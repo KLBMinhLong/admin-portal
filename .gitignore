@@ -1,0 +1,12 @@
+.env
+*.jar
+*.class
+target/
+node_modules/
+dist/
+.angular/
+*.log
+logs/
+.idea/
+*.iml
+.vscode/settings.json

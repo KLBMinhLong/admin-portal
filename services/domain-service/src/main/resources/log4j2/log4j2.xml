@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+  <Properties>
+    <Property name="SERVICE_NAME">${env:OTEL_SERVICE_NAME:-domain-service}</Property>
+    <Property name="LOG_LEVEL">${env:LOG_LEVEL:-INFO}</Property>
+    <Property name="LOG_DIR">${env:LOG_DIR:-logs}</Property>
+    <Property name="CONSOLE_PATTERN">%style{%d{yyyy-MM-dd HH:mm:ss.SSS}}{cyan} %highlight{%-5level}{FATAL=red blink, ERROR=red, WARN=yellow, INFO=green, DEBUG=blue} %style{[${SERVICE_NAME}]}{magenta} %style{[traceId=%X{traceId:-none}]}{bright_black} %logger{36} - %msg%n%throwable</Property>
+    <Property name="JSON_PATTERN">{"timestamp":"%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ}","level":"%level","service":"${SERVICE_NAME}","traceId":"%X{traceId:-}","spanId":"%X{spanId:-}","thread":"%t","logger":"%logger","message":"%enc{%msg}{JSON}"}%n</Property>
+  </Properties>
+  <Appenders>
+    <Console name="ConsoleAppender" target="SYSTEM_OUT">
+      <PatternLayout pattern="${CONSOLE_PATTERN}" disableAnsi="false"/>
+    </Console>
+    <RollingFile name="JsonFileAppender"
+                 fileName="${LOG_DIR}/${SERVICE_NAME}.json"
+                 filePattern="${LOG_DIR}/${SERVICE_NAME}-%d{yyyy-MM-dd}-%i.json.gz">
+      <PatternLayout pattern="${JSON_PATTERN}"/>
+      <Policies>
+        <TimeBasedTriggeringPolicy interval="1"/>
+        <SizeBasedTriggeringPolicy size="50MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="14"/>
+    </RollingFile>
+    <Async name="AsyncAppender" bufferSize="4096">
+      <AppenderRef ref="JsonFileAppender"/>
+    </Async>
+  </Appenders>
+  <Loggers>
+    <Logger name="com.adminportal" level="${LOG_LEVEL}" additivity="false">
+      <AppenderRef ref="ConsoleAppender"/>
+      <AppenderRef ref="AsyncAppender"/>
+    </Logger>
+    <Logger name="org.springframework" level="WARN" additivity="false">
+      <AppenderRef ref="ConsoleAppender"/>
+    </Logger>
+    <Logger name="org.apache.kafka" level="WARN" additivity="false">
+      <AppenderRef ref="ConsoleAppender"/>
+    </Logger>
+    <Root level="INFO">
+      <AppenderRef ref="ConsoleAppender"/>
+      <AppenderRef ref="AsyncAppender"/>
+    </Root>
+  </Loggers>
+</Configuration>

@@ -1,0 +1,109 @@
+spring:
+  application:
+    name: auth-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  main:
+    log-startup-info: false
+  logging:
+    config: classpath:log4j2/log4j2.xml
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/adminportal}
+    username: ${DB_USERNAME:portaluser}
+    password: ${DB_PASSWORD:changeme}
+    hikari:
+      pool-name: AuthHikariPool
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:changeme}
+      timeout: 3000ms
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:noreply@adminportal.com}
+    password: ${MAIL_PASSWORD:changeme}
+
+server:
+  port: 8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+app:
+  api-key: ${API_KEY:changeme}
+  token:
+    secret: ${TOKEN_SECRET:supersecretkey_changeme_in_production_min32chars}
+    never-expire: true
+    redis-ttl-hours: 24
+  encryption:
+    enabled: true
+    algorithm: AES/GCM/NoPadding
+    secret-key: ${ENCRYPT_SECRET:encryptkey_changeme_32chars_1234}
+  keycloak:
+    server-url: ${KEYCLOAK_URL:http://localhost:8080}
+    realm: ${KEYCLOAK_REALM:adminportal}
+    client-id: ${KEYCLOAK_CLIENT_ID:auth-service}
+    client-secret: ${KEYCLOAK_CLIENT_SECRET:changeme}
+  two-factor:
+    enabled: true
+    issuer: AdminPortal
+  rbac:
+    public-paths:
+      - /api/v1/auth/login
+      - /api/v1/auth/register
+      - /api/v1/auth/forgot-password
+      - /api/v1/auth/reset-password
+      - /actuator/health
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:postgresql://localhost:5432/adminportal
+  jpa:
+    show-sql: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: ${DB_URL}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  jpa:
+    show-sql: false
+  datasource:
+    hikari:
+      maximum-pool-size: 20
