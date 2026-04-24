@@ -47,7 +47,8 @@ public class AuthController {
 
     /** FE dang xuat -> BE cam co token */
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<Void> logout(@RequestHeader("Idempotency-Key") String idempotencyKey,
+                                       @RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
         logoutUseCase.execute(token);
         return ResponseEntity.noContent().build();
