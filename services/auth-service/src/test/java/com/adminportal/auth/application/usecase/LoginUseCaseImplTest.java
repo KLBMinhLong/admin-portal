@@ -10,6 +10,7 @@ import com.adminportal.auth.application.port.out.TokenGeneratorPort;
 import com.adminportal.auth.application.port.out.TokenRepositoryPort;
 import com.adminportal.auth.application.port.out.UserRepositoryPort;
 import com.adminportal.auth.application.services.AuthenticatedSessionService;
+import com.adminportal.auth.application.services.UserSessionRevocationService;
 import com.adminportal.auth.domain.entity.Token;
 import com.adminportal.auth.domain.entity.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,9 +55,12 @@ class LoginUseCaseImplTest {
 
     @BeforeEach
     void setUp() {
-        AuthenticatedSessionService authenticatedSessionService = new AuthenticatedSessionService(
+        UserSessionRevocationService userSessionRevocationService = new UserSessionRevocationService(
             tokenRepository,
-            tokenCache,
+            tokenCache
+        );
+        AuthenticatedSessionService authenticatedSessionService = new AuthenticatedSessionService(
+            userSessionRevocationService,
             tokenGenerator
         );
         loginUseCase = new LoginUseCaseImpl(

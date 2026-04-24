@@ -49,6 +49,9 @@ public class User {
     @Column(name = "reset_token_expiry")
     private Instant resetTokenExpiry;
 
+    @Column(name = "password_changed_at")
+    private Instant passwordChangedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -101,6 +104,7 @@ public class User {
         this.passwordHash = newPasswordHash;
         this.resetToken = null;
         this.resetTokenExpiry = null;
+        this.passwordChangedAt = Instant.now();
         this.updatedAt = Instant.now();
     }
 
@@ -132,6 +136,7 @@ public class User {
     public String getTwoFactorSecret()   { return twoFactorSecret; }
     public String getResetToken()        { return resetToken; }
     public Instant getResetTokenExpiry() { return resetTokenExpiry; }
+    public Instant getPasswordChangedAt(){ return passwordChangedAt; }
     public Instant getCreatedAt()     { return createdAt; }
     public Instant getUpdatedAt()     { return updatedAt; }
 }
