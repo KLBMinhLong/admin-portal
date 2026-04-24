@@ -1,5 +1,12 @@
 package com.adminportal.auth.domain.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -7,20 +14,49 @@ import java.util.UUID;
  * Domain Entity: User
  * Du lieu nguoi dung do BE tu thiet ke, KHONG dung Keycloak DB
  */
+@Entity
+@Table(name = "users")
 public class User {
 
-    private final UUID id;
+    @Id
+    @Column(nullable = false, updatable = false)
+    private UUID id;
+
+    @Column(nullable = false, unique = true, length = 50)
     private String username;
+
+    @Column(nullable = false, unique = true, length = 100)
     private String email;
+
+    @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
+
+    @Column(nullable = false, length = 50)
     private String role;
-    private String status;
+
+    @Column(name = "is_active", nullable = false)
+    private boolean active;
+
+    @Column(name = "is_2fa_enabled", nullable = false)
     private boolean twoFactorEnabled;
+
+    @Column(name = "two_factor_secret", length = 255)
     private String twoFactorSecret;
+
+    @Column(name = "reset_token", length = 255)
     private String resetToken;
+
+    @Column(name = "reset_token_expiry")
     private Instant resetTokenExpiry;
-    private final Instant createdAt;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    protected User() {
+    }
 
     private User(UUID id, String username, String email, String passwordHash,
                  String role, Instant createdAt) {
@@ -29,7 +65,7 @@ public class User {
         this.email = email;
         this.passwordHash = passwordHash;
         this.role = role;
-        this.status = "ACTIVE";
+        this.active = true;
         this.twoFactorEnabled = false;
         this.createdAt = createdAt;
         this.updatedAt = createdAt;
@@ -41,7 +77,7 @@ public class User {
                         passwordHash, role, Instant.now());
     }
 
-    public boolean isActive() { return "ACTIVE".equals(this.status); }
+    public boolean isActive() { return this.active; }
 
     public void enableTwoFactor(String secret) {
         this.twoFactorEnabled = true;
@@ -68,12 +104,30 @@ public class User {
         this.updatedAt = Instant.now();
     }
 
+    @PrePersist
+    void onCreate() {
+        Instant now = Instant.now();
+        if (id == null) {
+            id = UUID.randomUUID();
+        }
+        if (createdAt == null) {
+            createdAt = now;
+        }
+        if (updatedAt == null) {
+            updatedAt = now;
+        }
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = Instant.now();
+    }
+
     public UUID getId()               { return id; }
     public String getUsername()       { return username; }
     public String getEmail()          { return email; }
     public String getPasswordHash()   { return passwordHash; }
     public String getRole()           { return role; }
-    public String getStatus()         { return status; }
     public boolean isTwoFactorEnabled() { return twoFactorEnabled; }
     public String getTwoFactorSecret()   { return twoFactorSecret; }
     public String getResetToken()        { return resetToken; }
