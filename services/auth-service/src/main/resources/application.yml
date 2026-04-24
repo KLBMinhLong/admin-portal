@@ -71,9 +71,11 @@ app:
   two-factor:
     enabled: true
     issuer: AdminPortal
+    challenge-ttl-minutes: 5
   rbac:
     public-paths:
       - /api/v1/auth/login
+      - /api/v1/auth/verify-2fa
       - /api/v1/auth/register
       - /api/v1/auth/forgot-password
       - /api/v1/auth/reset-password

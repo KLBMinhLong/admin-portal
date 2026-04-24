@@ -34,6 +34,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     private static final String AUTH_HEADER    = "Authorization";
     private static final Set<String> PUBLIC_PATHS = Set.of(
         "/api/v1/auth/login",
+        "/api/v1/auth/verify-2fa",
         "/api/v1/auth/register",
         "/api/v1/auth/forgot-password",
         "/api/v1/auth/reset-password"
