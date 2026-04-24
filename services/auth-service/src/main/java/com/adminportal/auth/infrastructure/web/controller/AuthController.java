@@ -16,13 +16,16 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final LoginUseCase    loginUseCase;
+    private final VerifyTwoFactorUseCase verifyTwoFactorUseCase;
     private final LogoutUseCase   logoutUseCase;
     private final RegisterUseCase registerUseCase;
 
     public AuthController(LoginUseCase loginUseCase,
+                          VerifyTwoFactorUseCase verifyTwoFactorUseCase,
                           LogoutUseCase logoutUseCase,
                           RegisterUseCase registerUseCase) {
         this.loginUseCase = loginUseCase;
+        this.verifyTwoFactorUseCase = verifyTwoFactorUseCase;
         this.logoutUseCase = logoutUseCase;
         this.registerUseCase = registerUseCase;
     }
@@ -35,6 +38,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
         return ResponseEntity.ok(loginUseCase.execute(req));
+    }
+
+    @PostMapping("/verify-2fa")
+    public ResponseEntity<LoginResponse> verifyTwoFactor(@Valid @RequestBody TwoFactorVerifyRequest req) {
+        return ResponseEntity.ok(verifyTwoFactorUseCase.execute(req));
     }
 
     /** FE dang xuat -> BE cam co token */
