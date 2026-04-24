@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Flow theo ghi chu lead:
- * FE -> BE (username+password) -> Keycloak verify -> OK
+ * FE -> BE (username+password) -> Keycloak verify via custom user provider -> OK
  * BE mint token {username, role} -> save DB + Redis -> return FE
  * Login moi -> revoke token cu (single session)
  */
@@ -44,7 +44,7 @@ public class LoginUseCaseImpl implements LoginUseCase {
         String normalizedUsername = request.username().trim().toLowerCase();
         log.debug("Login attempt for username={}", normalizedUsername);
 
-        // Step 1: Keycloak custom provider verify credentials
+        // Step 1: Keycloak verifies credentials through the primary DB user provider.
         keycloakPort.authenticate(normalizedUsername, request.password());
 
         // Step 2: Lock user row trong transaction de tranh 2 login song song tao 2 token active

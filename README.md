@@ -21,12 +21,16 @@ Banking Intern Project - Rebuilt theo ghi chu lead.
 
 ## Auth Flow (theo ghi chu lead)
 
-  FE -> BE (username+password) -> Keycloak (custom provider verify)
+  FE -> BE (username+password) -> Keycloak (primary DB user provider verify)
   Keycloak -> OK -> BE
   BE: mint token {username, role} (khong co permission)
       -> save token DB + Redis (sync)
       -> revoke old token (single session)
       -> return token to FE
+
+  Keycloak custom providers:
+  - `adminportal-db-user-provider`: provider chinh cho login
+  - `adminportal-remote-user-federation`: de san cho remote user source trong tuong lai, chua tham gia login
 
   FE (moi request) -> BE: kiem tra token vs DB/Redis
                          -> lay permission tu DB (RBAC)

@@ -18,6 +18,8 @@ Dang nhap user, tao JWT moi, revoke token cu de dam bao single-session.
 1. Validate request schema.
 2. Xac minh thong tin dang nhap.
 3. Goi Keycloak custom provider de double-check.
+   - Provider chinh: `adminportal-db-user-provider`
+   - Remote federation khong tham gia login hien tai.
 4. Neu user bat 2FA -> tra challenge (ket thuc flow dang nhap buoc 1).
 5. Tim token dang active cua user.
 6. Revoke tat ca token cu trong DB (`is_active=false`).

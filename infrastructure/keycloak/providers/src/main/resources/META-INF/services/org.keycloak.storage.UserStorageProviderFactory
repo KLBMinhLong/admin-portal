@@ -1,0 +1,2 @@
+com.adminportal.keycloak.provider.DatabaseUserStorageProviderFactory
+com.adminportal.keycloak.provider.RemoteUserFederationProviderFactory

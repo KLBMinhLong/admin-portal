@@ -67,7 +67,7 @@ app:
     server-url: ${KEYCLOAK_URL:http://localhost:8080}
     realm: ${KEYCLOAK_REALM:adminportal}
     client-id: ${KEYCLOAK_CLIENT_ID:auth-service}
-    client-secret: ${KEYCLOAK_CLIENT_SECRET:changeme}
+    client-secret: ${KEYCLOAK_CLIENT_SECRET:}
   two-factor:
     enabled: true
     issuer: AdminPortal

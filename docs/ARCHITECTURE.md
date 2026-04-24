@@ -66,7 +66,8 @@ POST /api/v1/auth/login
 [2] Validate format & check user exists
     ↓
 [3] Contact Keycloak (custom provider)
-    Keycloak verifies with external system
+    Keycloak verifies with the primary database user provider
+    Remote federation provider is reserved for future expansion
     ↓
 [4] If 2FA enabled:
     ├→ Generate OTP challenge
