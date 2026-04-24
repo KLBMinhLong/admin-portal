@@ -1,15 +1,23 @@
 package com.adminportal.auth.application.dto.response;
+
 public record LoginResponse(
     String token,
-    String username,
-    String role,
+    UserProfile user,
     boolean requiresTwoFactor,
-    String userId
+    String challenge
 ) {
-    public static LoginResponse success(String token, String username, String role) {
-        return new LoginResponse(token, username, role, false, null);
+    public static LoginResponse success(String token, String userId, String username, String role) {
+        return new LoginResponse(token, new UserProfile(userId, username, role), false, null);
     }
-    public static LoginResponse requiresTwoFactor(String userId) {
-        return new LoginResponse(null, null, null, true, userId);
+
+    public static LoginResponse requiresTwoFactor(String challenge) {
+        return new LoginResponse(null, null, true, challenge);
+    }
+
+    public record UserProfile(
+        String id,
+        String username,
+        String role
+    ) {
     }
 }

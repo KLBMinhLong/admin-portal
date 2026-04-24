@@ -1,5 +1,12 @@
 package com.adminportal.auth.domain.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -9,34 +16,69 @@ import java.util.UUID;
  * - 1 phien dang nhap duy nhat per user
  * - Chi chua username + role (khong co permission - dinh danh thoi)
  */
+@Entity
+@Table(name = "auth_tokens", indexes = {
+    @Index(name = "idx_auth_tokens_user_active", columnList = "user_id,is_active"),
+    @Index(name = "idx_auth_tokens_jti", columnList = "token_jti", unique = true)
+})
 public class Token {
 
-    private final UUID id;
-    private final UUID userId;
-    private final String username;
-    private final String role;
-    private final String tokenValue;
-    private boolean active;
-    private final Instant createdAt;
-    private Instant revokedAt;
-    private final String deviceInfo;
+    @Id
+    @Column(nullable = false, updatable = false)
+    private UUID id;
 
-    private Token(UUID id, UUID userId, String username, String role,
-                  String tokenValue, Instant createdAt, String deviceInfo) {
-        this.id = id;
-        this.userId = userId;
-        this.username = username;
-        this.role = role;
-        this.tokenValue = tokenValue;
-        this.active = true;
-        this.createdAt = createdAt;
-        this.deviceInfo = deviceInfo;
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+
+    @Column(name = "token_jti", nullable = false, unique = true, length = 255)
+    private String tokenJti;
+
+    @Column(name = "token_hash", nullable = false, length = 255)
+    private String tokenHash;
+
+    @Column(name = "ip_address", length = 45)
+    private String ipAddress;
+
+    @Column(name = "user_agent", length = 500)
+    private String userAgent;
+
+    @Column(name = "is_active", nullable = false)
+    private boolean active;
+
+    @Column(name = "issued_at", nullable = false, updatable = false)
+    private Instant issuedAt;
+
+    @Column(name = "expires_at")
+    private Instant expiresAt;
+
+    @Column(name = "revoked_at")
+    private Instant revokedAt;
+
+    protected Token() {
     }
 
-    public static Token create(UUID userId, String username,
-                               String role, String tokenValue, String deviceInfo) {
-        return new Token(UUID.randomUUID(), userId, username, role,
-                         tokenValue, Instant.now(), deviceInfo);
+    private Token(UUID id, UUID userId, String tokenJti, String tokenHash,
+                  Instant issuedAt, String ipAddress, String userAgent) {
+        this.id = id;
+        this.userId = userId;
+        this.tokenJti = tokenJti;
+        this.tokenHash = tokenHash;
+        this.ipAddress = ipAddress;
+        this.userAgent = userAgent;
+        this.active = true;
+        this.issuedAt = issuedAt;
+        this.expiresAt = null;
+    }
+
+    public static Token issue(UUID userId, String tokenJti,
+                              String tokenHash, Instant issuedAt,
+                              String ipAddress, String userAgent) {
+        return new Token(UUID.randomUUID(), userId, tokenJti, tokenHash,
+            issuedAt, ipAddress, userAgent);
+    }
+
+    public static Token cached(String tokenJti) {
+        return new Token(null, null, tokenJti, "", Instant.now(), null, null);
     }
 
     /** Cam co token khong con hoat dong (dang xuat / dang nhap thiet bi khac) */
@@ -46,13 +88,24 @@ public class Token {
         this.revokedAt = Instant.now();
     }
 
-    public UUID getId()           { return id; }
-    public UUID getUserId()       { return userId; }
-    public String getUsername()   { return username; }
-    public String getRole()       { return role; }
-    public String getTokenValue() { return tokenValue; }
-    public boolean isActive()     { return active; }
-    public Instant getCreatedAt() { return createdAt; }
-    public Instant getRevokedAt() { return revokedAt; }
-    public String getDeviceInfo() { return deviceInfo; }
+    @PrePersist
+    void onCreate() {
+        if (id == null) {
+            id = UUID.randomUUID();
+        }
+        if (issuedAt == null) {
+            issuedAt = Instant.now();
+        }
+    }
+
+    public UUID getId()         { return id; }
+    public UUID getUserId()     { return userId; }
+    public String getTokenJti() { return tokenJti; }
+    public String getTokenHash(){ return tokenHash; }
+    public String getIpAddress(){ return ipAddress; }
+    public String getUserAgent(){ return userAgent; }
+    public boolean isActive()   { return active; }
+    public Instant getIssuedAt(){ return issuedAt; }
+    public Instant getExpiresAt(){ return expiresAt; }
+    public Instant getRevokedAt(){ return revokedAt; }
 }

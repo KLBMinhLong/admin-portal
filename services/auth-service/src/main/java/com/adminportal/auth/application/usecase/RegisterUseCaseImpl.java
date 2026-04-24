@@ -5,7 +5,6 @@ import com.adminportal.auth.application.dto.response.RegisterResponse;
 import com.adminportal.auth.application.port.in.RegisterUseCase;
 import com.adminportal.auth.application.port.out.UserRepositoryPort;
 import com.adminportal.auth.domain.entity.User;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,7 +16,6 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
-@RequiredArgsConstructor
 public class RegisterUseCaseImpl implements RegisterUseCase {
     private static final Logger log = LoggerFactory.getLogger(RegisterUseCaseImpl.class);
 
@@ -29,6 +27,11 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
 
     private final UserRepositoryPort userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    public RegisterUseCaseImpl(UserRepositoryPort userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     @Transactional

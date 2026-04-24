@@ -4,8 +4,6 @@ import com.adminportal.auth.application.dto.request.*;
 import com.adminportal.auth.application.dto.response.*;
 import com.adminportal.auth.application.port.in.*;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,15 +11,21 @@ import org.springframework.web.bind.annotation.*;
 /**
  * Login / Logout / Register / Hashing Password / Forgot Password / 2FA
  */
-@Log4j2
 @RestController
 @RequestMapping("/api/v1/auth")
-@RequiredArgsConstructor
 public class AuthController {
 
     private final LoginUseCase    loginUseCase;
     private final LogoutUseCase   logoutUseCase;
     private final RegisterUseCase registerUseCase;
+
+    public AuthController(LoginUseCase loginUseCase,
+                          LogoutUseCase logoutUseCase,
+                          RegisterUseCase registerUseCase) {
+        this.loginUseCase = loginUseCase;
+        this.logoutUseCase = logoutUseCase;
+        this.registerUseCase = registerUseCase;
+    }
 
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest req) {

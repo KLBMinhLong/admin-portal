@@ -1,4 +1,7 @@
 package com.adminportal.auth.application.port.out;
+
+import com.adminportal.auth.domain.entity.User;
+
 public interface TokenGeneratorPort {
-    String generate(String username, String role);
+    GeneratedToken generate(User user);
 }
