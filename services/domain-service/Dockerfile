@@ -9,7 +9,7 @@ FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 RUN apk add --no-cache curl && \
-    curl -fsSL "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.32.6/opentelemetry-javaagent.jar" \
+    curl -fsSL "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar" \
     -o /app/opentelemetry-javaagent.jar && \
     apk del curl
 

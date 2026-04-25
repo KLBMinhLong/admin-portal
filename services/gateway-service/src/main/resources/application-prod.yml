@@ -1,0 +1,12 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: ${AUTH_SERVICE_URL}
+          predicates:
+            - Path=/api/v1/auth/**
+        - id: domain-service
+          uri: ${DOMAIN_SERVICE_URL}
+          predicates:
+            - Path=/api/v1/**

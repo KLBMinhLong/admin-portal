@@ -57,7 +57,7 @@ final class DatabaseUserStorageProvider implements UserStorageProvider, UserLook
 
     @Override
     public UserModel getUserById(RealmModel realm, String id) {
-        return findOne("id = ?", StorageId.externalId(id))
+        return findOne("id::text = ?", StorageId.externalId(id))
             .map(user -> new ReadonlyUserAdapter(session, realm, model, user))
             .orElse(null);
     }
@@ -88,11 +88,12 @@ final class DatabaseUserStorageProvider implements UserStorageProvider, UserLook
 
     @Override
     public boolean isValid(RealmModel realm, UserModel user, CredentialInput input) {
-        if (!supportsCredentialType(input.getType()) || !(user instanceof ReadonlyUserAdapter adapter)) {
+        if (!supportsCredentialType(input.getType())) {
             return false;
         }
 
-        ProviderUser stored = findByExternalId(adapter.source().externalId()).orElse(null);
+        String externalId = StorageId.externalId(user.getId());
+        ProviderUser stored = findByExternalId(externalId).orElse(null);
         return stored != null
             && stored.enabled()
             && stored.passwordHash() != null
@@ -142,7 +143,7 @@ final class DatabaseUserStorageProvider implements UserStorageProvider, UserLook
     }
 
     private Optional<ProviderUser> findByExternalId(String externalId) {
-        return findOne("id = ?", externalId);
+        return findOne("id::text = ?", externalId);
     }
 
     private Optional<ProviderUser> findOne(String whereClause, String value) {
@@ -220,7 +221,7 @@ final class DatabaseUserStorageProvider implements UserStorageProvider, UserLook
 
     private ProviderUser mapRow(ResultSet rs) throws SQLException {
         return new ProviderUser(
-            String.valueOf(rs.getLong("id")),
+            rs.getString("id"),
             rs.getString("username"),
             rs.getString("email"),
             rs.getString("first_name"),

@@ -23,11 +23,9 @@
   "components": {
     "org.keycloak.storage.UserStorageProvider": [
       {
-        "id": "adminportal-db-user-provider-component",
+        "id": "db-user-provider-01",
         "name": "AdminPortal Database User Provider",
         "providerId": "adminportal-db-user-provider",
-        "providerType": "org.keycloak.storage.UserStorageProvider",
-        "parentId": "adminportal",
         "config": {
           "jdbcUrl": [
             "jdbc:postgresql://postgres:5432/adminportal"

@@ -80,18 +80,3 @@ app:
     enabled: true
     secret-key: ${ENCRYPT_SECRET:encryptkey_changeme_32chars_1234}
 
----
-spring:
-  config:
-    activate:
-      on-profile: local
-  jpa:
-    show-sql: true
-
----
-spring:
-  config:
-    activate:
-      on-profile: docker
-  datasource:
-    url: ${DB_URL}

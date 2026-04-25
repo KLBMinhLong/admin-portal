@@ -34,6 +34,15 @@ public class User {
     @Column(nullable = false, length = 50)
     private String role;
 
+    @Column(name = "first_name", length = 100)
+    private String firstName;
+
+    @Column(name = "last_name", length = 100)
+    private String lastName;
+
+    @Column(name = "is_email_verified", nullable = false)
+    private boolean emailVerified;
+
     @Column(name = "is_active", nullable = false)
     private boolean active;
 
@@ -62,12 +71,15 @@ public class User {
     }
 
     private User(UUID id, String username, String email, String passwordHash,
-                 String role, Instant createdAt) {
+                 String role, String firstName, String lastName, Instant createdAt) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.passwordHash = passwordHash;
         this.role = role;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.emailVerified = false;
         this.active = true;
         this.twoFactorEnabled = false;
         this.createdAt = createdAt;
@@ -77,7 +89,14 @@ public class User {
     public static User create(String username, String email,
                               String passwordHash, String role) {
         return new User(UUID.randomUUID(), username, email,
-                        passwordHash, role, Instant.now());
+                        passwordHash, role, null, null, Instant.now());
+    }
+
+    public static User create(String username, String email,
+                              String passwordHash, String role,
+                              String firstName, String lastName) {
+        return new User(UUID.randomUUID(), username, email,
+                        passwordHash, role, firstName, lastName, Instant.now());
     }
 
     public boolean isActive() { return this.active; }
@@ -137,6 +156,9 @@ public class User {
     public String getResetToken()        { return resetToken; }
     public Instant getResetTokenExpiry() { return resetTokenExpiry; }
     public Instant getPasswordChangedAt(){ return passwordChangedAt; }
-    public Instant getCreatedAt()     { return createdAt; }
-    public Instant getUpdatedAt()     { return updatedAt; }
+    public String getFirstName()     { return firstName; }
+    public String getLastName()      { return lastName; }
+    public boolean isEmailVerified() { return emailVerified; }
+    public Instant getCreatedAt()    { return createdAt; }
+    public Instant getUpdatedAt()    { return updatedAt; }
 }
