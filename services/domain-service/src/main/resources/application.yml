@@ -78,6 +78,8 @@ management:
 app:
   api-key: ${API_KEY:changeme}
   auth-service-url: ${AUTH_SERVICE_URL:http://localhost:8081}
+  token:
+    secret: ${TOKEN_SECRET:supersecretkey_changeme_in_production_min32chars}
   encryption:
     enabled: true
     secret-key: ${ENCRYPT_SECRET:encryptkey_changeme_32chars_1234}

@@ -2,6 +2,7 @@ package com.adminportal.domain.infrastructure.web;
 
 import com.adminportal.domain.application.dto.ApprovalActionDto;
 import com.adminportal.domain.application.dto.PurchasingRequestDto;
+import com.adminportal.domain.application.services.CurrentUserService;
 import com.adminportal.domain.application.usecase.ProcessApprovalUseCase;
 import com.adminportal.domain.domain.entity.IdempotencyRecord;
 import com.adminportal.domain.infrastructure.cache.IdempotencyService;
@@ -12,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -25,16 +27,20 @@ public class ApprovalController {
     private final ProcessApprovalUseCase processApprovalUseCase;
     private final IdempotencyService idempotencyService;
     private final ObjectMapper objectMapper;
+    private final CurrentUserService currentUserService;
 
     public ApprovalController(ProcessApprovalUseCase processApprovalUseCase,
                               IdempotencyService idempotencyService,
-                              ObjectMapper objectMapper) {
+                              ObjectMapper objectMapper,
+                              CurrentUserService currentUserService) {
         this.processApprovalUseCase = processApprovalUseCase;
         this.idempotencyService = idempotencyService;
         this.objectMapper = objectMapper;
+        this.currentUserService = currentUserService;
     }
 
     @PostMapping("/{requestId}/approve")
+    @PreAuthorize("hasAuthority('request.approve')")
     public ResponseEntity<String> approve(
             @PathVariable Long requestId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
@@ -44,6 +50,7 @@ public class ApprovalController {
     }
 
     @PostMapping("/{requestId}/reject")
+    @PreAuthorize("hasAuthority('request.reject')")
     public ResponseEntity<String> reject(
             @PathVariable Long requestId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
@@ -63,7 +70,7 @@ public class ApprovalController {
                 .body(record.getResponseBody());
         }
 
-        String username = "approver"; // TODO: Extract from JWT SecurityContext
+        String username = currentUserService.requireUsername();
 
         PurchasingRequestDto result = processApprovalUseCase.execute(requestId, username, isApproved, dto);
 

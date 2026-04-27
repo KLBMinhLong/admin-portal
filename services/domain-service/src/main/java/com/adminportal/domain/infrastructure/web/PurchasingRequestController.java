@@ -2,6 +2,7 @@ package com.adminportal.domain.infrastructure.web;
 
 import com.adminportal.domain.application.dto.CreateRequestDto;
 import com.adminportal.domain.application.dto.PurchasingRequestDto;
+import com.adminportal.domain.application.services.CurrentUserService;
 import com.adminportal.domain.application.usecase.CreateRequestUseCase;
 import com.adminportal.domain.application.usecase.SubmitRequestUseCase;
 import com.adminportal.domain.domain.entity.IdempotencyRecord;
@@ -13,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -33,23 +35,27 @@ public class PurchasingRequestController {
     private final com.adminportal.domain.application.usecase.GetRequestUseCase getRequestUseCase;
     private final IdempotencyService idempotencyService;
     private final ObjectMapper objectMapper;
+    private final CurrentUserService currentUserService;
 
     public PurchasingRequestController(CreateRequestUseCase createRequestUseCase,
                                        SubmitRequestUseCase submitRequestUseCase,
                                        com.adminportal.domain.application.usecase.GetRequestUseCase getRequestUseCase,
                                        IdempotencyService idempotencyService,
-                                       ObjectMapper objectMapper) {
+                                       ObjectMapper objectMapper,
+                                       CurrentUserService currentUserService) {
         this.createRequestUseCase = createRequestUseCase;
         this.submitRequestUseCase = submitRequestUseCase;
         this.getRequestUseCase = getRequestUseCase;
         this.idempotencyService = idempotencyService;
         this.objectMapper = objectMapper;
+        this.currentUserService = currentUserService;
     }
 
     /**
      * Lấy thông tin chi tiết request.
      */
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PurchasingRequestDto> getById(@PathVariable Long id) {
         return ResponseEntity.ok(getRequestUseCase.execute(id));
     }
@@ -62,6 +68,7 @@ public class PurchasingRequestController {
      * @return 201 Created kèm response body
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('request.create')")
     public ResponseEntity<String> create(
             @RequestHeader("Idempotency-Key") String idempotencyKey,
             @Valid @RequestBody CreateRequestDto dto) {
@@ -76,8 +83,7 @@ public class PurchasingRequestController {
                 .body(record.getResponseBody());
         }
 
-        // TODO: lấy username từ JWT SecurityContext, tạm hardcode cho local test
-        String username = "system";
+        String username = currentUserService.requireUsername();
 
         PurchasingRequestDto result = createRequestUseCase.execute(dto, username);
 
@@ -97,6 +103,7 @@ public class PurchasingRequestController {
      * Submit request sang quy trình phê duyệt.
      */
     @PostMapping("/{id}/submit")
+    @PreAuthorize("hasAuthority('request.submit')")
     public ResponseEntity<String> submit(
             @PathVariable Long id,
             @RequestHeader("Idempotency-Key") String idempotencyKey) {
@@ -111,7 +118,7 @@ public class PurchasingRequestController {
                 .body(record.getResponseBody());
         }
 
-        String username = "system"; // TODO: Lấy từ JWT Context sau
+        String username = currentUserService.requireUsername();
 
         PurchasingRequestDto result = submitRequestUseCase.execute(id, username);
 

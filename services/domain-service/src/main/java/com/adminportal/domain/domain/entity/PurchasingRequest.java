@@ -1,6 +1,7 @@
 package com.adminportal.domain.domain.entity;
 
 import jakarta.persistence.*;
+import com.adminportal.domain.domain.exception.DomainConflictException;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -116,7 +117,7 @@ public class PurchasingRequest {
      */
     public void submit() {
         if (this.status != RequestStatus.DRAFT) {
-            throw new IllegalStateException("Only DRAFT requests can be submitted");
+            throw new DomainConflictException("INVALID_STATUS_TRANSITION");
         }
         if (this.items.isEmpty()) {
             throw new IllegalStateException("Cannot submit request without any items");
@@ -142,16 +143,15 @@ public class PurchasingRequest {
         return this.approvalSteps.stream()
                 .filter(step -> step.getStatus() == ApprovalStatus.PENDING)
                 .min(java.util.Comparator.comparingInt(ApprovalStep::getStepOrder))
-                .orElseThrow(() -> new IllegalStateException("No pending approval steps found"));
+                .orElseThrow(() -> new DomainConflictException("STEP_ALREADY_PROCESSED"));
     }
 
     public void processApproval(String username, String comment, boolean isApproved) {
         if (this.status != RequestStatus.PENDING_APPROVAL) {
-            throw new IllegalStateException("Request is not in PENDING_APPROVAL state");
+            throw new DomainConflictException("INVALID_STATUS");
         }
 
         ApprovalStep currentStep = getCurrentPendingStep();
-        // In a real app, verify if 'username' has the role matching currentStep.getRoleName()
         
         if (isApproved) {
             currentStep.approve(username, comment);

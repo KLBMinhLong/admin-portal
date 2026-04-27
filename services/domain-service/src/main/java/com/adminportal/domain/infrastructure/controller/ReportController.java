@@ -53,7 +53,7 @@ public class ReportController {
      * @return PDF file
      */
     @GetMapping("/requests-by-status")
-    @PreAuthorize("hasPermission('report', 'view')")
+    @PreAuthorize("hasAuthority('report.view') or hasAuthority('report.export')")
     public ResponseEntity<byte[]> exportRequestsByStatus(
             @RequestParam(value = "status", required = false) String status,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
@@ -105,7 +105,7 @@ public class ReportController {
      * @return PDF file
      */
     @GetMapping("/request-detail/{id}")
-    @PreAuthorize("hasPermission('report', 'view')")
+    @PreAuthorize("hasAuthority('report.view') or hasAuthority('report.export')")
     public ResponseEntity<byte[]> exportRequestDetail(
             @PathVariable(value = "id") Long requestId,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
@@ -158,7 +158,7 @@ public class ReportController {
      * @return PDF file
      */
     @GetMapping("/financial-summary")
-    @PreAuthorize("hasPermission('report', 'view')")
+    @PreAuthorize("hasAuthority('report.view') or hasAuthority('report.export')")
     public ResponseEntity<byte[]> exportFinancialSummary(
             @RequestParam(value = "fromDate", required = false) 
             @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate fromDate,

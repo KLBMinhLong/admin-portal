@@ -1,10 +1,13 @@
 package com.adminportal.domain.infrastructure.config;
 
+import com.adminportal.domain.infrastructure.security.JwtAuthenticationFilter;
 import com.adminportal.domain.infrastructure.web.filter.ApiKeyFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -16,12 +19,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final ApiKeyFilter apiKeyFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(ApiKeyFilter apiKeyFilter) {
+    public SecurityConfig(ApiKeyFilter apiKeyFilter, JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.apiKeyFilter = apiKeyFilter;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
     @Bean
@@ -31,9 +37,12 @@ public class SecurityConfig {
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                .anyRequest().permitAll()  // JWT auth sẽ bổ sung sau khi tích hợp Gateway
+                .requestMatchers("/engine-rest/**", "/camunda/**").permitAll()
+                .anyRequest().authenticated()
             )
-            .addFilterBefore(apiKeyFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(apiKeyFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .cors(Customizer.withDefaults());
 
         return http.build();
     }
