@@ -2,7 +2,9 @@ package com.adminportal.auth.application.usecase;
 
 import com.adminportal.auth.application.dto.request.RegisterRequest;
 import com.adminportal.auth.application.dto.response.RegisterResponse;
+import com.adminportal.auth.application.port.out.RoleRepositoryPort;
 import com.adminportal.auth.application.port.out.UserRepositoryPort;
+import com.adminportal.auth.domain.entity.Role;
 import com.adminportal.auth.domain.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,11 +28,16 @@ class RegisterUseCaseImplTest {
     @Mock
     private UserRepositoryPort userRepository;
 
+    @Mock
+    private RoleRepositoryPort roleRepository;
+
     private RegisterUseCaseImpl registerUseCase;
+    private Role defaultRole;
 
     @BeforeEach
     void setUp() {
-        registerUseCase = new RegisterUseCaseImpl(userRepository, new BCryptPasswordEncoder(12));
+        registerUseCase = new RegisterUseCaseImpl(userRepository, roleRepository, new BCryptPasswordEncoder(12));
+        defaultRole = Role.create("USER", "User", "Default role");
     }
 
     @Test
@@ -45,6 +52,7 @@ class RegisterUseCaseImplTest {
 
         when(userRepository.existsByUsername("john_doe")).thenReturn(false);
         when(userRepository.existsByEmail("john@example.com")).thenReturn(false);
+        when(roleRepository.findByCode("USER")).thenReturn(java.util.Optional.of(defaultRole));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         RegisterResponse response = registerUseCase.execute(request);
@@ -55,6 +63,8 @@ class RegisterUseCaseImplTest {
 
         assertEquals("john_doe", savedUser.getUsername());
         assertEquals("john@example.com", savedUser.getEmail());
+        assertEquals(1, savedUser.getRoles().size());
+        assertTrue(savedUser.getRoles().stream().anyMatch(role -> "USER".equals(role.getCode())));
         assertEquals("john_doe", response.username());
         assertEquals("john@example.com", response.email());
         assertFalse(response.emailVerified());

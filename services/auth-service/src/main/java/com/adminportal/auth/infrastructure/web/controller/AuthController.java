@@ -6,7 +6,10 @@ import com.adminportal.auth.application.port.in.*;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * Login / Logout / Register / Hashing Password / Forgot Password / 2FA
@@ -70,5 +73,13 @@ public class AuthController {
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest req) {
         resetPasswordUseCase.execute(req);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/session")
+    public ResponseEntity<SessionResponse> session(Authentication authentication) {
+        List<String> authorities = authentication.getAuthorities().stream()
+            .map(grantedAuthority -> grantedAuthority.getAuthority())
+            .toList();
+        return ResponseEntity.ok(new SessionResponse(authentication.getName(), authorities));
     }
 }

@@ -3,7 +3,9 @@ package com.adminportal.domain.application.usecase;
 import com.adminportal.domain.application.dto.ApprovalActionDto;
 import com.adminportal.domain.application.dto.PurchasingRequestDto;
 import com.adminportal.domain.application.mapper.PurchasingRequestMapper;
+import com.adminportal.domain.application.services.RuntimeAuthorizationService;
 import com.adminportal.domain.domain.entity.PurchasingRequest;
+import com.adminportal.domain.domain.exception.ResourceNotFoundException;
 import com.adminportal.domain.domain.event.RequestProcessedEvent;
 import com.adminportal.domain.domain.repository.PurchasingRequestRepository;
 import com.adminportal.domain.infrastructure.camunda.WorkflowService;
@@ -25,24 +27,28 @@ public class ProcessApprovalUseCase {
     private final PurchasingRequestMapper mapper;
     private final WorkflowService workflowService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final RuntimeAuthorizationService runtimeAuthorizationService;
 
     public ProcessApprovalUseCase(PurchasingRequestRepository requestRepository,
                                   PurchasingRequestMapper mapper,
                                   WorkflowService workflowService,
-                                  KafkaTemplate<String, Object> kafkaTemplate) {
+                                  KafkaTemplate<String, Object> kafkaTemplate,
+                                  RuntimeAuthorizationService runtimeAuthorizationService) {
         this.requestRepository = requestRepository;
         this.mapper = mapper;
         this.workflowService = workflowService;
         this.kafkaTemplate = kafkaTemplate;
+        this.runtimeAuthorizationService = runtimeAuthorizationService;
     }
 
     @Transactional
     public PurchasingRequestDto execute(Long requestId, String username, boolean isApproved, ApprovalActionDto dto) {
         // 1. Fetch request with optimistic lock implicitly via JPA @Version
         PurchasingRequest request = requestRepository.findById(requestId)
-            .orElseThrow(() -> new IllegalArgumentException("Request not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Request not found: " + requestId));
 
         String comment = dto != null ? dto.comment() : null;
+        runtimeAuthorizationService.ensureUserHasRole(username, request.getCurrentPendingStep().getRoleName());
 
         // 2. Process Approval logic (transitions state and steps)
         request.processApproval(username, comment, isApproved);

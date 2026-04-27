@@ -3,7 +3,9 @@ package com.adminportal.auth.application.usecase;
 import com.adminportal.auth.application.dto.request.RegisterRequest;
 import com.adminportal.auth.application.dto.response.RegisterResponse;
 import com.adminportal.auth.application.port.in.RegisterUseCase;
+import com.adminportal.auth.application.port.out.RoleRepositoryPort;
 import com.adminportal.auth.application.port.out.UserRepositoryPort;
+import com.adminportal.auth.domain.entity.Role;
 import com.adminportal.auth.domain.entity.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,17 +21,22 @@ import java.util.regex.Pattern;
 public class RegisterUseCaseImpl implements RegisterUseCase {
     private static final Logger log = LoggerFactory.getLogger(RegisterUseCaseImpl.class);
 
-    private static final String DEFAULT_ROLE = "ROLE_USER";
+    private static final String DEFAULT_PRIMARY_ROLE = "ROLE_USER";
+    private static final String DEFAULT_RBAC_ROLE = "USER";
     private static final Pattern HAS_UPPERCASE = Pattern.compile(".*[A-Z].*");
     private static final Pattern HAS_LOWERCASE = Pattern.compile(".*[a-z].*");
     private static final Pattern HAS_NUMBER = Pattern.compile(".*\\d.*");
     private static final Pattern HAS_SPECIAL = Pattern.compile(".*[^a-zA-Z0-9].*");
 
     private final UserRepositoryPort userRepository;
+    private final RoleRepositoryPort roleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public RegisterUseCaseImpl(UserRepositoryPort userRepository, PasswordEncoder passwordEncoder) {
+    public RegisterUseCaseImpl(UserRepositoryPort userRepository,
+                               RoleRepositoryPort roleRepository,
+                               PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -43,8 +50,12 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
         validateUniqueUser(normalizedUsername, normalizedEmail);
 
         String passwordHash = passwordEncoder.encode(request.password());
-        User newUser = User.create(normalizedUsername, normalizedEmail, passwordHash, DEFAULT_ROLE,
+        Role defaultRole = roleRepository.findByCode(DEFAULT_RBAC_ROLE)
+            .orElseThrow(() -> new IllegalStateException("Default RBAC role not found: " + DEFAULT_RBAC_ROLE));
+
+        User newUser = User.create(normalizedUsername, normalizedEmail, passwordHash, DEFAULT_PRIMARY_ROLE,
             request.firstName(), request.lastName());
+        newUser.assignRoles(java.util.Set.of(defaultRole));
         User savedUser = userRepository.save(newUser);
 
         UUID verificationToken = UUID.randomUUID();

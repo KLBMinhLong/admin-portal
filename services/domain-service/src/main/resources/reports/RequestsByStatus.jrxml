@@ -1,86 +1,226 @@
-<!-- Created with Jaspersoft Studio version 7.0.6.final using JasperReports Library version 7.0.6-5d2a603fdc6b3db8f842a83383e594f41891534d  -->
-<jasperReport name="RequestsByStatus" language="java" pageWidth="842" pageHeight="595" whenNoDataType="AllSectionsNoDetail" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="25f10961-4818-423d-80e3-9936456ef979">
-	<parameter name="reportTitle" class="java.lang.String"/>
-	<parameter name="reportDate" class="java.util.Date"/>
-	<parameter name="generatedBy" class="java.lang.String"/>
-	<parameter name="filterStatus" class="java.lang.String"/>
-	<field name="requestNumber" class="java.lang.String"/>
-	<field name="title" class="java.lang.String"/>
-	<field name="requestedBy" class="java.lang.String"/>
-	<field name="requestedDate" class="java.time.LocalDateTime"/>
-	<field name="status" class="java.lang.String"/>
-	<field name="totalAmount" class="java.math.BigDecimal"/>
-	<field name="currency" class="java.lang.String"/>
-	<field name="departmentName" class="java.lang.String"/>
-	<field name="itemCount" class="java.lang.Integer"/>
-	<title height="70">
-		<element kind="staticText" uuid="a64cf456-9ce5-40f5-a4b1-75c7b7646a75" x="0" y="-10" width="802" height="30" fontName="SansSerif" fontSize="16.0" bold="true" hTextAlign="Center">
-			<text><![CDATA[Danh sách Yêu cầu Mua sắm]]></text>
-		</element>
-		<element kind="textField" uuid="dbfe3209-8ebb-45c1-bb43-af6d392cb7a9" x="0" y="24" width="400" height="14" fontName="SansSerif" fontSize="9.0">
-			<expression><![CDATA[$P{reportDate}]]></expression>
-		</element>
-		<element kind="textField" uuid="be42f0b6-4ad0-4207-b601-3152cf67ed2e" x="420" y="24" width="382" height="14" fontName="SansSerif" fontSize="9.0" hTextAlign="Right">
-			<expression><![CDATA[$P{generatedBy}]]></expression>
-		</element>
-		<element kind="textField" uuid="1359975f-1c3a-4ca4-9115-5bf912f9f45f" x="0" y="42" width="802" height="14" fontName="SansSerif" fontSize="9.0">
-			<expression><![CDATA[$P{filterStatus}]]></expression>
-		</element>
-	</title>
-	<columnHeader height="20">
-		<element kind="staticText" uuid="dbd4c568-7d83-427f-ae70-9a776d9b10b7" x="0" y="0" width="90" height="14" fontName="SansSerif" fontSize="9.0" bold="true">
-			<text><![CDATA[Mã YC]]></text>
-		</element>
-		<element kind="staticText" uuid="0cfe0c2f-5078-42b1-80b2-cb8a701702f5" x="90" y="0" width="170" height="14" fontName="SansSerif" fontSize="9.0" bold="true">
-			<text><![CDATA[Tiêu đề]]></text>
-		</element>
-		<element kind="staticText" uuid="10889ba5-1eff-4144-866d-5394051e4b8a" x="260" y="0" width="120" height="14" fontName="SansSerif" fontSize="9.0" bold="true">
-			<text><![CDATA[Người yêu cầu]]></text>
-		</element>
-		<element kind="staticText" uuid="f0a3a76e-40d2-41d6-9dfc-cbcbca473d37" x="380" y="0" width="120" height="14" fontName="SansSerif" fontSize="9.0" bold="true">
-			<text><![CDATA[Ngày YC]]></text>
-		</element>
-		<element kind="staticText" uuid="abc23ab5-ef03-48f8-889a-55718de08947" x="500" y="0" width="100" height="14" fontName="SansSerif" fontSize="9.0" bold="true" hTextAlign="Right">
-			<text><![CDATA[Tổng tiền]]></text>
-		</element>
-		<element kind="staticText" uuid="d5fa3e7a-d423-4623-801f-a738bb57ffa9" x="600" y="0" width="60" height="14" fontName="SansSerif" fontSize="9.0" bold="true" hTextAlign="Center">
-			<text><![CDATA[SL]]></text>
-		</element>
-		<element kind="staticText" uuid="2eab94d4-dbb2-463e-817e-30c425a8e95b" x="660" y="0" width="142" height="14" fontName="SansSerif" fontSize="9.0" bold="true">
-			<text><![CDATA[Phòng ban]]></text>
-		</element>
-	</columnHeader>
-	<detail>
-		<band height="18">
-			<element kind="textField" uuid="72af8402-6bd5-440e-80ab-99237646e39b" x="0" y="0" width="90" height="14" fontName="SansSerif" fontSize="9.0">
-				<expression><![CDATA[$F{requestNumber}]]></expression>
-			</element>
-			<element kind="textField" uuid="df9c91f2-52d2-4932-b4f1-b9908dc5478d" x="90" y="0" width="170" height="14" fontName="SansSerif" fontSize="9.0">
-				<expression><![CDATA[$F{title}]]></expression>
-			</element>
-			<element kind="textField" uuid="72f71ec9-f7a3-48d1-ae69-312ee0f07081" x="260" y="0" width="120" height="14" fontName="SansSerif" fontSize="9.0">
-				<expression><![CDATA[$F{requestedBy}]]></expression>
-			</element>
-			<element kind="textField" uuid="65d123fc-bbbc-490e-9d38-b95f7722b058" x="380" y="0" width="120" height="14" fontName="SansSerif" fontSize="9.0">
-				<expression><![CDATA[$F{requestedDate}]]></expression>
-			</element>
-			<element kind="textField" uuid="59b8d8f5-fb10-481f-9823-f98cd7077c43" x="500" y="0" width="100" height="14" fontName="SansSerif" fontSize="9.0" hTextAlign="Right">
-				<expression><![CDATA[$F{totalAmount}]]></expression>
-			</element>
-			<element kind="textField" uuid="795f6858-a058-4040-b55d-406bd6cbebbe" x="600" y="0" width="60" height="14" fontName="SansSerif" fontSize="9.0" hTextAlign="Center">
-				<expression><![CDATA[$F{itemCount}]]></expression>
-			</element>
-			<element kind="textField" uuid="3e145558-2831-4587-9162-d8eeb9374eae" x="660" y="0" width="142" height="14" fontName="SansSerif" fontSize="9.0">
-				<expression><![CDATA[$F{departmentName}]]></expression>
-			</element>
-		</band>
-	</detail>
-	<pageFooter height="16">
-		<element kind="textField" uuid="97d4b786-8959-478f-b7cc-48a42695b920" x="0" y="0" width="200" height="12" fontName="SansSerif" fontSize="8.0">
-			<expression><![CDATA[$P{generatedBy}]]></expression>
-		</element>
-		<element kind="textField" uuid="7248b14f-1eef-455d-9df7-b905a7580069" x="720" y="0" width="82" height="12" fontName="SansSerif" fontSize="8.0" hTextAlign="Right">
-			<expression><![CDATA["Trang " + $V{PAGE_NUMBER}]]></expression>
-		</element>
-	</pageFooter>
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="RequestsByStatus"
+              language="java"
+              pageWidth="842"
+              pageHeight="595"
+              orientation="Landscape"
+              whenNoDataType="AllSectionsNoDetail"
+              columnWidth="802"
+              leftMargin="20"
+              rightMargin="20"
+              topMargin="20"
+              bottomMargin="20">
+    <parameter name="reportTitle" class="java.lang.String"/>
+    <parameter name="reportDate" class="java.util.Date"/>
+    <parameter name="generatedBy" class="java.lang.String"/>
+    <parameter name="filterStatus" class="java.lang.String"/>
+
+    <field name="requestNumber" class="java.lang.String"/>
+    <field name="title" class="java.lang.String"/>
+    <field name="requestedBy" class="java.lang.String"/>
+    <field name="requestedDate" class="java.time.LocalDateTime"/>
+    <field name="status" class="java.lang.String"/>
+    <field name="totalAmount" class="java.math.BigDecimal"/>
+    <field name="currency" class="java.lang.String"/>
+    <field name="departmentName" class="java.lang.String"/>
+    <field name="itemCount" class="java.lang.Integer"/>
+
+    <title>
+        <band height="64">
+            <textField>
+                <reportElement x="0" y="0" width="802" height="24"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="18" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{reportTitle}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="30" width="420" height="14"/>
+                <textElement>
+                    <font fontName="SansSerif" size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Ngày xuất: " + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format($P{reportDate})]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="462" y="30" width="340" height="14"/>
+                <textElement textAlignment="Right">
+                    <font fontName="SansSerif" size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Người xuất: " + $P{generatedBy}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="48" width="802" height="14"/>
+                <textElement>
+                    <font fontName="SansSerif" size="9" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Bộ lọc trạng thái: " + ($P{filterStatus} == null ? "Tất cả" : $P{filterStatus})]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <columnHeader>
+        <band height="20">
+            <rectangle>
+                <reportElement x="0" y="0" width="802" height="20" backcolor="#E8EEF7"/>
+                <graphicElement/>
+            </rectangle>
+            <staticText>
+                <reportElement x="0" y="3" width="90" height="14"/>
+                <textElement textAlignment="Center">
+                    <font fontName="SansSerif" size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Mã YC]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="90" y="3" width="180" height="14"/>
+                <textElement>
+                    <font fontName="SansSerif" size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Tiêu đề]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="270" y="3" width="105" height="14"/>
+                <textElement>
+                    <font fontName="SansSerif" size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Người yêu cầu]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="375" y="3" width="105" height="14"/>
+                <textElement>
+                    <font fontName="SansSerif" size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Ngày yêu cầu]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="480" y="3" width="85" height="14"/>
+                <textElement>
+                    <font fontName="SansSerif" size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Trạng thái]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="565" y="3" width="102" height="14"/>
+                <textElement textAlignment="Right">
+                    <font fontName="SansSerif" size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Tổng tiền]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="667" y="3" width="45" height="14"/>
+                <textElement textAlignment="Center">
+                    <font fontName="SansSerif" size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[SL]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="712" y="3" width="90" height="14"/>
+                <textElement>
+                    <font fontName="SansSerif" size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Phòng ban]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="20">
+            <line>
+                <reportElement x="0" y="19" width="802" height="1" forecolor="#D7DEE8"/>
+            </line>
+            <textField>
+                <reportElement x="0" y="3" width="90" height="14"/>
+                <textElement textAlignment="Center">
+                    <font fontName="SansSerif" size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{requestNumber}]]></textFieldExpression>
+            </textField>
+            <textField isStretchWithOverflow="true">
+                <reportElement x="90" y="3" width="180" height="14"/>
+                <textElement>
+                    <font fontName="SansSerif" size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{title}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="270" y="3" width="105" height="14"/>
+                <textElement>
+                    <font fontName="SansSerif" size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{requestedBy}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="375" y="3" width="105" height="14"/>
+                <textElement>
+                    <font fontName="SansSerif" size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{requestedDate} == null ? "" : $F{requestedDate}.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="480" y="3" width="85" height="14"/>
+                <textElement>
+                    <font fontName="SansSerif" size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{status}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00">
+                <reportElement x="565" y="3" width="102" height="14"/>
+                <textElement textAlignment="Right">
+                    <font fontName="SansSerif" size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{totalAmount}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="667" y="3" width="45" height="14"/>
+                <textElement textAlignment="Center">
+                    <font fontName="SansSerif" size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{itemCount}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="712" y="3" width="90" height="14"/>
+                <textElement>
+                    <font fontName="SansSerif" size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{departmentName}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+    <pageFooter>
+        <band height="18">
+            <line>
+                <reportElement x="0" y="0" width="802" height="1" forecolor="#D7DEE8"/>
+            </line>
+            <textField>
+                <reportElement x="0" y="4" width="300" height="12"/>
+                <textElement>
+                    <font fontName="SansSerif" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Filter: " + ($P{filterStatus} == null ? "Tất cả" : $P{filterStatus})]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="690" y="4" width="112" height="12"/>
+                <textElement textAlignment="Right">
+                    <font fontName="SansSerif" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Trang " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+
+    <noData>
+        <band height="80">
+            <staticText>
+                <reportElement x="0" y="20" width="802" height="20"/>
+                <textElement textAlignment="Center">
+                    <font fontName="SansSerif" size="12" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Không có dữ liệu phù hợp với bộ lọc hiện tại]]></text>
+            </staticText>
+        </band>
+    </noData>
 </jasperReport>

@@ -27,6 +27,11 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     }
 
     @Override
+    public Optional<User> findByIdWithRolesAndPermissions(UUID id) {
+        return repository.findByIdWithRolesAndPermissions(id);
+    }
+
+    @Override
     public Optional<User> findByUsername(String username) {
         return repository.findByUsername(username);
     }
@@ -34,6 +39,11 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     @Override
     public Optional<User> findByUsernameForUpdate(String username) {
         return repository.findByUsernameForUpdate(username);
+    }
+
+    @Override
+    public Optional<User> findByUsernameWithRolesAndPermissions(String username) {
+        return repository.findByUsernameWithRolesAndPermissions(username);
     }
 
     @Override

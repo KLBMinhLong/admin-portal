@@ -3,6 +3,7 @@ package com.adminportal.domain.application.usecase;
 import com.adminportal.domain.application.dto.PurchasingRequestDto;
 import com.adminportal.domain.application.mapper.PurchasingRequestMapper;
 import com.adminportal.domain.domain.entity.PurchasingRequest;
+import com.adminportal.domain.domain.exception.ResourceNotFoundException;
 import com.adminportal.domain.domain.event.RequestSubmittedEvent;
 import com.adminportal.domain.domain.repository.PurchasingRequestRepository;
 import com.adminportal.domain.infrastructure.camunda.WorkflowService;
@@ -39,7 +40,7 @@ public class SubmitRequestUseCase {
     public PurchasingRequestDto execute(Long requestId, String username) {
         // 1. Fetch request
         PurchasingRequest request = requestRepository.findById(requestId)
-            .orElseThrow(() -> new IllegalArgumentException("Request not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Request not found: " + requestId));
 
         // 2. State validation & status change
         // UC-REQ-02 flow: DRAFT -> PENDING_APPROVAL and add steps
