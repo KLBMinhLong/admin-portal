@@ -26,8 +26,9 @@ public class ApiKeyFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         String uri = request.getRequestURI();
 
-        // Skip health/actuator endpoints
-        if (uri.contains("/actuator") || uri.contains("/health")) {
+        // Skip health/actuator endpoints, and Camunda web/rest endpoints
+        if (uri.contains("/actuator") || uri.contains("/health") || 
+            uri.contains("/engine-rest") || uri.contains("/camunda")) {
             filterChain.doFilter(request, response);
             return;
         }

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.2.0">
+  <bpmn:process id="PurchasingRequestApproval" name="Quy trình phê duyệt yêu cầu mua sắm nâng cao" isExecutable="true" camunda:historyTimeToLive="P30D">
+    <bpmn:startEvent id="StartEvent_Submit" name="Request Submitted">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_Submit" targetRef="Task_DepartmentLead" />
+    <bpmn:userTask id="Task_DepartmentLead" name="Department Lead phê duyệt" camunda:candidateGroups="DEPARTMENT_LEAD">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_AfterDeptLead</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_DeptLead" name="Duyệt?">
+      <bpmn:incoming>Flow_AfterDeptLead</bpmn:incoming>
+      <bpmn:outgoing>Flow_DeptApproved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_DeptRejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_AfterDeptLead" sourceRef="Task_DepartmentLead" targetRef="Gateway_DeptLead" />
+    <bpmn:exclusiveGateway id="Gateway_AmountCheck" name="Kiểm tra số tiền?">
+      <bpmn:incoming>Flow_DeptApproved</bpmn:incoming>
+      <bpmn:outgoing>Flow_UnderThreshold</bpmn:outgoing>
+      <bpmn:outgoing>Flow_OverThreshold</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_DeptApproved" name="Yes" sourceRef="Gateway_DeptLead" targetRef="Gateway_AmountCheck">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="Task_FinanceManager" name="Finance Manager phê duyệt" camunda:candidateGroups="FINANCE_MANAGER">
+      <bpmn:incoming>Flow_OverThreshold</bpmn:incoming>
+      <bpmn:outgoing>Flow_AfterFinance</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_OverThreshold" name="&gt;= 50,000,000" sourceRef="Gateway_AmountCheck" targetRef="Task_FinanceManager">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${totalAmount &gt;= 50000000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="Gateway_Finance" name="Duyệt?">
+      <bpmn:incoming>Flow_AfterFinance</bpmn:incoming>
+      <bpmn:outgoing>Flow_FinanceApproved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_FinanceRejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_AfterFinance" sourceRef="Task_FinanceManager" targetRef="Gateway_Finance" />
+    <bpmn:sequenceFlow id="Flow_FinanceApproved" name="Yes" sourceRef="Gateway_Finance" targetRef="Activity_NotifySuccess">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_UnderThreshold" name="&lt; 50,000,000" sourceRef="Gateway_AmountCheck" targetRef="Activity_NotifySuccess">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${totalAmount &lt; 50000000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="EndEvent_Approved" name="Kết thúc - Đã duyệt">
+      <bpmn:incoming>Flow_FinalEnd</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_FinalEnd" sourceRef="Activity_NotifySuccess" targetRef="EndEvent_Approved" />
+    <bpmn:serviceTask id="Activity_NotifySuccess" name="Thông báo kết quả thành công" camunda:expression="${workflowService.logInfo('Request Approved Success')}">
+      <bpmn:incoming>Flow_FinanceApproved</bpmn:incoming>
+      <bpmn:incoming>Flow_UnderThreshold</bpmn:incoming>
+      <bpmn:outgoing>Flow_FinalEnd</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_Rejected" name="Kết thúc - Bị từ chối">
+      <bpmn:incoming>Flow_DeptRejected</bpmn:incoming>
+      <bpmn:incoming>Flow_FinanceRejected</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_DeptRejected" name="No" sourceRef="Gateway_DeptLead" targetRef="EndEvent_Rejected">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_FinanceRejected" name="No" sourceRef="Gateway_Finance" targetRef="EndEvent_Rejected">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="PurchasingRequestApproval">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_Submit">
+        <dc:Bounds x="152" y="199" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="142" y="242" width="56" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_DeptLead_di" bpmnElement="Task_DepartmentLead">
+        <dc:Bounds x="240" y="177" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_DeptLead_di" bpmnElement="Gateway_DeptLead" isMarkerVisible="true">
+        <dc:Bounds x="395" y="192" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="403" y="249" width="35" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_AmountCheck_di" bpmnElement="Gateway_AmountCheck" isMarkerVisible="true">
+        <dc:Bounds x="505" y="192" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="490" y="249" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Finance_di" bpmnElement="Task_FinanceManager">
+        <dc:Bounds x="640" y="177" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Finance_di" bpmnElement="Gateway_Finance" isMarkerVisible="true">
+        <dc:Bounds x="805" y="192" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="813" y="249" width="35" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_NotifySuccess_di" bpmnElement="Activity_NotifySuccess">
+        <dc:Bounds x="920" y="177" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Approved_di" bpmnElement="EndEvent_Approved">
+        <dc:Bounds x="1082" y="199" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1066" y="242" width="69" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Rejected_di" bpmnElement="EndEvent_Rejected">
+        <dc:Bounds x="402" y="82" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="385" y="52" width="71" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="188" y="217" />
+        <di:waypoint x="240" y="217" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AfterDeptLead_di" bpmnElement="Flow_AfterDeptLead">
+        <di:waypoint x="340" y="217" />
+        <di:waypoint x="395" y="217" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DeptApproved_di" bpmnElement="Flow_DeptApproved">
+        <di:waypoint x="445" y="217" />
+        <di:waypoint x="505" y="217" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="466" y="199" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_OverThreshold_di" bpmnElement="Flow_OverThreshold">
+        <di:waypoint x="555" y="217" />
+        <di:waypoint x="640" y="217" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="564" y="199" width="68" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AfterFinance_di" bpmnElement="Flow_AfterFinance">
+        <di:waypoint x="740" y="217" />
+        <di:waypoint x="805" y="217" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FinanceApproved_di" bpmnElement="Flow_FinanceApproved">
+        <di:waypoint x="855" y="217" />
+        <di:waypoint x="920" y="217" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="879" y="199" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_UnderThreshold_di" bpmnElement="Flow_UnderThreshold">
+        <di:waypoint x="530" y="242" />
+        <di:waypoint x="530" y="320" />
+        <di:waypoint x="970" y="320" />
+        <di:waypoint x="970" y="257" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="546" y="283" width="68" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FinalEnd_di" bpmnElement="Flow_FinalEnd">
+        <di:waypoint x="1020" y="217" />
+        <di:waypoint x="1082" y="217" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DeptRejected_di" bpmnElement="Flow_DeptRejected">
+        <di:waypoint x="420" y="192" />
+        <di:waypoint x="420" y="118" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="428" y="152" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FinanceRejected_di" bpmnElement="Flow_FinanceRejected">
+        <di:waypoint x="830" y="192" />
+        <di:waypoint x="830" y="100" />
+        <di:waypoint x="438" y="100" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="838" y="143" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

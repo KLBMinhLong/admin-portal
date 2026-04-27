@@ -60,6 +60,9 @@ public class PurchasingRequest {
     @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PurchaseItem> items = new ArrayList<>();
 
+    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ApprovalStep> approvalSteps = new ArrayList<>();
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -102,7 +105,70 @@ public class PurchasingRequest {
                                     requestedBy, departmentId, costCenter, currency);
     }
 
+    @Version
+    @Column(name = "version")
+    private Long version;
+
     // ──────── Domain behaviour ────────
+
+    /**
+     * Submit request: kiểm tra điều kiện và chuyển sang trạng thái PENDING_APPROVAL.
+     */
+    public void submit() {
+        if (this.status != RequestStatus.DRAFT) {
+            throw new IllegalStateException("Only DRAFT requests can be submitted");
+        }
+        if (this.items.isEmpty()) {
+            throw new IllegalStateException("Cannot submit request without any items");
+        }
+        
+        // Step 1 luôn là Department Lead
+        addApprovalStep(new ApprovalStep(1, "DEPARTMENT_LEAD"));
+        
+        // Step 2: Finance Manager chỉ cần khi số tiền >= 50,000,000 VND
+        if (this.totalAmount.compareTo(new java.math.BigDecimal("50000000")) >= 0) {
+            addApprovalStep(new ApprovalStep(2, "FINANCE_MANAGER"));
+        }
+        
+        this.status = RequestStatus.PENDING_APPROVAL;
+    }
+
+    private void addApprovalStep(ApprovalStep step) {
+        step.assignTo(this);
+        this.approvalSteps.add(step);
+    }
+
+    public ApprovalStep getCurrentPendingStep() {
+        return this.approvalSteps.stream()
+                .filter(step -> step.getStatus() == ApprovalStatus.PENDING)
+                .min(java.util.Comparator.comparingInt(ApprovalStep::getStepOrder))
+                .orElseThrow(() -> new IllegalStateException("No pending approval steps found"));
+    }
+
+    public void processApproval(String username, String comment, boolean isApproved) {
+        if (this.status != RequestStatus.PENDING_APPROVAL) {
+            throw new IllegalStateException("Request is not in PENDING_APPROVAL state");
+        }
+
+        ApprovalStep currentStep = getCurrentPendingStep();
+        // In a real app, verify if 'username' has the role matching currentStep.getRoleName()
+        
+        if (isApproved) {
+            currentStep.approve(username, comment);
+            // Kiểm tra xem còn step pending nào không
+            boolean hasMoreSteps = this.approvalSteps.stream()
+                    .anyMatch(step -> step.getStatus() == ApprovalStatus.PENDING);
+            if (!hasMoreSteps) {
+                this.status = RequestStatus.APPROVED;
+            }
+        } else {
+            if (comment == null || comment.trim().isEmpty()) {
+                throw new IllegalArgumentException("Rejecting a request requires a comment/remark");
+            }
+            currentStep.reject(username, comment);
+            this.status = RequestStatus.REJECTED;
+        }
+    }
 
     /**
      * Thêm item vào request và cập nhật tổng tiền.
@@ -139,4 +205,5 @@ public class PurchasingRequest {
     public Instant getUpdatedAt()        { return updatedAt; }
     public String getCreatedBy()         { return createdBy; }
     public String getUpdatedBy()         { return updatedBy; }
+    public List<ApprovalStep> getApprovalSteps() { return approvalSteps; }
 }
