@@ -3,6 +3,7 @@ package com.adminportal.domain.application.mapper;
 import com.adminportal.domain.application.dto.PurchasingRequestDto;
 import com.adminportal.domain.domain.entity.PurchaseItem;
 import com.adminportal.domain.domain.entity.PurchasingRequest;
+import com.adminportal.domain.domain.entity.ApprovalStep;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -21,4 +22,9 @@ public interface PurchasingRequestMapper {
     PurchasingRequestDto.PurchaseItemResponseDto toItemDto(PurchaseItem item);
 
     List<PurchasingRequestDto.PurchaseItemResponseDto> toItemDtoList(List<PurchaseItem> items);
+
+    @Mapping(target = "status", expression = "java(step.getStatus().name())")
+    PurchasingRequestDto.ApprovalStepResponseDto toApprovalStepDto(ApprovalStep step);
+
+    List<PurchasingRequestDto.ApprovalStepResponseDto> toApprovalStepDtoList(List<ApprovalStep> steps);
 }

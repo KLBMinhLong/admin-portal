@@ -21,6 +21,7 @@ public record PurchasingRequestDto(
     Long departmentId,
     String costCenter,
     List<PurchaseItemResponseDto> items,
+    List<ApprovalStepResponseDto> approvalSteps,
     Instant createdAt,
     String createdBy
 ) {
@@ -32,5 +33,15 @@ public record PurchasingRequestDto(
         BigDecimal unitPrice,
         BigDecimal totalPrice,
         String specification
+    ) {}
+
+    public record ApprovalStepResponseDto(
+        Long id,
+        int stepOrder,
+        String roleName,
+        String approver,
+        String status,
+        String comment,
+        Instant completedAt
     ) {}
 }
