@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="RequestDetail"
+              language="java"
+              pageWidth="595"
+              pageHeight="842"
+              columnWidth="555"
+              leftMargin="20"
+              rightMargin="20"
+              topMargin="20"
+              bottomMargin="20"
+              whenNoDataType="AllSectionsNoDetail">
+
+    <parameter name="reportTitle" class="java.lang.String"/>
+    <parameter name="reportDate" class="java.util.Date"/>
+    <parameter name="generatedBy" class="java.lang.String"/>
+
+    <field name="requestNumber" class="java.lang.String"/>
+    <field name="title" class="java.lang.String"/>
+    <field name="description" class="java.lang.String"/>
+    <field name="status" class="java.lang.String"/>
+    <field name="requestedBy" class="java.lang.String"/>
+    <field name="requestedDate" class="java.time.LocalDateTime"/>
+    <field name="departmentName" class="java.lang.String"/>
+    <field name="costCenter" class="java.lang.String"/>
+    <field name="totalAmount" class="java.math.BigDecimal"/>
+    <field name="currency" class="java.lang.String"/>
+    <field name="itemsSummary" class="java.lang.String"/>
+    <field name="approvalsSummary" class="java.lang.String"/>
+    <field name="itemCount" class="java.lang.Integer"/>
+    <field name="approvalCount" class="java.lang.Integer"/>
+
+    <title>
+        <band height="72">
+            <staticText>
+                <reportElement x="0" y="0" width="555" height="20"/>
+                <textElement textAlignment="Center">
+                    <font fontName="SansSerif" size="16" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Chi tiết Yêu cầu Mua sắm]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="0" y="24" width="300" height="14"/>
+                <textElement><font fontName="SansSerif" size="9"/></textElement>
+                <textFieldExpression><![CDATA[$P{reportDate}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="345" y="24" width="210" height="14"/>
+                <textElement textAlignment="Right"><font fontName="SansSerif" size="9"/></textElement>
+                <textFieldExpression><![CDATA[$P{generatedBy}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <detail>
+        <band height="390">
+            <staticText><reportElement x="0" y="0" width="100" height="14"/><textElement><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[Mã YC:]]></text></staticText>
+            <textField><reportElement x="110" y="0" width="220" height="14"/><textElement><font fontName="SansSerif" size="9"/></textElement><textFieldExpression><![CDATA[$F{requestNumber}]]></textFieldExpression></textField>
+
+            <staticText><reportElement x="0" y="18" width="100" height="14"/><textElement><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[Trạng thái:]]></text></staticText>
+            <textField><reportElement x="110" y="18" width="220" height="14"/><textElement><font fontName="SansSerif" size="9"/></textElement><textFieldExpression><![CDATA[$F{status}]]></textFieldExpression></textField>
+
+            <staticText><reportElement x="0" y="36" width="100" height="14"/><textElement><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[Tiêu đề:]]></text></staticText>
+            <textField><reportElement x="110" y="36" width="445" height="14"/><textElement><font fontName="SansSerif" size="9"/></textElement><textFieldExpression><![CDATA[$F{title}]]></textFieldExpression></textField>
+
+            <staticText><reportElement x="0" y="54" width="100" height="14"/><textElement><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[Mô tả:]]></text></staticText>
+            <textField><reportElement x="110" y="54" width="445" height="30"/><textElement><font fontName="SansSerif" size="8"/></textElement><textFieldExpression><![CDATA[$F{description}]]></textFieldExpression></textField>
+
+            <staticText><reportElement x="0" y="90" width="100" height="14"/><textElement><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[Người yêu cầu:]]></text></staticText>
+            <textField><reportElement x="110" y="90" width="220" height="14"/><textElement><font fontName="SansSerif" size="9"/></textElement><textFieldExpression><![CDATA[$F{requestedBy}]]></textFieldExpression></textField>
+
+            <staticText><reportElement x="0" y="108" width="100" height="14"/><textElement><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[Ngày YC:]]></text></staticText>
+            <textField><reportElement x="110" y="108" width="220" height="14"/><textElement><font fontName="SansSerif" size="9"/></textElement><textFieldExpression><![CDATA[$F{requestedDate}]]></textFieldExpression></textField>
+
+            <staticText><reportElement x="0" y="126" width="100" height="14"/><textElement><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[Phòng ban:]]></text></staticText>
+            <textField><reportElement x="110" y="126" width="220" height="14"/><textElement><font fontName="SansSerif" size="9"/></textElement><textFieldExpression><![CDATA[$F{departmentName}]]></textFieldExpression></textField>
+
+            <staticText><reportElement x="0" y="144" width="100" height="14"/><textElement><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[Cost Center:]]></text></staticText>
+            <textField><reportElement x="110" y="144" width="220" height="14"/><textElement><font fontName="SansSerif" size="9"/></textElement><textFieldExpression><![CDATA[$F{costCenter}]]></textFieldExpression></textField>
+
+            <staticText><reportElement x="0" y="162" width="100" height="14"/><textElement><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[Tổng tiền:]]></text></staticText>
+            <textField><reportElement x="110" y="162" width="220" height="14"/><textElement><font fontName="SansSerif" size="9"/></textElement><textFieldExpression><![CDATA[$F{totalAmount}]]></textFieldExpression></textField>
+
+            <staticText><reportElement x="0" y="180" width="100" height="14"/><textElement><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[Tiền tệ:]]></text></staticText>
+            <textField><reportElement x="110" y="180" width="220" height="14"/><textElement><font fontName="SansSerif" size="9"/></textElement><textFieldExpression><![CDATA[$F{currency}]]></textFieldExpression></textField>
+
+            <staticText><reportElement x="0" y="210" width="200" height="14"/><textElement><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[Items summary:]]></text></staticText>
+            <textField><reportElement x="0" y="226" width="555" height="60"/><textElement><font fontName="SansSerif" size="8"/></textElement><textFieldExpression><![CDATA[$F{itemsSummary}]]></textFieldExpression></textField>
+
+            <staticText><reportElement x="0" y="292" width="200" height="14"/><textElement><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[Approvals summary:]]></text></staticText>
+            <textField><reportElement x="0" y="308" width="555" height="60"/><textElement><font fontName="SansSerif" size="8"/></textElement><textFieldExpression><![CDATA[$F{approvalsSummary}]]></textFieldExpression></textField>
+
+            <textField><reportElement x="0" y="372" width="555" height="12"/><textElement textAlignment="Right"><font fontName="SansSerif" size="8"/></textElement><textFieldExpression><![CDATA["Items: " + $F{itemCount} + " | Approvals: " + $F{approvalCount}]]></textFieldExpression></textField>
+        </band>
+    </detail>
+
+</jasperReport>

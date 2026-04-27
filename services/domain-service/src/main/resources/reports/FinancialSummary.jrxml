@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="FinancialSummary"
+              language="java"
+              pageWidth="842"
+              pageHeight="595"
+              columnWidth="802"
+              leftMargin="20"
+              rightMargin="20"
+              topMargin="20"
+              bottomMargin="20"
+              whenNoDataType="AllSectionsNoDetail">
+
+    <parameter name="reportTitle" class="java.lang.String"/>
+    <parameter name="reportDate" class="java.util.Date"/>
+    <parameter name="generatedBy" class="java.lang.String"/>
+    <parameter name="fromDate" class="java.sql.Date"/>
+    <parameter name="toDate" class="java.sql.Date"/>
+
+    <field name="departmentName" class="java.lang.String"/>
+    <field name="status" class="java.lang.String"/>
+    <field name="requestCount" class="java.lang.Integer"/>
+    <field name="totalAmount" class="java.math.BigDecimal"/>
+    <field name="averageAmount" class="java.math.BigDecimal"/>
+    <field name="currency" class="java.lang.String"/>
+    <field name="itemCount" class="java.lang.Integer"/>
+
+    <title>
+        <band height="72">
+            <staticText>
+                <reportElement x="0" y="0" width="802" height="20"/>
+                <textElement textAlignment="Center">
+                    <font fontName="SansSerif" size="16" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Tóm tắt Tài chính Yêu cầu Mua sắm]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="0" y="24" width="400" height="14"/>
+                <textElement><font fontName="SansSerif" size="9"/></textElement>
+                <textFieldExpression><![CDATA[$P{reportDate}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="420" y="24" width="382" height="14"/>
+                <textElement textAlignment="Right"><font fontName="SansSerif" size="9"/></textElement>
+                <textFieldExpression><![CDATA[$P{generatedBy}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="42" width="802" height="14"/>
+                <textElement><font fontName="SansSerif" size="9"/></textElement>
+                <textFieldExpression><![CDATA[$P{fromDate} + " - " + $P{toDate}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <columnHeader>
+        <band height="20">
+            <staticText><reportElement x="0" y="0" width="180" height="14"/><textElement><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[Phòng ban]]></text></staticText>
+            <staticText><reportElement x="180" y="0" width="120" height="14"/><textElement><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[Trạng thái]]></text></staticText>
+            <staticText><reportElement x="300" y="0" width="90" height="14"/><textElement textAlignment="Center"><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[SL YC]]></text></staticText>
+            <staticText><reportElement x="390" y="0" width="120" height="14"/><textElement textAlignment="Right"><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[Tổng tiền]]></text></staticText>
+            <staticText><reportElement x="510" y="0" width="120" height="14"/><textElement textAlignment="Right"><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[TB]]></text></staticText>
+            <staticText><reportElement x="630" y="0" width="82" height="14"/><textElement textAlignment="Center"><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[SL SP]]></text></staticText>
+            <staticText><reportElement x="712" y="0" width="90" height="14"/><textElement><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[Tiền tệ]]></text></staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="18">
+            <textField><reportElement x="0" y="0" width="180" height="14"/><textElement><font fontName="SansSerif" size="9"/></textElement><textFieldExpression><![CDATA[$F{departmentName}]]></textFieldExpression></textField>
+            <textField><reportElement x="180" y="0" width="120" height="14"/><textElement><font fontName="SansSerif" size="9"/></textElement><textFieldExpression><![CDATA[$F{status}]]></textFieldExpression></textField>
+            <textField><reportElement x="300" y="0" width="90" height="14"/><textElement textAlignment="Center"><font fontName="SansSerif" size="9"/></textElement><textFieldExpression><![CDATA[$F{requestCount}]]></textFieldExpression></textField>
+            <textField><reportElement x="390" y="0" width="120" height="14"/><textElement textAlignment="Right"><font fontName="SansSerif" size="9"/></textElement><textFieldExpression><![CDATA[$F{totalAmount}]]></textFieldExpression></textField>
+            <textField><reportElement x="510" y="0" width="120" height="14"/><textElement textAlignment="Right"><font fontName="SansSerif" size="9"/></textElement><textFieldExpression><![CDATA[$F{averageAmount}]]></textFieldExpression></textField>
+            <textField><reportElement x="630" y="0" width="82" height="14"/><textElement textAlignment="Center"><font fontName="SansSerif" size="9"/></textElement><textFieldExpression><![CDATA[$F{itemCount}]]></textFieldExpression></textField>
+            <textField><reportElement x="712" y="0" width="90" height="14"/><textElement><font fontName="SansSerif" size="9"/></textElement><textFieldExpression><![CDATA[$F{currency}]]></textFieldExpression></textField>
+        </band>
+    </detail>
+
+    <pageFooter>
+        <band height="16">
+            <textField>
+                <reportElement x="0" y="0" width="200" height="12"/>
+                <textElement><font fontName="SansSerif" size="8"/></textElement>
+                <textFieldExpression><![CDATA[$P{generatedBy}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="720" y="0" width="82" height="12"/>
+                <textElement textAlignment="Right"><font fontName="SansSerif" size="8"/></textElement>
+                <textFieldExpression><![CDATA["Trang " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+
+</jasperReport>
