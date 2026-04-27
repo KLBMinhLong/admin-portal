@@ -3,17 +3,44 @@ spring:
     name: gateway-service
   cloud:
     gateway:
+      httpclient:
+        connect-timeout: 3000
+        response-timeout: 5s
       routes:
         - id: auth-service
           uri: ${AUTH_SERVICE_URL:http://localhost:8081}
           predicates:
             - Path=/api/v1/auth/**
-        - id: domain-service
+        - id: request-service
           uri: ${DOMAIN_SERVICE_URL:http://localhost:8082}
           predicates:
-            - Path=/api/v1/**
-      default-filters:
-        - name: RequestRateLimiter
+            - Path=/api/v1/requests/**
+          filters:
+            - name: Retry
+              args:
+                retries: 2
+                methods: GET
+                statuses: BAD_GATEWAY,GATEWAY_TIMEOUT
+        - id: approval-service
+          uri: ${DOMAIN_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/v1/approvals/**
+          filters:
+            - name: Retry
+              args:
+                retries: 2
+                methods: GET
+                statuses: BAD_GATEWAY,GATEWAY_TIMEOUT
+        - id: report-service
+          uri: ${DOMAIN_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/v1/reports/**
+          filters:
+            - name: Retry
+              args:
+                retries: 2
+                methods: GET
+                statuses: BAD_GATEWAY,GATEWAY_TIMEOUT
 server:
   port: 8000
 management:
@@ -23,3 +50,16 @@ management:
         include: health,info
 app:
   api-key: ${API_KEY:changeme}
+  token:
+    secret: ${TOKEN_SECRET:supersecretkey_changeme_in_production_min32chars}
+  auth:
+    session-path: /api/v1/auth/session
+    public-paths:
+      - /api/v1/auth/login
+      - /api/v1/auth/verify-2fa
+      - /api/v1/auth/register
+      - /api/v1/auth/forgot-password
+      - /api/v1/auth/reset-password
+  rate-limit:
+    anonymous-per-minute: ${GATEWAY_ANON_RATE_LIMIT:30}
+    authenticated-per-minute: ${GATEWAY_AUTH_RATE_LIMIT:60}
