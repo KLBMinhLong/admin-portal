@@ -1,0 +1,12 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: http://portal-auth-service:8081
+          predicates:
+            - Path=/api/v1/auth/**
+        - id: domain-service
+          uri: http://portal-domain-service:8082
+          predicates:
+            - Path=/api/v1/**

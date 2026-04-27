@@ -18,15 +18,21 @@ public class AuthController {
     private final LoginUseCase    loginUseCase;
     private final VerifyTwoFactorUseCase verifyTwoFactorUseCase;
     private final LogoutUseCase   logoutUseCase;
+    private final ForgotPasswordUseCase forgotPasswordUseCase;
+    private final ResetPasswordUseCase resetPasswordUseCase;
     private final RegisterUseCase registerUseCase;
 
     public AuthController(LoginUseCase loginUseCase,
                           VerifyTwoFactorUseCase verifyTwoFactorUseCase,
                           LogoutUseCase logoutUseCase,
+                          ForgotPasswordUseCase forgotPasswordUseCase,
+                          ResetPasswordUseCase resetPasswordUseCase,
                           RegisterUseCase registerUseCase) {
         this.loginUseCase = loginUseCase;
         this.verifyTwoFactorUseCase = verifyTwoFactorUseCase;
         this.logoutUseCase = logoutUseCase;
+        this.forgotPasswordUseCase = forgotPasswordUseCase;
+        this.resetPasswordUseCase = resetPasswordUseCase;
         this.registerUseCase = registerUseCase;
     }
 
@@ -47,7 +53,8 @@ public class AuthController {
 
     /** FE dang xuat -> BE cam co token */
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<Void> logout(@RequestHeader("Idempotency-Key") String idempotencyKey,
+                                       @RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
         logoutUseCase.execute(token);
         return ResponseEntity.noContent().build();
@@ -55,12 +62,13 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest req) {
-        // forgotPasswordUseCase.execute(req.email()); -- implement tiep
+        forgotPasswordUseCase.execute(req);
         return ResponseEntity.accepted().build();
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest req) {
+        resetPasswordUseCase.execute(req);
         return ResponseEntity.ok().build();
     }
 }

@@ -43,7 +43,8 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
         validateUniqueUser(normalizedUsername, normalizedEmail);
 
         String passwordHash = passwordEncoder.encode(request.password());
-        User newUser = User.create(normalizedUsername, normalizedEmail, passwordHash, DEFAULT_ROLE);
+        User newUser = User.create(normalizedUsername, normalizedEmail, passwordHash, DEFAULT_ROLE,
+            request.firstName(), request.lastName());
         User savedUser = userRepository.save(newUser);
 
         UUID verificationToken = UUID.randomUUID();

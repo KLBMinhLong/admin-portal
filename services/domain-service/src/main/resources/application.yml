@@ -26,6 +26,8 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+    baseline-version: 0
+    table: flyway_schema_history_domain
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -80,18 +82,3 @@ app:
     enabled: true
     secret-key: ${ENCRYPT_SECRET:encryptkey_changeme_32chars_1234}
 
----
-spring:
-  config:
-    activate:
-      on-profile: local
-  jpa:
-    show-sql: true
-
----
-spring:
-  config:
-    activate:
-      on-profile: docker
-  datasource:
-    url: ${DB_URL}

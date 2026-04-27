@@ -1,4 +1,4 @@
-# UC-AUTH-04 - Quen mat khau va dat lai
+# UC-AUTH-05 - Quen mat khau va dat lai
 
 ## Goal
 Cho phep user doi mat khau an toan qua email reset link.

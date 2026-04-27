@@ -179,6 +179,8 @@ CREATE INDEX idx_users_active ON users(is_active);
   1. Check user exists & `is_active = true`
   2. Verify password hash
   3. Contact Keycloak custom provider để verify lần nữa (double-check)
+     - Primary provider: database-backed user storage
+     - Remote federation: reserved for future user sources, not in login flow now
   4. Mint JWT token
   5. Save token to DB + Redis (sync)
   6. Check 2FA enabled → if yes, return 2FA verification request

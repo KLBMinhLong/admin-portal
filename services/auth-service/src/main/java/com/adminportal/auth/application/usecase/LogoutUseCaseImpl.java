@@ -32,11 +32,15 @@ public class LogoutUseCaseImpl implements LogoutUseCase {
     @Transactional
     public void execute(String tokenValue) {
         String tokenJti = jwtProvider.parse(tokenValue).jti();
-        tokenRepository.findByTokenJti(tokenJti).ifPresent(token -> {
-            token.revoke();
-            tokenRepository.save(token);
-            tokenCache.evict(tokenJti);
-            log.info("Token revoked on logout for userId={}", token.getUserId());
-        });
+        tokenRepository.findByTokenJti(tokenJti).ifPresentOrElse(token -> {
+            if (token.isActive()) {
+                token.revoke();
+                tokenRepository.save(token);
+                log.info("Token revoked on logout for userId={}", token.getUserId());
+            } else {
+                log.debug("Logout called for already revoked token jti={}", tokenJti);
+            }
+        }, () -> log.debug("Logout called for missing token jti={}", tokenJti));
+        tokenCache.evict(tokenJti);
     }
 }

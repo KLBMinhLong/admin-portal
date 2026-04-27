@@ -1,0 +1,52 @@
+{
+  "id": "adminportal",
+  "realm": "adminportal",
+  "enabled": true,
+  "displayName": "Admin Portal",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": false,
+  "clients": [
+    {
+      "clientId": "auth-service",
+      "name": "Auth Service",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [],
+      "webOrigins": []
+    }
+  ],
+  "components": {
+    "org.keycloak.storage.UserStorageProvider": [
+      {
+        "id": "db-user-provider-01",
+        "name": "AdminPortal Database User Provider",
+        "providerId": "adminportal-db-user-provider",
+        "config": {
+          "jdbcUrl": [
+            "jdbc:postgresql://postgres:5432/adminportal"
+          ],
+          "dbUsername": [
+            "portaluser"
+          ],
+          "dbPassword": [
+            "changeme"
+          ],
+          "dbSchema": [
+            "public"
+          ],
+          "usersTable": [
+            "users"
+          ],
+          "searchable": [
+            "true"
+          ]
+        }
+      }
+    ]
+  }
+}
