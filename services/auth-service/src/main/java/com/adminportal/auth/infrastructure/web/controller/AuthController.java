@@ -3,6 +3,7 @@ package com.adminportal.auth.infrastructure.web.controller;
 import com.adminportal.auth.application.dto.request.*;
 import com.adminportal.auth.application.dto.response.*;
 import com.adminportal.auth.application.port.in.*;
+import com.adminportal.auth.infrastructure.security.Encrypted;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,16 +41,19 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    @Encrypted
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(registerUseCase.execute(req));
     }
 
     @PostMapping("/login")
+    @Encrypted
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
         return ResponseEntity.ok(loginUseCase.execute(req));
     }
 
     @PostMapping("/verify-2fa")
+    @Encrypted
     public ResponseEntity<LoginResponse> verifyTwoFactor(@Valid @RequestBody TwoFactorVerifyRequest req) {
         return ResponseEntity.ok(verifyTwoFactorUseCase.execute(req));
     }
@@ -64,12 +68,14 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
+    @Encrypted
     public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest req) {
         forgotPasswordUseCase.execute(req);
         return ResponseEntity.accepted().build();
     }
 
     @PostMapping("/reset-password")
+    @Encrypted
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest req) {
         resetPasswordUseCase.execute(req);
         return ResponseEntity.ok().build();

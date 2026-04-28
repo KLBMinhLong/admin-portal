@@ -7,6 +7,7 @@ import com.adminportal.domain.application.usecase.CreateRequestUseCase;
 import com.adminportal.domain.application.usecase.SubmitRequestUseCase;
 import com.adminportal.domain.domain.entity.IdempotencyRecord;
 import com.adminportal.domain.infrastructure.cache.IdempotencyService;
+import com.adminportal.domain.infrastructure.security.Encrypted;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
@@ -25,6 +26,7 @@ import java.util.Optional;
  * Rule 17: path = /api/v1/requests, resource plural, no verb.
  */
 @RestController
+@Encrypted
 @RequestMapping("/api/v1/requests")
 public class PurchasingRequestController {
 
