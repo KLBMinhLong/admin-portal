@@ -41,6 +41,10 @@ spring:
                 retries: 2
                 methods: GET
                 statuses: BAD_GATEWAY,GATEWAY_TIMEOUT
+        - id: websocket-service
+          uri: ${DOMAIN_SERVICE_WS_URL:ws://localhost:8082}
+          predicates:
+            - Path=/ws/**
 server:
   port: 8000
 management:

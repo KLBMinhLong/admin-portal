@@ -26,4 +26,9 @@ public class PermissionRepositoryAdapter implements PermissionRepositoryPort {
     public List<Permission> findAllByCodes(Set<String> codes) {
         return repository.findAllByCodeIn(codes);
     }
+
+    @Override
+    public List<Permission> findAll() {
+        return repository.findAll();
+    }
 }

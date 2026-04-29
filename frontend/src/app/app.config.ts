@@ -9,19 +9,21 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 
 import { routes } from './app.routes';
 import { ApiKeyInterceptor } from './core/interceptors/api-key.interceptor';
+import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { IdempotencyInterceptor } from './core/interceptors/idempotency.interceptor';
 import { EncryptionInterceptor } from './core/interceptors/encryption.interceptor';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 /**
  * App configuration (standalone Angular 18).
  *
- * Thứ tự interceptor quan trọng (cho REQUEST):
+ * Thứ tự interceptor cho REQUEST (chạy từ trên xuống):
  *   1. ApiKeyInterceptor      – gắn header x-api-key
- *   2. IdempotencyInterceptor – sinh Idempotency-Key cho POST/PUT/PATCH
- *   3. EncryptionInterceptor  – encrypt body (request) / decrypt body (response)
+ *   2. AuthInterceptor        – gắn header Authorization + handle 401
+ *   3. IdempotencyInterceptor – sinh Idempotency-Key cho POST/PUT/PATCH
+ *   4. EncryptionInterceptor  – encrypt body (request) / decrypt body (response)
  *
- * Interceptor chạy theo thứ tự khai báo cho REQUEST,
- * và ngược lại cho RESPONSE.
+ * Cho RESPONSE → chạy ngược lại (4 → 1).
  */
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -29,9 +31,11 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(withInterceptorsFromDi()),
     provideAnimationsAsync(),
+    provideCharts(withDefaultRegisterables()),
 
-    // Interceptor chain
+    // Interceptor chain (thứ tự quan trọng!)
     { provide: HTTP_INTERCEPTORS, useClass: ApiKeyInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: IdempotencyInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: EncryptionInterceptor, multi: true },
   ],

@@ -1,5 +1,6 @@
 package com.adminportal.auth.application.port.out;
 import com.adminportal.auth.domain.entity.User;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 public interface UserRepositoryPort {
@@ -12,4 +13,5 @@ public interface UserRepositoryPort {
     Optional<User> findByEmail(String email);
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
+    List<User> findAll();
 }

@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import com.adminportal.domain.application.services.RequestCommentService;
+import com.adminportal.domain.application.services.WebSocketNotificationService;
 
 @Service
 public class ProcessApprovalUseCase {
@@ -28,17 +30,23 @@ public class ProcessApprovalUseCase {
     private final WorkflowService workflowService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final RuntimeAuthorizationService runtimeAuthorizationService;
+    private final RequestCommentService commentService;
+    private final WebSocketNotificationService wsService;
 
     public ProcessApprovalUseCase(PurchasingRequestRepository requestRepository,
                                   PurchasingRequestMapper mapper,
                                   WorkflowService workflowService,
                                   KafkaTemplate<String, Object> kafkaTemplate,
-                                  RuntimeAuthorizationService runtimeAuthorizationService) {
+                                  RuntimeAuthorizationService runtimeAuthorizationService,
+                                  RequestCommentService commentService,
+                                  WebSocketNotificationService wsService) {
         this.requestRepository = requestRepository;
         this.mapper = mapper;
         this.workflowService = workflowService;
         this.kafkaTemplate = kafkaTemplate;
         this.runtimeAuthorizationService = runtimeAuthorizationService;
+        this.commentService = commentService;
+        this.wsService = wsService;
     }
 
     @Transactional
@@ -55,6 +63,14 @@ public class ProcessApprovalUseCase {
 
         // 3. Persist
         PurchasingRequest saved = requestRepository.save(request);
+
+        String systemMessage = isApproved ? "Yêu cầu đã được phê duyệt" : "Yêu cầu đã bị từ chối";
+        if (comment != null && !comment.isEmpty()) {
+            systemMessage += " với lý do: " + comment;
+        }
+        commentService.addSystemComment(saved, systemMessage);
+        
+        wsService.sendUserNotification(saved.getRequestedBy(), "Yêu cầu " + saved.getRequestNumber() + " " + (isApproved ? "đã được duyệt" : "đã bị từ chối"));
 
         // 4. Update Camunda Workflow
         try {

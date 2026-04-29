@@ -9,4 +9,5 @@ import java.util.UUID;
 public interface PermissionRepositoryPort {
     List<Permission> findAllByIds(Set<UUID> ids);
     List<Permission> findAllByCodes(Set<String> codes);
+    List<Permission> findAll();
 }

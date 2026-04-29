@@ -47,4 +47,14 @@ public class RoleRepositoryAdapter implements RoleRepositoryPort {
     public Role save(Role role) {
         return repository.save(role);
     }
+
+    @Override
+    public List<Role> findAll() {
+        return repository.findAll();
+    }
+
+    @Override
+    public List<Role> findAllWithPermissions() {
+        return repository.findAllWithPermissions();
+    }
 }

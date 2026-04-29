@@ -4,6 +4,7 @@ import com.adminportal.auth.application.port.out.UserRepositoryPort;
 import com.adminportal.auth.domain.entity.User;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -60,4 +61,10 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     public boolean existsByEmail(String email) {
         return repository.existsByEmail(email);
     }
+
+    @Override
+    public List<User> findAll() {
+        return repository.findAll();
+    }
 }
+

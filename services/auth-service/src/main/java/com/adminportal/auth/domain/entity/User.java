@@ -147,6 +147,21 @@ public class User {
         this.updatedAt = Instant.now();
     }
 
+    public void toggleActive() {
+        this.active = !this.active;
+        this.updatedAt = Instant.now();
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+        this.updatedAt = Instant.now();
+    }
+
+    public void updateRole(String role) {
+        this.role = role;
+        this.updatedAt = Instant.now();
+    }
+
     public Set<String> getPermissionCodes() {
         return roles.stream()
             .filter(Role::isActive)
