@@ -12,6 +12,7 @@ import { ApiKeyInterceptor } from './core/interceptors/api-key.interceptor';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { IdempotencyInterceptor } from './core/interceptors/idempotency.interceptor';
 import { EncryptionInterceptor } from './core/interceptors/encryption.interceptor';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 /**
  * App configuration (standalone Angular 18).
@@ -30,6 +31,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(withInterceptorsFromDi()),
     provideAnimationsAsync(),
+    provideCharts(withDefaultRegisterables()),
 
     // Interceptor chain (thứ tự quan trọng!)
     { provide: HTTP_INTERCEPTORS, useClass: ApiKeyInterceptor, multi: true },
