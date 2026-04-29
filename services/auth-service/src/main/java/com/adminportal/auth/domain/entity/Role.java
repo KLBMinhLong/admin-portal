@@ -72,6 +72,17 @@ public class Role {
         this.updatedAt = Instant.now();
     }
 
+    public void updateInfo(String name, String description) {
+        this.name = name;
+        this.description = description;
+        this.updatedAt = Instant.now();
+    }
+
+    public void toggleActive() {
+        this.active = !this.active;
+        this.updatedAt = Instant.now();
+    }
+
     @PrePersist
     void onCreate() {
         Instant now = Instant.now();

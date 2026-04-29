@@ -105,6 +105,16 @@ import { Subscription } from 'rxjs';
             Người dùng
           </a>
 
+          <a routerLink="/roles/management" routerLinkActive="bg-blue-50 text-blue-600 font-medium"
+            class="flex items-center gap-3 px-3 py-2 text-sm text-slate-600 rounded-lg
+                   hover:bg-slate-50 hover:text-slate-900 transition-colors duration-200 cursor-pointer">
+            <!-- TableCells icon -->
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H18a2.25 2.25 0 01-2.25-2.25v-2.25z" />
+            </svg>
+            Danh sách Role
+          </a>
+
           <a routerLink="/roles/matrix" routerLinkActive="bg-blue-50 text-blue-600 font-medium"
             class="flex items-center gap-3 px-3 py-2 text-sm text-slate-600 rounded-lg
                    hover:bg-slate-50 hover:text-slate-900 transition-colors duration-200 cursor-pointer">
@@ -113,7 +123,7 @@ import { Subscription } from 'rxjs';
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
             </svg>
-            Phân quyền
+            Ma trận Phân quyền
           </a>
 
           <a routerLink="/roles/audit" routerLinkActive="bg-blue-50 text-blue-600 font-medium"

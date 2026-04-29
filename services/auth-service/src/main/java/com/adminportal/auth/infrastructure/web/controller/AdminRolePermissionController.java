@@ -32,13 +32,35 @@ public class AdminRolePermissionController {
     private final RoleRepositoryPort roleRepository;
     private final PermissionRepositoryPort permissionRepository;
     private final RbacAuditLogRepositoryPort auditLogRepository;
+    private final com.adminportal.auth.application.port.in.RoleManagementUseCase roleManagementUseCase;
 
     public AdminRolePermissionController(RoleRepositoryPort roleRepository,
                                          PermissionRepositoryPort permissionRepository,
-                                         RbacAuditLogRepositoryPort auditLogRepository) {
+                                         RbacAuditLogRepositoryPort auditLogRepository,
+                                         com.adminportal.auth.application.port.in.RoleManagementUseCase roleManagementUseCase) {
         this.roleRepository = roleRepository;
         this.permissionRepository = permissionRepository;
         this.auditLogRepository = auditLogRepository;
+        this.roleManagementUseCase = roleManagementUseCase;
+    }
+
+    @org.springframework.web.bind.annotation.PostMapping("/roles")
+    @PreAuthorize("hasAuthority('role.manage')")
+    public ResponseEntity<AdminRoleDto> createRole(@jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody com.adminportal.auth.application.dto.request.AdminRoleRequest request) {
+        return ResponseEntity.ok(roleManagementUseCase.createRole(request));
+    }
+
+    @org.springframework.web.bind.annotation.PatchMapping("/roles/{id}")
+    @PreAuthorize("hasAuthority('role.manage')")
+    public ResponseEntity<AdminRoleDto> updateRole(@org.springframework.web.bind.annotation.PathVariable("id") java.util.UUID roleId,
+                                                 @jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody com.adminportal.auth.application.dto.request.AdminRoleRequest request) {
+        return ResponseEntity.ok(roleManagementUseCase.updateRole(roleId, request));
+    }
+
+    @org.springframework.web.bind.annotation.PatchMapping("/roles/{id}/toggle-active")
+    @PreAuthorize("hasAuthority('role.manage')")
+    public ResponseEntity<AdminRoleDto> toggleRoleActive(@org.springframework.web.bind.annotation.PathVariable("id") java.util.UUID roleId) {
+        return ResponseEntity.ok(roleManagementUseCase.toggleRoleActive(roleId));
     }
 
     @GetMapping("/roles")

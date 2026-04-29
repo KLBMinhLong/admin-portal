@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @Service
 public class AssignRolePermissionsUseCaseImpl implements AssignRolePermissionsUseCase {
 
-    private static final String REQUIRED_PERMISSION = "system.config";
+    private static final String REQUIRED_PERMISSION = "role.manage";
 
     private final RoleRepositoryPort roleRepository;
     private final PermissionRepositoryPort permissionRepository;
@@ -51,24 +51,22 @@ public class AssignRolePermissionsUseCaseImpl implements AssignRolePermissionsUs
             .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + roleId));
 
         Set<Permission> requestedPermissions = resolvePermissions(request);
-        Set<Permission> mergedPermissions = new LinkedHashSet<>(role.getPermissions());
-        Set<Permission> newlyAssignedPermissions = requestedPermissions.stream()
-            .filter(permission -> mergedPermissions.stream().noneMatch(existing -> existing.getId().equals(permission.getId())))
-            .collect(Collectors.toCollection(LinkedHashSet::new));
-
-        mergedPermissions.addAll(requestedPermissions);
-        role.assignPermissions(mergedPermissions);
+        
+        // Replace permissions instead of merging for Matrix UI
+        role.assignPermissions(requestedPermissions);
         Role savedRole = roleRepository.save(role);
 
         String actor = runtimePermissionService.getCurrentUsername();
         Instant assignedAt = Instant.now();
-        newlyAssignedPermissions.forEach(permission -> auditService.record(
+        
+        // Record audit
+        auditService.record(
             actor,
-            "ROLE_PERMISSION_ASSIGNED",
+            "ROLE_PERMISSIONS_UPDATED",
             "ROLE",
             savedRole.getId().toString(),
-            "permission=" + permission.getCode() + ", assigned_by=" + actor + ", assigned_at=" + assignedAt
-        ));
+            "Permissions updated to: " + requestedPermissions.stream().map(Permission::getCode).collect(Collectors.joining(", "))
+        );
 
         return new RolePermissionAssignmentResponse(
             savedRole.getId().toString(),
@@ -106,11 +104,7 @@ public class AssignRolePermissionsUseCaseImpl implements AssignRolePermissionsUs
     }
 
     private void validateRequest(AssignPermissionsRequest request) {
-        boolean hasIds = request.permissionIds() != null && !request.permissionIds().isEmpty();
-        boolean hasCodes = request.permissionCodes() != null && !request.permissionCodes().isEmpty();
-        if (!hasIds && !hasCodes) {
-            throw new IllegalArgumentException("At least one permission id or permission code is required");
-        }
+        // Allow empty requests to clear all permissions
     }
 
     private String normalizeCode(String code) {
