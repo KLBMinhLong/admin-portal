@@ -4,7 +4,9 @@ import com.adminportal.domain.application.dto.ApprovalActionDto;
 import com.adminportal.domain.application.dto.PurchasingRequestDto;
 import com.adminportal.domain.application.mapper.PurchasingRequestMapper;
 import com.adminportal.domain.application.port.out.UserAccessQueryPort;
+import com.adminportal.domain.application.services.RequestCommentService;
 import com.adminportal.domain.application.services.RuntimeAuthorizationService;
+import com.adminportal.domain.application.services.WebSocketNotificationService;
 import com.adminportal.domain.domain.entity.PurchaseItem;
 import com.adminportal.domain.domain.entity.PurchasingRequest;
 import com.adminportal.domain.domain.repository.PurchasingRequestRepository;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.kafka.core.KafkaTemplate;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -40,6 +43,15 @@ class ProcessApprovalUseCaseTest {
     @Mock
     private TaskService taskService;
 
+    @Mock
+    private KafkaTemplate<String, Object> kafkaTemplate;
+
+    @Mock
+    private RequestCommentService commentService;
+
+    @Mock
+    private WebSocketNotificationService wsService;
+
     private ProcessApprovalUseCase useCase;
     private WorkflowService workflowService;
     private RuntimeAuthorizationService runtimeAuthorizationService;
@@ -60,8 +72,10 @@ class ProcessApprovalUseCaseTest {
             requestRepository,
             mapper,
             workflowService,
-            null,
-            runtimeAuthorizationService
+            kafkaTemplate,
+            runtimeAuthorizationService,
+            commentService,
+            wsService
         );
     }
 

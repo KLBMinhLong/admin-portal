@@ -10,4 +10,4 @@ FROM quay.io/keycloak/keycloak:24.0
 COPY --from=provider-builder /workspace/providers/target/adminportal-keycloak-providers-1.0.0-SNAPSHOT.jar /opt/keycloak/providers/
 COPY realms /opt/keycloak/data/import
 
-RUN /opt/keycloak/bin/kc.sh build
+RUN /opt/keycloak/bin/kc.sh build --health-enabled=true
