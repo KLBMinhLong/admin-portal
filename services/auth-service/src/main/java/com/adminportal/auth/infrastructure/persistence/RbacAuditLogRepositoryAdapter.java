@@ -17,4 +17,9 @@ public class RbacAuditLogRepositoryAdapter implements RbacAuditLogRepositoryPort
     public RbacAuditLog save(RbacAuditLog auditLog) {
         return repository.save(auditLog);
     }
+
+    @Override
+    public java.util.List<RbacAuditLog> findTop50ByOrderByCreatedAtDesc() {
+        return repository.findTop50ByOrderByCreatedAtDesc();
+    }
 }

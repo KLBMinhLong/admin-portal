@@ -13,5 +13,7 @@ public interface RoleRepositoryPort {
     Optional<Role> findByCode(String code);
     List<Role> findAllByIds(Set<UUID> ids);
     List<Role> findAllByCodes(Set<String> codes);
+    List<Role> findAll();
+    List<Role> findAllWithPermissions();
     Role save(Role role);
 }

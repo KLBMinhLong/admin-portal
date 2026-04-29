@@ -20,4 +20,8 @@ interface SpringDataRoleRepository extends JpaRepository<Role, UUID> {
     List<Role> findAllByIdIn(Collection<UUID> ids);
 
     List<Role> findAllByCodeIn(Collection<String> codes);
+
+    @EntityGraph(attributePaths = {"permissions"})
+    @Query("select r from Role r")
+    List<Role> findAllWithPermissions();
 }
