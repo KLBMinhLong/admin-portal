@@ -14,8 +14,7 @@ WORKDIR /app
 # Download OTel agent
 RUN apk add --no-cache curl && \
     curl -fsSL "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar" \
-    -o /app/opentelemetry-javaagent.jar && \
-    apk del curl
+    -o /app/opentelemetry-javaagent.jar
 
 COPY --from=builder /build/target/*.jar /app/auth-service.jar
 

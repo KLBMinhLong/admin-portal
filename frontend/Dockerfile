@@ -1,6 +1,8 @@
 # Stage 1: Build Angular
 FROM node:20-alpine AS builder
 WORKDIR /app
+ENV NG_CLI_ANALYTICS=false
+ENV CI=true
 COPY package*.json ./
 RUN npm ci --silent
 COPY . .
@@ -8,12 +10,13 @@ RUN npm run build -- --configuration production
 
 # Stage 2: Serve voi Nginx
 FROM nginx:alpine
+RUN apk add --no-cache curl
 COPY --from=builder /app/dist/admin-portal-frontend/browser /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy entrypoint script
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 EXPOSE 80
 ENTRYPOINT ["/entrypoint.sh"]
