@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
@@ -163,6 +163,48 @@ import { AuthService } from '@core/auth/auth.service';
           </button>
           <div class="flex-1"></div>
           <div class="flex items-center gap-3">
+            <!-- Notifications -->
+            <div class="relative">
+              <button (click)="toggleNotifications()" class="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors cursor-pointer relative">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                </svg>
+                @if (unreadCount() > 0) {
+                  <span class="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                }
+              </button>
+              
+              <!-- Dropdown -->
+              @if (showNotifications()) {
+                <div class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden z-50">
+                  <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+                    <h3 class="text-sm font-semibold text-slate-900">Thông báo</h3>
+                    <button (click)="markAllAsRead()" class="text-xs font-medium text-blue-600 hover:text-blue-700">Đánh dấu đã đọc</button>
+                  </div>
+                  <div class="max-h-80 overflow-y-auto">
+                    @for (notif of notifications(); track notif.id) {
+                      <div class="px-4 py-3 hover:bg-slate-50 border-b border-slate-50 transition-colors cursor-pointer"
+                           [class.bg-blue-50]="!notif.read">
+                        <p class="text-sm text-slate-800 font-medium">{{ notif.title }}</p>
+                        <p class="text-xs text-slate-500 mt-0.5 line-clamp-2">{{ notif.message }}</p>
+                        <p class="text-[10px] text-slate-400 mt-1.5">{{ notif.time }}</p>
+                      </div>
+                    } @empty {
+                      <div class="px-4 py-8 text-center">
+                        <p class="text-sm text-slate-500">Không có thông báo mới.</p>
+                      </div>
+                    }
+                  </div>
+                  <div class="p-2 border-t border-slate-100 bg-slate-50/50 text-center">
+                    <a href="#" class="text-xs font-medium text-slate-600 hover:text-slate-900">Xem tất cả</a>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Vertical divider -->
+            <div class="w-px h-6 bg-slate-200 mx-1 hidden sm:block"></div>
+
             <span class="text-sm text-slate-500 hidden sm:inline">
               Xin chào, <strong class="text-slate-900">{{ authService.currentUser()?.username }}</strong>
             </span>
@@ -179,6 +221,16 @@ import { AuthService } from '@core/auth/auth.service';
 })
 export class ShellComponent {
   sidebarOpen = signal(false);
+  showNotifications = signal(false);
+
+  // Mock notifications
+  notifications = signal([
+    { id: 1, title: 'Yêu cầu được phê duyệt', message: 'Yêu cầu mua sắm PR-2023-001 của bạn đã được Giám đốc Tài chính phê duyệt.', time: '10 phút trước', read: false },
+    { id: 2, title: 'Cần duyệt yêu cầu', message: 'Bạn có 1 yêu cầu mua sắm mới cần phê duyệt từ phòng IT.', time: '2 giờ trước', read: false },
+    { id: 3, title: 'Có phản hồi mới', message: 'Trưởng phòng đã phản hồi trong yêu cầu PR-2023-002.', time: '1 ngày trước', read: true },
+  ]);
+
+  unreadCount = computed(() => this.notifications().filter(n => !n.read).length);
 
   constructor(public authService: AuthService) {}
 
@@ -186,4 +238,12 @@ export class ShellComponent {
     const name = this.authService.currentUser()?.username || '?';
     return name.charAt(0).toUpperCase();
   };
+
+  toggleNotifications(): void {
+    this.showNotifications.set(!this.showNotifications());
+  }
+
+  markAllAsRead(): void {
+    this.notifications.update(list => list.map(n => ({ ...n, read: true })));
+  }
 }

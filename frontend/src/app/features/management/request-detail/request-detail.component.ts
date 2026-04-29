@@ -4,21 +4,23 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RequestService } from '@core/services/request.service';
 import { PurchasingRequest } from '@core/models/request.models';
 import { StatusBadgeComponent } from '@shared/components/status-badge/status-badge.component';
+import { RequestStepperComponent } from '../components/request-stepper/request-stepper.component';
+import { RequestCommentsComponent } from '../components/request-comments/request-comments.component';
 
 @Component({
   selector: 'app-request-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, StatusBadgeComponent],
+  imports: [CommonModule, RouterLink, StatusBadgeComponent, RequestStepperComponent, RequestCommentsComponent],
   template: `
     @if (loading()) {
       <div class="space-y-4">
         <div class="skeleton h-8 w-64"></div>
+        <div class="skeleton h-24 w-full"></div>
         <div class="skeleton h-48 w-full"></div>
-        <div class="skeleton h-32 w-full"></div>
       </div>
     } @else if (request()) {
       <!-- Header -->
-      <div class="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-4 mb-2">
         <a routerLink="/requests"
           class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer self-start">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -41,6 +43,11 @@ import { StatusBadgeComponent } from '@shared/components/status-badge/status-bad
             @if (submitting()) { Đang gửi... } @else { Gửi phê duyệt }
           </button>
         }
+      </div>
+
+      <!-- Stepper UI -->
+      <div class="mb-6 px-2 sm:px-8">
+        <app-request-stepper [currentStatus]="request()!.status" />
       </div>
 
       @if (successMsg()) {
@@ -102,31 +109,8 @@ import { StatusBadgeComponent } from '@shared/components/status-badge/status-bad
             </div>
           </div>
 
-          <!-- Approval steps -->
-          @if (request()!.approvalSteps?.length) {
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-              <h2 class="text-base font-semibold text-slate-900 mb-4">Lịch sử phê duyệt</h2>
-              <div class="space-y-3">
-                @for (step of request()!.approvalSteps; track step.id) {
-                  <div class="flex items-start gap-3 p-3 rounded-lg border border-slate-100">
-                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0"
-                      [class]="step.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
-                               step.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-500'">
-                      {{ step.stepOrder }}
-                    </div>
-                    <div class="flex-1">
-                      <p class="text-sm font-medium text-slate-900">{{ step.roleName }}</p>
-                      <p class="text-xs text-slate-500">{{ step.approver || 'Chưa xử lý' }}</p>
-                      @if (step.comment) {
-                        <p class="text-xs text-slate-600 mt-1 italic">"{{ step.comment }}"</p>
-                      }
-                    </div>
-                    <app-status-badge [status]="$any(step.status)" />
-                  </div>
-                }
-              </div>
-            </div>
-          }
+          <!-- Comments Thread -->
+          <app-request-comments [requestId]="request()!.id" />
         </div>
 
         <!-- Sidebar info -->
@@ -152,6 +136,29 @@ import { StatusBadgeComponent } from '@shared/components/status-badge/status-bad
               </div>
             </dl>
           </div>
+
+          <!-- Approval steps (Historical logs) -->
+          @if (request()!.approvalSteps?.length) {
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+              <h3 class="text-sm font-semibold text-slate-900 mb-4">Lịch sử phê duyệt</h3>
+              <div class="space-y-3">
+                @for (step of request()!.approvalSteps; track step.id) {
+                  <div class="flex items-start gap-3 p-3 rounded-lg bg-slate-50 border border-slate-100">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center justify-between mb-1">
+                        <p class="text-sm font-medium text-slate-900 truncate">{{ step.roleName }}</p>
+                        <app-status-badge [status]="$any(step.status)" />
+                      </div>
+                      <p class="text-xs text-slate-500">{{ step.approver || 'Chưa xử lý' }}</p>
+                      @if (step.comment) {
+                        <p class="text-xs text-slate-600 mt-1.5 italic">"{{ step.comment }}"</p>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
         </div>
       </div>
     }
