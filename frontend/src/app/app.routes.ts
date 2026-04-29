@@ -30,6 +30,23 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/management/management.routes').then((m) => m.MANAGEMENT_ROUTES),
       },
+      {
+        path: 'approvals',
+        loadChildren: () =>
+          import('./features/approval/approval.routes').then((m) => m.APPROVAL_ROUTES),
+      },
+      {
+        path: 'reports',
+        loadComponent: () =>
+          import('./features/reports/reports.component').then((m) => m.ReportsComponent),
+        title: 'Báo cáo - Purchasing Portal',
+      },
+      {
+        path: 'forbidden',
+        loadComponent: () =>
+          import('./shared/components/forbidden/forbidden.component').then((m) => m.ForbiddenComponent),
+        title: '403 - Purchasing Portal',
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },
