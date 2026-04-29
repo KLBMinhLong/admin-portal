@@ -68,7 +68,7 @@ import { RequestCommentsComponent } from '../components/request-comments/request
           <!-- Items table -->
           <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200">
-              <h2 class="text-base font-semibold text-slate-900">Danh sách hàng hóa ({{ request()!.items?.length || 0 }})</h2>
+              <h2 class="text-base font-semibold text-slate-900">Danh sách hàng hóa ({{ request()!.items.length || 0 }})</h2>
             </div>
             <div class="overflow-x-auto">
               <table class="w-full">
@@ -138,7 +138,7 @@ import { RequestCommentsComponent } from '../components/request-comments/request
           </div>
 
           <!-- Approval steps (Historical logs) -->
-          @if (request()!.approvalSteps?.length) {
+          @if (request()!.approvalSteps.length) {
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
               <h3 class="text-sm font-semibold text-slate-900 mb-4">Lịch sử phê duyệt</h3>
               <div class="space-y-3">

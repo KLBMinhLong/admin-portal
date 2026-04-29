@@ -1,0 +1,40 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+
+export interface ProfileDto {
+  username: string;
+  email: string;
+  role: string;
+  firstName: string;
+  lastName: string;
+  twoFactorEnabled: boolean;
+  createdAt: string;
+}
+
+export interface Toggle2faResponse {
+  enabled: boolean;
+  qrCodeImage: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ProfileService {
+  private apiUrl = `${environment.apiBaseUrl}/profile`;
+
+  constructor(private http: HttpClient) {}
+
+  getProfile(): Observable<ProfileDto> {
+    return this.http.get<ProfileDto>(this.apiUrl);
+  }
+
+  changePassword(data: any): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/change-password`, data);
+  }
+
+  toggle2fa(): Observable<Toggle2faResponse> {
+    return this.http.post<Toggle2faResponse>(`${this.apiUrl}/2fa/toggle`, {});
+  }
+}

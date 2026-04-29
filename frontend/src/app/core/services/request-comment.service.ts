@@ -16,7 +16,7 @@ export interface CommentDto {
   providedIn: 'root'
 })
 export class RequestCommentService {
-  private apiUrl = `${environment.apiUrl}/requests`;
+  private apiUrl = `${environment.apiBaseUrl}/requests`;
 
   constructor(private http: HttpClient) {}
 

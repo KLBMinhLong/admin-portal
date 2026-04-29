@@ -13,7 +13,7 @@ export class WebsocketService {
     this.rxStomp = new RxStomp();
     
     // Gateway URL is http://localhost:8000, so WS is ws://localhost:8000/ws
-    const brokerURL = environment.apiUrl.replace('http', 'ws').replace('/api/v1', '/ws');
+    const brokerURL = environment.apiBaseUrl.replace('http', 'ws').replace('/api/v1', '/ws');
 
     this.rxStomp.configure({
       brokerURL: brokerURL,

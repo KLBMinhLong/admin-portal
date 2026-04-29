@@ -134,8 +134,8 @@ import { Subscription } from 'rxjs';
             <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-semibold text-slate-600">
               {{ userInitial() }}
             </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-slate-900 truncate">{{ authService.currentUser()?.username }}</p>
+            <div class="flex-1 min-w-0 cursor-pointer hover:bg-slate-50 p-1 -ml-1 rounded transition-colors" routerLink="/profile" title="Hồ sơ của tôi">
+              <p class="text-sm font-medium text-slate-900 truncate hover:text-blue-600">{{ authService.currentUser()?.username }}</p>
               <p class="text-xs text-slate-500 truncate">{{ authService.currentUser()?.role }}</p>
             </div>
             <button

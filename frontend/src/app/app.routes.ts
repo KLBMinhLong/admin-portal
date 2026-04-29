@@ -57,6 +57,12 @@ export const routes: Routes = [
           import('./shared/components/forbidden/forbidden.component').then((m) => m.ForbiddenComponent),
         title: '403 - Purchasing Portal',
       },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./features/profile/profile.component').then((m) => m.ProfileComponent),
+        title: 'Hồ sơ cá nhân - Purchasing Portal',
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },
