@@ -2,6 +2,9 @@ package com.adminportal.domain.infrastructure.web;
 
 import com.adminportal.domain.domain.exception.DomainConflictException;
 import com.adminportal.domain.domain.exception.ResourceNotFoundException;
+import com.adminportal.domain.infrastructure.encryption.DecryptionFailedException;
+import com.adminportal.domain.infrastructure.encryption.EncryptionConfigException;
+import com.adminportal.domain.infrastructure.encryption.InvalidEncryptedPayloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -35,12 +38,43 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MissingRequestHeaderException.class)
     public ResponseEntity<Map<String, Object>> handleMissingHeader(MissingRequestHeaderException ex) {
+        // UC-SEC-02 A1: Thiếu Idempotency-Key → error code rõ ràng
+        if (ex.getHeaderName().equalsIgnoreCase("Idempotency-Key")) {
+            return buildResponse(HttpStatus.BAD_REQUEST, "MISSING_IDEMPOTENCY_KEY");
+        }
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(com.adminportal.domain.domain.exception.IdempotencyInProgressException.class)
+    public ResponseEntity<Map<String, Object>> handleIdempotencyInProgress(
+            com.adminportal.domain.domain.exception.IdempotencyInProgressException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(com.adminportal.domain.domain.exception.IdempotencyPayloadMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleIdempotencyPayloadMismatch(
+            com.adminportal.domain.domain.exception.IdempotencyPayloadMismatchException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArg(IllegalArgumentException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidEncryptedPayloadException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidEncryptedPayload(InvalidEncryptedPayloadException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(DecryptionFailedException.class)
+    public ResponseEntity<Map<String, Object>> handleDecryptionFailed(DecryptionFailedException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(EncryptionConfigException.class)
+    public ResponseEntity<Map<String, Object>> handleEncryptionConfig(EncryptionConfigException ex) {
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)

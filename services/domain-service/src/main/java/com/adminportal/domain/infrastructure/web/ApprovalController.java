@@ -6,6 +6,7 @@ import com.adminportal.domain.application.services.CurrentUserService;
 import com.adminportal.domain.application.usecase.ProcessApprovalUseCase;
 import com.adminportal.domain.domain.entity.IdempotencyRecord;
 import com.adminportal.domain.infrastructure.cache.IdempotencyService;
+import com.adminportal.domain.infrastructure.security.Encrypted;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @RestController
+@Encrypted
 @RequestMapping("/api/v1/approvals")
 public class ApprovalController {
 

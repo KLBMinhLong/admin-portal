@@ -2,6 +2,9 @@ package com.adminportal.auth.infrastructure.web;
 
 import com.adminportal.auth.domain.exception.ResourceConflictException;
 import com.adminportal.auth.domain.exception.ResourceNotFoundException;
+import com.adminportal.auth.infrastructure.encryption.DecryptionFailedException;
+import com.adminportal.auth.infrastructure.encryption.EncryptionConfigException;
+import com.adminportal.auth.infrastructure.encryption.InvalidEncryptedPayloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -26,6 +29,24 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleBadRequest(IllegalArgumentException ex) {
         log.warn("Bad request: {}", ex.getMessage());
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidEncryptedPayloadException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidEncryptedPayload(InvalidEncryptedPayloadException ex) {
+        log.warn("Invalid encrypted payload: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(DecryptionFailedException.class)
+    public ResponseEntity<Map<String, Object>> handleDecryptionFailed(DecryptionFailedException ex) {
+        log.warn("Decryption failed: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(EncryptionConfigException.class)
+    public ResponseEntity<Map<String, Object>> handleEncryptionConfig(EncryptionConfigException ex) {
+        log.error("Encryption config error: {}", ex.getMessage(), ex);
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
