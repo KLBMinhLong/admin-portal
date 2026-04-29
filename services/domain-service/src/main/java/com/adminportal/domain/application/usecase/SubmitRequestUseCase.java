@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import com.adminportal.domain.application.services.RequestCommentService;
+import com.adminportal.domain.application.services.WebSocketNotificationService;
 
 @Service
 public class SubmitRequestUseCase {
@@ -25,15 +27,21 @@ public class SubmitRequestUseCase {
     private final PurchasingRequestMapper mapper;
     private final WorkflowService workflowService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final RequestCommentService commentService;
+    private final WebSocketNotificationService wsService;
 
     public SubmitRequestUseCase(PurchasingRequestRepository requestRepository,
                                 PurchasingRequestMapper mapper,
                                 WorkflowService workflowService,
-                                KafkaTemplate<String, Object> kafkaTemplate) {
+                                KafkaTemplate<String, Object> kafkaTemplate,
+                                RequestCommentService commentService,
+                                WebSocketNotificationService wsService) {
         this.requestRepository = requestRepository;
         this.mapper = mapper;
         this.workflowService = workflowService;
         this.kafkaTemplate = kafkaTemplate;
+        this.commentService = commentService;
+        this.wsService = wsService;
     }
 
     @Transactional
@@ -48,6 +56,10 @@ public class SubmitRequestUseCase {
 
         // 3. Persist
         PurchasingRequest saved = requestRepository.save(request);
+        
+        // Add system comment
+        commentService.addSystemComment(saved, "Yêu cầu đã được gửi phê duyệt");
+        wsService.sendUserNotification(saved.getRequestedBy(), "Yêu cầu " + saved.getRequestNumber() + " đã được gửi");
 
         // 4. Start workflow
         try {

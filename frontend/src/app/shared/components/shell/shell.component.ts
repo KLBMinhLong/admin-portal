@@ -1,7 +1,9 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
+import { WebsocketService } from '@core/services/websocket.service';
+import { Subscription } from 'rxjs';
 
 /**
  * Shell layout — sidebar + header + content area.
@@ -219,20 +221,43 @@ import { AuthService } from '@core/auth/auth.service';
     </div>
   `,
 })
-export class ShellComponent {
+export class ShellComponent implements OnInit, OnDestroy {
   sidebarOpen = signal(false);
   showNotifications = signal(false);
 
-  // Mock notifications
-  notifications = signal([
-    { id: 1, title: 'Yêu cầu được phê duyệt', message: 'Yêu cầu mua sắm PR-2023-001 của bạn đã được Giám đốc Tài chính phê duyệt.', time: '10 phút trước', read: false },
-    { id: 2, title: 'Cần duyệt yêu cầu', message: 'Bạn có 1 yêu cầu mua sắm mới cần phê duyệt từ phòng IT.', time: '2 giờ trước', read: false },
-    { id: 3, title: 'Có phản hồi mới', message: 'Trưởng phòng đã phản hồi trong yêu cầu PR-2023-002.', time: '1 ngày trước', read: true },
-  ]);
+  // Mock notifications initially, will be updated via websocket
+  notifications = signal<any[]>([]);
 
   unreadCount = computed(() => this.notifications().filter(n => !n.read).length);
+  private wsSubscription?: Subscription;
 
-  constructor(public authService: AuthService) {}
+  constructor(
+    public authService: AuthService,
+    private wsService: WebsocketService
+  ) {}
+
+  ngOnInit() {
+    const user = this.authService.currentUser();
+    if (user && user.username) {
+      this.wsSubscription = this.wsService.watchUserNotifications(user.username).subscribe(message => {
+        const text = message.body;
+        const newNotif = {
+          id: Date.now(),
+          title: 'Thông báo hệ thống',
+          message: text,
+          time: 'Vừa xong',
+          read: false
+        };
+        this.notifications.update(list => [newNotif, ...list]);
+      });
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.wsSubscription) {
+      this.wsSubscription.unsubscribe();
+    }
+  }
 
   userInitial = () => {
     const name = this.authService.currentUser()?.username || '?';
