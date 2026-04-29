@@ -38,7 +38,23 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MissingRequestHeaderException.class)
     public ResponseEntity<Map<String, Object>> handleMissingHeader(MissingRequestHeaderException ex) {
+        // UC-SEC-02 A1: Thiếu Idempotency-Key → error code rõ ràng
+        if (ex.getHeaderName().equalsIgnoreCase("Idempotency-Key")) {
+            return buildResponse(HttpStatus.BAD_REQUEST, "MISSING_IDEMPOTENCY_KEY");
+        }
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(com.adminportal.domain.domain.exception.IdempotencyInProgressException.class)
+    public ResponseEntity<Map<String, Object>> handleIdempotencyInProgress(
+            com.adminportal.domain.domain.exception.IdempotencyInProgressException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(com.adminportal.domain.domain.exception.IdempotencyPayloadMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleIdempotencyPayloadMismatch(
+            com.adminportal.domain.domain.exception.IdempotencyPayloadMismatchException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

@@ -11,3 +11,4 @@ logs/
 *.iml
 .vscode/settings.json
 payload*.json
+.agent
