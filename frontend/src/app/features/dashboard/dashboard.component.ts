@@ -1,45 +1,40 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { AuthService } from '@core/auth/auth.service';
 
 /**
- * Dashboard placeholder — sẽ được implement đầy đủ trong UC-FE-02.
+ * Dashboard — placeholder content (UC-FE-02 focus is management, dashboard sẽ mở rộng sau).
  */
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
   template: `
-    <div class="min-h-screen bg-slate-50">
-      <!-- Header -->
-      <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6">
-        <h1 class="text-xl font-semibold text-slate-900">Dashboard</h1>
-        <div class="flex items-center gap-4">
-          <span class="text-sm text-slate-600">
-            Xin chào, <strong class="text-slate-900">{{ authService.currentUser()?.username }}</strong>
-          </span>
-          <button
-            (click)="authService.logout()"
-            class="px-3 py-1.5 text-sm font-medium text-slate-600 border border-slate-300
-                   rounded-lg hover:bg-slate-50 transition-colors duration-200 cursor-pointer"
-          >
-            Đăng xuất
-          </button>
-        </div>
-      </header>
+    <h1 class="text-2xl font-bold text-slate-900 mb-6">Dashboard</h1>
 
-      <!-- Content -->
-      <main class="p-6">
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <h2 class="text-base font-semibold text-slate-900 mb-2">Chào mừng đến Purchasing Portal</h2>
-          <p class="text-sm text-slate-500">
-            Module dashboard sẽ được hoàn thiện trong UC-FE-02.
-          </p>
-        </div>
-      </main>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <!-- Stat cards -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Tổng yêu cầu</p>
+        <p class="text-2xl font-bold text-slate-900">—</p>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Chờ duyệt</p>
+        <p class="text-2xl font-bold text-amber-600">—</p>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Đã duyệt</p>
+        <p class="text-2xl font-bold text-green-600">—</p>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Từ chối</p>
+        <p class="text-2xl font-bold text-red-600">—</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <h2 class="text-base font-semibold text-slate-900 mb-2">Chào mừng đến Purchasing Portal</h2>
+      <p class="text-sm text-slate-500">
+        Dashboard sẽ hiển thị biểu đồ thống kê khi có dữ liệu thực tế.
+      </p>
     </div>
   `,
 })
-export class DashboardComponent {
-  constructor(public authService: AuthService) {}
-}
+export class DashboardComponent {}
