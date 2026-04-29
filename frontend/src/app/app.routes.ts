@@ -42,6 +42,11 @@ export const routes: Routes = [
         title: 'Báo cáo - Purchasing Portal',
       },
       {
+        path: 'users',
+        loadChildren: () =>
+          import('./features/users/users.routes').then((m) => m.USERS_ROUTES),
+      },
+      {
         path: 'forbidden',
         loadComponent: () =>
           import('./shared/components/forbidden/forbidden.component').then((m) => m.ForbiddenComponent),
