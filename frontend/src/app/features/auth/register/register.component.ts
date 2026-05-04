@@ -1,9 +1,21 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
+
+/** Custom validator khop chinh xac voi password policy cua backend */
+function passwordPolicyValidator(control: AbstractControl): ValidationErrors | null {
+  const val: string = control.value ?? '';
+  const errors: Record<string, boolean> = {};
+  if (val.length < 12)             errors['minlength']   = true;
+  if (!/[A-Z]/.test(val))          errors['noUppercase'] = true;
+  if (!/[a-z]/.test(val))          errors['noLowercase'] = true;
+  if (!/\d/.test(val))             errors['noDigit']     = true;
+  if (/^[a-zA-Z0-9]*$/.test(val)) errors['noSpecial']   = true;
+  return Object.keys(errors).length ? errors : null;
+}
 
 @Component({
   selector: 'app-register',
@@ -59,8 +71,11 @@ import { HttpErrorResponse } from '@angular/common/http';
           class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm
                  focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none
                  transition-colors duration-200"
+          [class.border-red-400]="form.get('username')?.touched && form.get('username')?.invalid"
           placeholder="username_123" />
-        @if (form.get('username')?.touched && form.get('username')?.invalid) {
+        @if (form.get('username')?.touched && form.get('username')?.hasError('required')) {
+          <p class="mt-1 text-xs text-red-600">Vui lòng nhập tên đăng nhập</p>
+        } @else if (form.get('username')?.touched && form.get('username')?.invalid) {
           <p class="mt-1 text-xs text-red-600">3-50 ký tự, chỉ gồm chữ, số, dấu gạch dưới</p>
         }
       </div>
@@ -73,8 +88,11 @@ import { HttpErrorResponse } from '@angular/common/http';
           class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm
                  focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none
                  transition-colors duration-200"
+          [class.border-red-400]="form.get('email')?.touched && form.get('email')?.invalid"
           placeholder="example@company.com" />
-        @if (form.get('email')?.touched && form.get('email')?.hasError('email')) {
+        @if (form.get('email')?.touched && form.get('email')?.hasError('required')) {
+          <p class="mt-1 text-xs text-red-600">Vui lòng nhập email</p>
+        } @else if (form.get('email')?.touched && form.get('email')?.hasError('email')) {
           <p class="mt-1 text-xs text-red-600">Email không hợp lệ</p>
         }
       </div>
@@ -87,9 +105,34 @@ import { HttpErrorResponse } from '@angular/common/http';
           class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm
                  focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none
                  transition-colors duration-200"
+          [class.border-red-400]="form.get('password')?.touched && form.get('password')?.invalid"
           placeholder="Tối thiểu 12 ký tự" />
-        @if (form.get('password')?.touched && form.get('password')?.hasError('minlength')) {
-          <p class="mt-1 text-xs text-red-600">Mật khẩu tối thiểu 12 ký tự</p>
+
+        @if (pwdCtrl?.value || pwdCtrl?.touched) {
+          <ul class="mt-2 space-y-0.5 text-xs">
+            <li [class]="policyOk('minlength')   ? 'text-green-600' : 'text-red-500'">
+              @if (policyOk('minlength'))   { [OK] } @else { [ ] }
+              Ít nhất 12 ký tự
+            </li>
+            <li [class]="policyOk('noUppercase') ? 'text-green-600' : 'text-red-500'">
+              @if (policyOk('noUppercase')) { [OK] } @else { [ ] }
+              Có chữ hoa (A-Z)
+            </li>
+            <li [class]="policyOk('noLowercase') ? 'text-green-600' : 'text-red-500'">
+              @if (policyOk('noLowercase')) { [OK] } @else { [ ] }
+              Có chữ thường (a-z)
+            </li>
+            <li [class]="policyOk('noDigit')     ? 'text-green-600' : 'text-red-500'">
+              @if (policyOk('noDigit'))     { [OK] } @else { [ ] }
+              Có chữ số (0-9)
+            </li>
+            <li [class]="policyOk('noSpecial')   ? 'text-green-600' : 'text-red-500'">
+              @if (policyOk('noSpecial'))   { [OK] } @else { [ ] }
+              Có ký tự đặc biệt
+            </li>
+          </ul>
+        } @else {
+          <p class="mt-1 text-xs text-slate-500">Tối thiểu 12 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt</p>
         }
       </div>
 
@@ -126,6 +169,8 @@ export class RegisterComponent {
   errorMsg = signal('');
   successMsg = signal('');
 
+  get pwdCtrl() { return this.form.get('password'); }
+
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
@@ -136,8 +181,15 @@ export class RegisterComponent {
       lastName: [''],
       username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50), Validators.pattern(/^[a-zA-Z0-9_]+$/)]],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(12)]],
+      password: ['', [Validators.required, passwordPolicyValidator]],
     });
+  }
+
+  /** Returns true if the password field does NOT have the given validation error */
+  policyOk(errorKey: string): boolean {
+    const ctrl = this.form.get('password');
+    if (!ctrl?.value) return false;
+    return !ctrl.hasError(errorKey);
   }
 
   onSubmit(): void {
@@ -158,7 +210,7 @@ export class RegisterComponent {
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
-        const msg = err.error?.message || 'Đã xảy ra lỗi';
+        const msg = err.error?.message || 'Đã xảy ra lỗi, vui lòng thử lại';
         this.errorMsg.set(msg);
       },
     });
