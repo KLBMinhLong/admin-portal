@@ -252,6 +252,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: portal-frontend
+    environment:
+      API_KEY: ${API_KEY:-changeme}
+      ENCRYPT_SECRET: ${ENCRYPT_SECRET:-encryptkey_changeme_32chars_1234}
     networks: [portal-net]
     ports: ["80:80"]
     depends_on:
