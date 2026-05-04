@@ -68,7 +68,8 @@ public class Role {
     }
 
     public void assignPermissions(Set<Permission> permissions) {
-        this.permissions = new LinkedHashSet<>(permissions);
+        this.permissions.clear();
+        this.permissions.addAll(permissions);
         this.updatedAt = Instant.now();
     }
 

@@ -8,6 +8,7 @@ import com.adminportal.auth.application.dto.response.UserRoleAssignmentResponse;
 import com.adminportal.auth.application.port.in.AssignRolePermissionsUseCase;
 import com.adminportal.auth.application.port.in.AssignUserRolesUseCase;
 import com.adminportal.auth.application.port.in.GetUserPermissionsUseCase;
+import com.adminportal.auth.infrastructure.security.Encrypted;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,6 +38,7 @@ public class AdminRbacController {
     }
 
     @PostMapping("/users/{id}/roles")
+    @Encrypted
     public ResponseEntity<UserRoleAssignmentResponse> assignRoles(@PathVariable("id") UUID userId,
                                                                   @RequestHeader("Idempotency-Key") String idempotencyKey,
                                                                   @Valid @RequestBody AssignRolesRequest request) {
@@ -44,6 +46,7 @@ public class AdminRbacController {
     }
 
     @PostMapping("/roles/{id}/permissions")
+    @Encrypted
     public ResponseEntity<RolePermissionAssignmentResponse> assignPermissions(@PathVariable("id") UUID roleId,
                                                                               @RequestHeader("Idempotency-Key") String idempotencyKey,
                                                                               @Valid @RequestBody AssignPermissionsRequest request) {

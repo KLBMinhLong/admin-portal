@@ -142,8 +142,16 @@ public class User {
         this.updatedAt = Instant.now();
     }
 
+    public void updateProfile(String email, String firstName, String lastName) {
+        this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.updatedAt = Instant.now();
+    }
+
     public void assignRoles(Set<Role> roles) {
-        this.roles = new LinkedHashSet<>(roles);
+        this.roles.clear();
+        this.roles.addAll(roles);
         this.updatedAt = Instant.now();
     }
 

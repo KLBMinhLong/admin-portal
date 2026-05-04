@@ -3,6 +3,8 @@ package com.adminportal.auth.application.dto.response;
 import com.adminportal.auth.domain.entity.User;
 
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -30,7 +32,7 @@ public record AdminUserDto(
             user.getId(),
             user.getUsername(),
             user.getEmail(),
-            user.getRole(),
+            extractPrimaryRoleCode(user),
             user.getFirstName(),
             user.getLastName(),
             user.isActive(),
@@ -38,9 +40,26 @@ public record AdminUserDto(
             user.isTwoFactorEnabled(),
             user.getRoles().stream()
                 .map(r -> r.getCode())
-                .collect(Collectors.toSet()),
+                .sorted(Comparator.naturalOrder())
+                .collect(Collectors.toCollection(LinkedHashSet::new)),
             user.getCreatedAt(),
             user.getUpdatedAt()
         );
+    }
+
+    private static String extractPrimaryRoleCode(User user) {
+        return user.getRoles().stream()
+            .map(role -> role.getCode())
+            .findFirst()
+            .orElseGet(() -> normalizePrimaryRole(user.getRole()));
+    }
+
+    private static String normalizePrimaryRole(String primaryRole) {
+        if (primaryRole == null || primaryRole.isBlank()) {
+            return "";
+        }
+        return primaryRole.startsWith("ROLE_")
+            ? primaryRole.substring(5)
+            : primaryRole;
     }
 }

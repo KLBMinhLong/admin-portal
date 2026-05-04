@@ -6,6 +6,7 @@ import com.adminportal.auth.application.dto.response.AdminRoleDto;
 import com.adminportal.auth.application.port.out.PermissionRepositoryPort;
 import com.adminportal.auth.application.port.out.RbacAuditLogRepositoryPort;
 import com.adminportal.auth.application.port.out.RoleRepositoryPort;
+import com.adminportal.auth.infrastructure.security.Encrypted;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -46,12 +47,14 @@ public class AdminRolePermissionController {
 
     @org.springframework.web.bind.annotation.PostMapping("/roles")
     @PreAuthorize("hasAuthority('role.manage')")
+    @Encrypted
     public ResponseEntity<AdminRoleDto> createRole(@jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody com.adminportal.auth.application.dto.request.AdminRoleRequest request) {
         return ResponseEntity.ok(roleManagementUseCase.createRole(request));
     }
 
     @org.springframework.web.bind.annotation.PatchMapping("/roles/{id}")
     @PreAuthorize("hasAuthority('role.manage')")
+    @Encrypted
     public ResponseEntity<AdminRoleDto> updateRole(@org.springframework.web.bind.annotation.PathVariable("id") java.util.UUID roleId,
                                                  @jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody com.adminportal.auth.application.dto.request.AdminRoleRequest request) {
         return ResponseEntity.ok(roleManagementUseCase.updateRole(roleId, request));

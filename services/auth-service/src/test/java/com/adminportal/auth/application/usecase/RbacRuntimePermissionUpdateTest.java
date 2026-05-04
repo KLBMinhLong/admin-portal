@@ -70,10 +70,11 @@ class RbacRuntimePermissionUpdateTest {
     @Test
     void shouldExposeNewPermissionOnNextLookupWithoutRelogin() {
         Permission systemConfig = Permission.create("system.config", "System Config", "Manage RBAC", "system", "config");
+        Permission roleManage = Permission.create("role.manage", "Role Manage", "Manage roles", "role", "manage");
         Permission reportView = Permission.create("report.view", "View Report", "View reports", "report", "view");
 
         Role adminRole = Role.create("ADMIN", "Admin", "Admin role");
-        adminRole.assignPermissions(Set.of(systemConfig));
+        adminRole.assignPermissions(Set.of(systemConfig, roleManage));
         User adminUser = User.create("admin", "admin@example.com", "$2-hash", "ROLE_ADMIN");
         adminUser.assignRoles(Set.of(adminRole));
 

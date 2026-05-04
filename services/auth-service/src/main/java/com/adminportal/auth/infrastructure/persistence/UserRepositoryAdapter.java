@@ -66,5 +66,10 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     public List<User> findAll() {
         return repository.findAll();
     }
+
+    @Override
+    public List<User> findAllWithRoles() {
+        return repository.findAllWithRoles();
+    }
 }
 

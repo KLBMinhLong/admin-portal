@@ -1,147 +1,195 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { UserManagementService } from '@core/services/user-management.service';
-import { AdminUser, ROLE_OPTIONS } from '@core/models/user.models';
 import { HttpErrorResponse } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
+import { UserManagementService } from '@core/services/user-management.service';
+import {
+  AdminUser,
+  AdminUserRoleOption,
+  UpdateAdminUserRequest,
+  USER_STATUS_CONFIG,
+  formatRoleCode,
+} from '@core/models/user.models';
 
 @Component({
   selector: 'app-user-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
     @if (loading()) {
       <div class="space-y-4">
-        <div class="skeleton h-8 w-64"></div>
-        <div class="skeleton h-48 w-full"></div>
+        <div class="skeleton h-8 w-56 rounded-xl"></div>
+        <div class="skeleton h-72 w-full rounded-3xl"></div>
       </div>
     } @else if (user()) {
-      <!-- Header -->
-      <div class="flex items-center gap-4 mb-6">
-        <a routerLink="/users"
-          class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-          </svg>
-        </a>
-        <div class="flex-1">
-          <h1 class="text-2xl font-bold text-slate-900">{{ user()!.username }}</h1>
-          <p class="text-sm text-slate-500">{{ user()!.email }}</p>
+      <div class="space-y-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex items-start gap-4">
+            <a
+              routerLink="/users"
+              class="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-300 bg-white text-slate-600 transition hover:bg-slate-50"
+            >
+              ←
+            </a>
+            <div class="flex items-start gap-4">
+              <div class="flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-900 text-lg font-semibold text-white">
+                {{ getUserInitials(user()!) }}
+              </div>
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">User Detail</p>
+                <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">{{ user()!.username }}</h1>
+                <p class="mt-2 text-sm text-slate-500">{{ user()!.email }}</p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <span class="inline-flex rounded-full border px-2.5 py-1 text-xs font-medium" [class]="getStatusConfig().class">
+                    {{ getStatusConfig().label }}
+                  </span>
+                  <span class="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
+                    {{ getRoleName(user()!.role) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <button
+              type="button"
+              (click)="toggleActive()"
+              [disabled]="processing()"
+              class="rounded-xl border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60"
+              [class]="user()!.active
+                ? 'border-red-200 text-red-700 hover:bg-red-50'
+                : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'"
+            >
+              {{ processing() ? 'Đang xử lý...' : (user()!.active ? 'Khóa tài khoản' : 'Mở khóa tài khoản') }}
+            </button>
+          </div>
         </div>
-        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border"
-          [class]="user()!.active ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'">
-          {{ user()!.active ? 'Hoạt động' : 'Đã khóa' }}
-        </span>
-      </div>
 
-      @if (successMsg()) {
-        <div class="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-sm text-green-700">{{ successMsg() }}</div>
-      }
-      @if (errorMsg()) {
-        <div class="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">{{ errorMsg() }}</div>
-      }
+        @if (successMsg()) {
+          <div class="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+            {{ successMsg() }}
+          </div>
+        }
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Info cards -->
-        <div class="lg:col-span-2 space-y-6">
-          <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-            <h2 class="text-base font-semibold text-slate-900 mb-4">Thông tin tài khoản</h2>
-            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm">
-              <div>
-                <dt class="text-slate-500">Username</dt>
-                <dd class="text-slate-900 font-medium mt-0.5">{{ user()!.username }}</dd>
+        @if (errorMsg()) {
+          <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {{ errorMsg() }}
+          </div>
+        }
+
+        <div class="grid gap-6 xl:grid-cols-[1.4fr_0.9fr]">
+          <div class="space-y-6">
+            <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h2 class="text-lg font-bold text-slate-900">Thông tin hồ sơ</h2>
+                  <p class="mt-1 text-sm text-slate-500">Cập nhật email và thông tin hiển thị của người dùng.</p>
+                </div>
               </div>
-              <div>
-                <dt class="text-slate-500">Email</dt>
-                <dd class="text-slate-900 font-medium mt-0.5">{{ user()!.email }}</dd>
+
+              <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="mt-6 grid gap-4 md:grid-cols-2">
+                <label class="block md:col-span-2">
+                  <span class="mb-1.5 block text-sm font-medium text-slate-700">Email</span>
+                  <input formControlName="email" type="email" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200" />
+                </label>
+
+                <label class="block">
+                  <span class="mb-1.5 block text-sm font-medium text-slate-700">Tên</span>
+                  <input formControlName="firstName" type="text" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200" />
+                </label>
+
+                <label class="block">
+                  <span class="mb-1.5 block text-sm font-medium text-slate-700">Họ</span>
+                  <input formControlName="lastName" type="text" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200" />
+                </label>
+
+                <div class="md:col-span-2 flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    [disabled]="profileForm.invalid || profileSubmitting()"
+                    class="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {{ profileSubmitting() ? 'Đang lưu...' : 'Lưu thông tin' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 class="text-lg font-bold text-slate-900">Metadata tài khoản</h2>
+              <div class="mt-6 grid gap-4 md:grid-cols-2">
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Họ và tên</p>
+                  <p class="mt-2 text-sm font-medium text-slate-900">{{ getDisplayName(user()!) }}</p>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Username</p>
+                  <p class="mt-2 text-sm font-medium text-slate-900">{{ user()!.username }}</p>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ngày tạo</p>
+                  <p class="mt-2 text-sm font-medium text-slate-900">{{ user()!.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Cập nhật gần nhất</p>
+                  <p class="mt-2 text-sm font-medium text-slate-900">{{ user()!.updatedAt | date:'dd/MM/yyyy HH:mm' }}</p>
+                </div>
               </div>
-              <div>
-                <dt class="text-slate-500">Họ</dt>
-                <dd class="text-slate-900 mt-0.5">{{ user()!.lastName || '—' }}</dd>
-              </div>
-              <div>
-                <dt class="text-slate-500">Tên</dt>
-                <dd class="text-slate-900 mt-0.5">{{ user()!.firstName || '—' }}</dd>
-              </div>
-              <div>
-                <dt class="text-slate-500">Email xác thực</dt>
-                <dd class="mt-0.5">
-                  @if (user()!.emailVerified) {
-                    <span class="text-green-600 text-xs font-medium">✓ Đã xác thực</span>
-                  } @else {
-                    <span class="text-amber-600 text-xs font-medium">✗ Chưa xác thực</span>
-                  }
-                </dd>
-              </div>
-              <div>
-                <dt class="text-slate-500">Bảo mật 2FA</dt>
-                <dd class="mt-0.5">
-                  @if (user()!.twoFactorEnabled) {
-                    <span class="text-green-600 text-xs font-medium">✓ Đã bật</span>
-                  } @else {
-                    <span class="text-slate-400 text-xs">Chưa bật</span>
-                  }
-                </dd>
-              </div>
-              <div>
-                <dt class="text-slate-500">Ngày tạo</dt>
-                <dd class="text-slate-900 mt-0.5">{{ user()!.createdAt | date:'dd/MM/yyyy HH:mm' }}</dd>
-              </div>
-              <div>
-                <dt class="text-slate-500">Cập nhật lần cuối</dt>
-                <dd class="text-slate-900 mt-0.5">{{ user()!.updatedAt | date:'dd/MM/yyyy HH:mm' }}</dd>
-              </div>
-            </dl>
+            </div>
           </div>
 
-          <!-- Roles assigned (from RBAC) -->
-          @if (user()!.roles.length > 0) {
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-              <h2 class="text-base font-semibold text-slate-900 mb-3">RBAC Roles được gán</h2>
-              <div class="flex flex-wrap gap-2">
-                @for (role of user()!.roles; track role) {
-                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                    {{ role }}
-                  </span>
-                }
+          <div class="space-y-6">
+            <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 class="text-lg font-bold text-slate-900">Role và truy cập</h2>
+              <div class="mt-5 space-y-4">
+                <label class="block">
+                  <span class="mb-1.5 block text-sm font-medium text-slate-700">Role chính</span>
+                  <select
+                    [value]="user()!.role"
+                    (change)="changeRole(($any($event.target)).value)"
+                    [disabled]="processing()"
+                    class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    @for (role of roleOptions(); track role.id) {
+                      <option [value]="role.code">{{ role.name }}</option>
+                    }
+                  </select>
+                </label>
+
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">RBAC roles đang gán</p>
+                  <div class="mt-3 flex flex-wrap gap-2">
+                    @for (roleCode of user()!.roles; track roleCode) {
+                      <span class="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700">
+                        {{ getRoleName(roleCode) }}
+                      </span>
+                    } @empty {
+                      <span class="text-sm text-slate-500">Chưa có RBAC role nào.</span>
+                    }
+                  </div>
+                </div>
               </div>
             </div>
-          }
-        </div>
 
-        <!-- Action panel -->
-        <div class="space-y-6">
-          <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-            <h3 class="text-sm font-semibold text-slate-900 mb-4">Quản lý</h3>
-
-            <!-- Role dropdown -->
-            <div class="mb-4">
-              <label class="block text-xs font-medium text-slate-600 mb-1">Role</label>
-              <select [ngModel]="user()!.role" (ngModelChange)="onRoleChange($event)"
-                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm
-                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer">
-                @for (r of roleOptions; track r.value) {
-                  <option [value]="r.value">{{ r.label }}</option>
-                }
-              </select>
+            <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 class="text-lg font-bold text-slate-900">Bảo mật</h2>
+              <div class="mt-5 space-y-3">
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Email</p>
+                  <p class="mt-2 text-sm font-medium" [class]="user()!.emailVerified ? 'text-emerald-700' : 'text-amber-700'">
+                    {{ user()!.emailVerified ? 'Đã xác thực' : 'Chưa xác thực' }}
+                  </p>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Xác thực hai lớp</p>
+                  <p class="mt-2 text-sm font-medium" [class]="user()!.twoFactorEnabled ? 'text-emerald-700' : 'text-slate-600'">
+                    {{ user()!.twoFactorEnabled ? 'Đã bật 2FA' : 'Chưa bật 2FA' }}
+                  </p>
+                </div>
+              </div>
             </div>
-
-            <!-- Toggle active -->
-            <button (click)="toggleActive()" [disabled]="processing()"
-              class="w-full py-2 px-4 text-sm font-medium rounded-lg transition-colors duration-200
-                     cursor-pointer border disabled:opacity-50 disabled:cursor-not-allowed"
-              [class]="user()!.active
-                ? 'text-red-600 border-red-300 hover:bg-red-50'
-                : 'text-green-600 border-green-300 hover:bg-green-50'">
-              @if (processing()) {
-                Đang xử lý...
-              } @else if (user()!.active) {
-                Khóa tài khoản
-              } @else {
-                Mở khóa tài khoản
-              }
-            </button>
           </div>
         </div>
       </div>
@@ -150,59 +198,161 @@ import { HttpErrorResponse } from '@angular/common/http';
 })
 export class UserDetailComponent implements OnInit {
   user = signal<AdminUser | null>(null);
+  roleOptions = signal<AdminUserRoleOption[]>([]);
   loading = signal(true);
   processing = signal(false);
+  profileSubmitting = signal(false);
   successMsg = signal('');
   errorMsg = signal('');
-  roleOptions = ROLE_OPTIONS;
+
+  profileForm = this.formBuilder.nonNullable.group({
+    email: ['', [Validators.required, Validators.email]],
+    firstName: [''],
+    lastName: [''],
+  });
 
   constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private userService: UserManagementService,
+    private readonly formBuilder: FormBuilder,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly userService: UserManagementService,
   ) {}
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
-    if (!id) { this.router.navigate(['/users']); return; }
+    if (!id) {
+      this.router.navigate(['/users']);
+      return;
+    }
 
-    this.userService.getById(id).subscribe({
-      next: (data) => { this.user.set(data); this.loading.set(false); },
-      error: () => { this.loading.set(false); this.router.navigate(['/users']); },
+    this.loading.set(true);
+
+    forkJoin({
+      user: this.userService.getById(id),
+      roleOptions: this.userService.getRoleOptions(),
+    }).subscribe({
+      next: ({ user, roleOptions }) => {
+        this.user.set(user);
+        this.roleOptions.set(roleOptions);
+        this.profileForm.patchValue({
+          email: user.email,
+          firstName: user.firstName ?? '',
+          lastName: user.lastName ?? '',
+        });
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.router.navigate(['/users']);
+      },
+    });
+  }
+
+  saveProfile(): void {
+    if (!this.user() || this.profileForm.invalid) {
+      this.profileForm.markAllAsTouched();
+      return;
+    }
+
+    this.profileSubmitting.set(true);
+    this.errorMsg.set('');
+
+    const raw = this.profileForm.getRawValue();
+    const payload: UpdateAdminUserRequest = {
+      email: raw.email,
+      firstName: raw.firstName || null,
+      lastName: raw.lastName || null,
+    };
+
+    this.userService.updateUser(this.user()!.id, payload).subscribe({
+      next: (updatedUser) => {
+        this.user.set(updatedUser);
+        this.profileForm.patchValue({
+          email: updatedUser.email,
+          firstName: updatedUser.firstName ?? '',
+          lastName: updatedUser.lastName ?? '',
+        });
+        this.profileSubmitting.set(false);
+        this.successMsg.set('Đã cập nhật hồ sơ người dùng.');
+        this.clearSuccessLater();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.profileSubmitting.set(false);
+        this.errorMsg.set(error.error?.message || 'Không thể cập nhật hồ sơ người dùng.');
+      },
+    });
+  }
+
+  changeRole(roleCode: string): void {
+    if (!this.user() || roleCode === this.user()!.role) {
+      return;
+    }
+
+    this.processing.set(true);
+    this.errorMsg.set('');
+
+    this.userService.updateRole(this.user()!.id, roleCode).subscribe({
+      next: (updatedUser) => {
+        this.user.set(updatedUser);
+        this.processing.set(false);
+        this.successMsg.set(`Đã cập nhật role thành "${this.getRoleName(updatedUser.role)}".`);
+        this.clearSuccessLater();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.processing.set(false);
+        this.errorMsg.set(error.error?.message || 'Không thể cập nhật role người dùng.');
+      },
     });
   }
 
   toggleActive(): void {
+    if (!this.user()) {
+      return;
+    }
+
     this.processing.set(true);
     this.errorMsg.set('');
+
     this.userService.toggleActive(this.user()!.id).subscribe({
-      next: (updated) => {
-        this.user.set(updated);
+      next: (updatedUser) => {
+        this.user.set(updatedUser);
         this.processing.set(false);
-        this.successMsg.set(updated.active ? 'Đã mở khóa tài khoản.' : 'Đã khóa tài khoản.');
-        setTimeout(() => this.successMsg.set(''), 3000);
+        this.successMsg.set(updatedUser.active ? 'Đã mở khóa tài khoản.' : 'Đã khóa tài khoản.');
+        this.clearSuccessLater();
       },
-      error: (err: HttpErrorResponse) => {
+      error: (error: HttpErrorResponse) => {
         this.processing.set(false);
-        this.errorMsg.set(err.error?.message || 'Lỗi khi thay đổi trạng thái.');
+        this.errorMsg.set(error.error?.message || 'Không thể cập nhật trạng thái người dùng.');
       },
     });
   }
 
-  onRoleChange(newRole: string): void {
-    this.processing.set(true);
-    this.errorMsg.set('');
-    this.userService.updateRole(this.user()!.id, newRole).subscribe({
-      next: (updated) => {
-        this.user.set(updated);
-        this.processing.set(false);
-        this.successMsg.set(`Đã cập nhật role thành "${newRole}".`);
-        setTimeout(() => this.successMsg.set(''), 3000);
-      },
-      error: (err: HttpErrorResponse) => {
-        this.processing.set(false);
-        this.errorMsg.set(err.error?.message || 'Lỗi khi cập nhật role.');
-      },
-    });
+  getDisplayName(user: AdminUser): string {
+    const fullName = `${user.lastName ?? ''} ${user.firstName ?? ''}`.trim();
+    return fullName || 'Chưa cập nhật họ tên';
+  }
+
+  getUserInitials(user: AdminUser): string {
+    const displayName = this.getDisplayName(user);
+    if (displayName !== 'Chưa cập nhật họ tên') {
+      return displayName
+        .split(' ')
+        .slice(0, 2)
+        .map((part) => part.charAt(0).toUpperCase())
+        .join('');
+    }
+    return user.username.charAt(0).toUpperCase();
+  }
+
+  getRoleName(roleCode: string): string {
+    return this.roleOptions().find((role) => role.code === roleCode)?.name ?? formatRoleCode(roleCode);
+  }
+
+  getStatusConfig() {
+    return this.user()?.active ? USER_STATUS_CONFIG.active : USER_STATUS_CONFIG.inactive;
+  }
+
+  private clearSuccessLater(): void {
+    setTimeout(() => this.successMsg.set(''), 3000);
   }
 }
