@@ -52,6 +52,9 @@ class VerifyTwoFactorUseCaseImplTest {
     @Mock
     private TokenGeneratorPort tokenGenerator;
 
+    @Mock
+    private com.adminportal.auth.application.services.RuntimePermissionService runtimePermissionService;
+
     private VerifyTwoFactorUseCaseImpl verifyTwoFactorUseCase;
 
     @BeforeEach
@@ -62,7 +65,8 @@ class VerifyTwoFactorUseCaseImplTest {
         );
         AuthenticatedSessionService authenticatedSessionService = new AuthenticatedSessionService(
             userSessionRevocationService,
-            tokenGenerator
+            tokenGenerator,
+            runtimePermissionService
         );
         verifyTwoFactorUseCase = new VerifyTwoFactorUseCaseImpl(
             challengeStore,

@@ -46,14 +46,14 @@ public class AdminRolePermissionController {
     }
 
     @org.springframework.web.bind.annotation.PostMapping("/roles")
-    @PreAuthorize("hasAuthority('role.manage')")
+    @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
     @Encrypted
     public ResponseEntity<AdminRoleDto> createRole(@jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody com.adminportal.auth.application.dto.request.AdminRoleRequest request) {
         return ResponseEntity.ok(roleManagementUseCase.createRole(request));
     }
 
     @org.springframework.web.bind.annotation.PatchMapping("/roles/{id}")
-    @PreAuthorize("hasAuthority('role.manage')")
+    @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
     @Encrypted
     public ResponseEntity<AdminRoleDto> updateRole(@org.springframework.web.bind.annotation.PathVariable("id") java.util.UUID roleId,
                                                  @jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody com.adminportal.auth.application.dto.request.AdminRoleRequest request) {
@@ -61,13 +61,13 @@ public class AdminRolePermissionController {
     }
 
     @org.springframework.web.bind.annotation.PatchMapping("/roles/{id}/toggle-active")
-    @PreAuthorize("hasAuthority('role.manage')")
+    @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
     public ResponseEntity<AdminRoleDto> toggleRoleActive(@org.springframework.web.bind.annotation.PathVariable("id") java.util.UUID roleId) {
         return ResponseEntity.ok(roleManagementUseCase.toggleRoleActive(roleId));
     }
 
     @GetMapping("/roles")
-    @PreAuthorize("hasAuthority('role.manage')")
+    @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
     public ResponseEntity<List<AdminRoleDto>> listRoles() {
         List<AdminRoleDto> roles = roleRepository.findAllWithPermissions().stream()
             .map(AdminRoleDto::from)
@@ -77,7 +77,7 @@ public class AdminRolePermissionController {
     }
 
     @GetMapping("/permissions")
-    @PreAuthorize("hasAuthority('role.manage')")
+    @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
     public ResponseEntity<List<AdminPermissionDto>> listPermissions() {
         List<AdminPermissionDto> permissions = permissionRepository.findAll().stream()
             .map(AdminPermissionDto::from)
@@ -86,7 +86,7 @@ public class AdminRolePermissionController {
     }
 
     @GetMapping("/audit-logs")
-    @PreAuthorize("hasAuthority('role.manage')")
+    @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
     public ResponseEntity<List<AdminAuditLogDto>> listAuditLogs() {
         List<AdminAuditLogDto> logs = auditLogRepository.findTop50ByOrderByCreatedAtDesc().stream()
             .map(AdminAuditLogDto::from)

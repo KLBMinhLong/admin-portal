@@ -51,6 +51,9 @@ class LoginUseCaseImplTest {
     @Mock
     private TokenGeneratorPort tokenGenerator;
 
+    @Mock
+    private com.adminportal.auth.application.services.RuntimePermissionService runtimePermissionService;
+
     private LoginUseCaseImpl loginUseCase;
 
     @BeforeEach
@@ -61,7 +64,8 @@ class LoginUseCaseImplTest {
         );
         AuthenticatedSessionService authenticatedSessionService = new AuthenticatedSessionService(
             userSessionRevocationService,
-            tokenGenerator
+            tokenGenerator,
+            runtimePermissionService
         );
         loginUseCase = new LoginUseCaseImpl(
             keycloakPort,

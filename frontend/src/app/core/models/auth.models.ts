@@ -35,6 +35,7 @@ export interface UserProfile {
   id: string;
   username: string;
   role: string;
+  authorities: string[];
 }
 
 export interface LoginResponse {

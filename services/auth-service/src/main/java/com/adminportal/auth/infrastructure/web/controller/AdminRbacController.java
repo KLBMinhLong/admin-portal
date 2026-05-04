@@ -11,6 +11,7 @@ import com.adminportal.auth.application.port.in.GetUserPermissionsUseCase;
 import com.adminportal.auth.infrastructure.security.Encrypted;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,6 +40,7 @@ public class AdminRbacController {
 
     @PostMapping("/users/{id}/roles")
     @Encrypted
+    @PreAuthorize("hasAuthority('system.config') and hasAuthority('user.manage')")
     public ResponseEntity<UserRoleAssignmentResponse> assignRoles(@PathVariable("id") UUID userId,
                                                                   @RequestHeader("Idempotency-Key") String idempotencyKey,
                                                                   @Valid @RequestBody AssignRolesRequest request) {
@@ -47,6 +49,7 @@ public class AdminRbacController {
 
     @PostMapping("/roles/{id}/permissions")
     @Encrypted
+    @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
     public ResponseEntity<RolePermissionAssignmentResponse> assignPermissions(@PathVariable("id") UUID roleId,
                                                                               @RequestHeader("Idempotency-Key") String idempotencyKey,
                                                                               @Valid @RequestBody AssignPermissionsRequest request) {
@@ -54,6 +57,7 @@ public class AdminRbacController {
     }
 
     @GetMapping("/users/{id}/permissions")
+    @PreAuthorize("hasAuthority('system.config') and hasAuthority('user.manage')")
     public ResponseEntity<UserPermissionsResponse> getUserPermissions(@PathVariable("id") UUID userId) {
         return ResponseEntity.ok(getUserPermissionsUseCase.execute(userId));
     }

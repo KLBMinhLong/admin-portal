@@ -6,8 +6,8 @@ public record LoginResponse(
     boolean requiresTwoFactor,
     String challenge
 ) {
-    public static LoginResponse success(String token, String userId, String username, String role) {
-        return new LoginResponse(token, new UserProfile(userId, username, role), false, null);
+    public static LoginResponse success(String token, String userId, String username, String role, java.util.List<String> authorities) {
+        return new LoginResponse(token, new UserProfile(userId, username, role, authorities), false, null);
     }
 
     public static LoginResponse requiresTwoFactor(String challenge) {
@@ -17,7 +17,8 @@ public record LoginResponse(
     public record UserProfile(
         String id,
         String username,
-        String role
+        String role,
+        java.util.List<String> authorities
     ) {
     }
 }

@@ -12,7 +12,10 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
+import java.util.Set;
 
 @Service
 public class AuthenticatedSessionService {
@@ -20,11 +23,14 @@ public class AuthenticatedSessionService {
 
     private final UserSessionRevocationService userSessionRevocationService;
     private final TokenGeneratorPort tokenGenerator;
+    private final RuntimePermissionService runtimePermissionService;
 
     public AuthenticatedSessionService(UserSessionRevocationService userSessionRevocationService,
-                                       TokenGeneratorPort tokenGenerator) {
+                                       TokenGeneratorPort tokenGenerator,
+                                       RuntimePermissionService runtimePermissionService) {
         this.userSessionRevocationService = userSessionRevocationService;
         this.tokenGenerator = tokenGenerator;
+        this.runtimePermissionService = runtimePermissionService;
     }
 
     public LoginResponse create(User user, String deviceInfo) {
@@ -43,11 +49,17 @@ public class AuthenticatedSessionService {
         userSessionRevocationService.storeNewSession(newToken);
         log.info("Token created for userId={}", user.getId());
 
+        Set<String> permissionCodes = runtimePermissionService.getPermissionCodes(user.getUsername());
+        List<String> authorities = new ArrayList<>();
+        authorities.add(user.getRole());
+        authorities.addAll(permissionCodes);
+
         return LoginResponse.success(
             generatedToken.value(),
             user.getId().toString(),
             user.getUsername(),
-            user.getRole()
+            user.getRole(),
+            authorities
         );
     }
 

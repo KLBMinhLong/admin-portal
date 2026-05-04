@@ -3,6 +3,7 @@ package com.adminportal.auth.infrastructure.web.controller;
 import com.adminportal.auth.application.dto.request.*;
 import com.adminportal.auth.application.dto.response.*;
 import com.adminportal.auth.application.port.in.*;
+import com.adminportal.auth.application.services.RuntimePermissionService;
 import com.adminportal.auth.infrastructure.security.Encrypted;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -10,7 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Login / Logout / Register / Hashing Password / Forgot Password / 2FA
@@ -25,19 +28,22 @@ public class AuthController {
     private final ForgotPasswordUseCase forgotPasswordUseCase;
     private final ResetPasswordUseCase resetPasswordUseCase;
     private final RegisterUseCase registerUseCase;
+    private final RuntimePermissionService runtimePermissionService;
 
     public AuthController(LoginUseCase loginUseCase,
                           VerifyTwoFactorUseCase verifyTwoFactorUseCase,
                           LogoutUseCase logoutUseCase,
                           ForgotPasswordUseCase forgotPasswordUseCase,
                           ResetPasswordUseCase resetPasswordUseCase,
-                          RegisterUseCase registerUseCase) {
+                          RegisterUseCase registerUseCase,
+                          RuntimePermissionService runtimePermissionService) {
         this.loginUseCase = loginUseCase;
         this.verifyTwoFactorUseCase = verifyTwoFactorUseCase;
         this.logoutUseCase = logoutUseCase;
         this.forgotPasswordUseCase = forgotPasswordUseCase;
         this.resetPasswordUseCase = resetPasswordUseCase;
         this.registerUseCase = registerUseCase;
+        this.runtimePermissionService = runtimePermissionService;
     }
 
     @PostMapping("/register")
@@ -82,10 +88,10 @@ public class AuthController {
     }
 
     @GetMapping("/session")
-    public ResponseEntity<SessionResponse> session(Authentication authentication) {
-        List<String> authorities = authentication.getAuthorities().stream()
-            .map(grantedAuthority -> grantedAuthority.getAuthority())
-            .toList();
-        return ResponseEntity.ok(new SessionResponse(authentication.getName(), authorities));
+    public ResponseEntity<Void> session(Authentication authentication) {
+        // Endpoint này hiện tại chỉ dùng để Gateway gọi sang validate xem Token có hợp lệ/active hay không.
+        // Gateway chỉ quan tâm HTTP Status Code (2xx là pass, 401 là block).
+        // Trả về 204 No Content để không lộ thông tin user/role/permission trong response body qua mạng.
+        return ResponseEntity.noContent().build();
     }
 }

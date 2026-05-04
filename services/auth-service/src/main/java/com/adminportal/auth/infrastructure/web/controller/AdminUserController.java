@@ -38,7 +38,7 @@ public class AdminUserController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('user.manage')")
+    @PreAuthorize("hasAuthority('system.config') and hasAuthority('user.manage')")
     public ResponseEntity<List<AdminUserDto>> listUsers() {
         List<AdminUserDto> users = adminUserManagementService.listUsers();
         log.info("[ADMIN] Listed {} users", users.size());
@@ -46,20 +46,20 @@ public class AdminUserController {
     }
 
     @GetMapping("/role-options")
-    @PreAuthorize("hasAuthority('user.manage')")
+    @PreAuthorize("hasAuthority('system.config') and hasAuthority('user.manage')")
     public ResponseEntity<List<AdminUserRoleOptionDto>> listRoleOptions() {
         return ResponseEntity.ok(adminUserManagementService.listAssignableRoles());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('user.manage')")
+    @PreAuthorize("hasAuthority('system.config') and hasAuthority('user.manage')")
     public ResponseEntity<AdminUserDto> getUser(@PathVariable UUID id) {
         return ResponseEntity.ok(adminUserManagementService.getUser(id));
     }
 
     @PostMapping
     @Encrypted
-    @PreAuthorize("hasAuthority('user.manage')")
+    @PreAuthorize("hasAuthority('system.config') and hasAuthority('user.manage')")
     public ResponseEntity<AdminUserDto> createUser(@Valid @RequestBody AdminUserCreateRequest request,
                                                    @RequestHeader("Idempotency-Key") String idempotencyKey) {
         AdminUserDto createdUser = adminUserManagementService.createUser(request);
@@ -69,7 +69,7 @@ public class AdminUserController {
 
     @PatchMapping("/{id}")
     @Encrypted
-    @PreAuthorize("hasAuthority('user.manage')")
+    @PreAuthorize("hasAuthority('system.config') and hasAuthority('user.manage')")
     public ResponseEntity<AdminUserDto> updateUser(@PathVariable UUID id,
                                                    @Valid @RequestBody AdminUserUpdateRequest request,
                                                    @RequestHeader("Idempotency-Key") String idempotencyKey) {
@@ -79,7 +79,7 @@ public class AdminUserController {
     }
 
     @PatchMapping("/{id}/toggle-active")
-    @PreAuthorize("hasAuthority('user.manage')")
+    @PreAuthorize("hasAuthority('system.config') and hasAuthority('user.manage')")
     public ResponseEntity<AdminUserDto> toggleActive(@PathVariable UUID id,
                                                      @RequestHeader("Idempotency-Key") String idempotencyKey) {
         AdminUserDto updatedUser = adminUserManagementService.toggleActive(id);
@@ -89,7 +89,7 @@ public class AdminUserController {
 
     @PatchMapping("/{id}/role")
     @Encrypted
-    @PreAuthorize("hasAuthority('user.manage')")
+    @PreAuthorize("hasAuthority('system.config') and hasAuthority('user.manage')")
     public ResponseEntity<AdminUserDto> updateRole(@PathVariable UUID id,
                                                    @Valid @RequestBody AdminUserRoleUpdateRequest request,
                                                    @RequestHeader("Idempotency-Key") String idempotencyKey) {
