@@ -1,38 +1,4 @@
 spring:
-  cloud:
-    gateway:
-      routes:
-        - id: auth-service
-          uri: ${AUTH_SERVICE_URL}
-          predicates:
-            - Path=/api/v1/auth/**
-        - id: request-service
-          uri: ${DOMAIN_SERVICE_URL}
-          predicates:
-            - Path=/api/v1/requests/**
-          filters:
-            - name: Retry
-              args:
-                retries: 2
-                methods: GET
-                statuses: BAD_GATEWAY,GATEWAY_TIMEOUT
-        - id: approval-service
-          uri: ${DOMAIN_SERVICE_URL}
-          predicates:
-            - Path=/api/v1/approvals/**
-          filters:
-            - name: Retry
-              args:
-                retries: 2
-                methods: GET
-                statuses: BAD_GATEWAY,GATEWAY_TIMEOUT
-        - id: report-service
-          uri: ${DOMAIN_SERVICE_URL}
-          predicates:
-            - Path=/api/v1/reports/**
-          filters:
-            - name: Retry
-              args:
-                retries: 2
-                methods: GET
-                statuses: BAD_GATEWAY,GATEWAY_TIMEOUT
+  config:
+    activate:
+      on-profile: prod
