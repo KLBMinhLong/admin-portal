@@ -31,10 +31,10 @@
             "jdbc:postgresql://postgres:5432/adminportal"
           ],
           "dbUsername": [
-            "portaluser"
+            ""
           ],
           "dbPassword": [
-            "changeme"
+            ""
           ],
           "dbSchema": [
             "auth"

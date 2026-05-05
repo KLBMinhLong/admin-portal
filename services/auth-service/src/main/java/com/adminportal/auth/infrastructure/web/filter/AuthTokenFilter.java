@@ -2,6 +2,7 @@ package com.adminportal.auth.infrastructure.web.filter;
 
 import com.adminportal.auth.application.port.out.TokenCachePort;
 import com.adminportal.auth.application.port.out.TokenRepositoryPort;
+import com.adminportal.auth.application.services.RuntimePermissionService;
 import com.adminportal.auth.domain.entity.Token;
 import com.adminportal.auth.infrastructure.security.JwtProvider;
 import jakarta.servlet.FilterChain;
@@ -19,6 +20,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.Set;
 
 /**
@@ -43,13 +46,16 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     private final TokenCachePort      tokenCache;
     private final TokenRepositoryPort tokenRepository;
     private final JwtProvider jwtProvider;
+    private final RuntimePermissionService runtimePermissionService;
 
     public AuthTokenFilter(TokenCachePort tokenCache,
                            TokenRepositoryPort tokenRepository,
-                           JwtProvider jwtProvider) {
+                           JwtProvider jwtProvider,
+                           RuntimePermissionService runtimePermissionService) {
         this.tokenCache = tokenCache;
         this.tokenRepository = tokenRepository;
         this.jwtProvider = jwtProvider;
+        this.runtimePermissionService = runtimePermissionService;
     }
 
     // Inject API_KEY from config
@@ -114,9 +120,14 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         }
 
         // 5. Set Spring Security context (RBAC - permission load tu DB o layer service)
+        Set<String> authoritiesSet = runtimePermissionService.getAllAuthorities(principal.username());
+        List<SimpleGrantedAuthority> authorities = authoritiesSet.stream()
+            .map(SimpleGrantedAuthority::new)
+            .collect(Collectors.toList());
+
         var auth = new UsernamePasswordAuthenticationToken(
             principal.username(), null,
-            List.of(new SimpleGrantedAuthority(principal.role()))
+            authorities
         );
         SecurityContextHolder.getContext().setAuthentication(auth);
 

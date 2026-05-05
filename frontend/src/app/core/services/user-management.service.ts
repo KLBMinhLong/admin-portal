@@ -44,4 +44,8 @@ export class UserManagementService {
     const body: UpdateAdminUserRoleRequest = { roleCode };
     return this.http.patch<AdminUser>(`${this.apiUrl}/${id}/role`, body);
   }
+
+  assignRoles(id: string, roleCodes: string[]): Observable<{ assignedRoles: string[] }> {
+    return this.http.post<{ assignedRoles: string[] }>(`${this.apiUrl}/${id}/roles`, { roleCodes });
+  }
 }

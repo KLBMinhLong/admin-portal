@@ -46,7 +46,7 @@ import {
                     {{ getStatusConfig().label }}
                   </span>
                   <span class="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
-                    {{ getRoleName(user()!.role) }}
+                    {{ user()!.roles.length > 0 ? getRoleName(user()!.roles[0]) : 'Chưa có role' }}
                   </span>
                 </div>
               </div>
@@ -144,29 +144,18 @@ import {
             <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <h2 class="text-lg font-bold text-slate-900">Role và truy cập</h2>
               <div class="mt-5 space-y-4">
-                <label class="block">
-                  <span class="mb-1.5 block text-sm font-medium text-slate-700">Role chính</span>
-                  <select
-                    [value]="user()!.role"
-                    (change)="changeRole(($any($event.target)).value)"
-                    [disabled]="processing()"
-                    class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
+                <div class="block">
+                  <span class="mb-1.5 block text-sm font-medium text-slate-700">Chỉ định Roles</span>
+                  <div class="space-y-3 rounded-xl border border-slate-300 bg-slate-50 p-4">
                     @for (role of roleOptions(); track role.id) {
-                      <option [value]="role.code">{{ role.name }}</option>
-                    }
-                  </select>
-                </label>
-
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">RBAC roles đang gán</p>
-                  <div class="mt-3 flex flex-wrap gap-2">
-                    @for (roleCode of user()!.roles; track roleCode) {
-                      <span class="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700">
-                        {{ getRoleName(roleCode) }}
-                      </span>
-                    } @empty {
-                      <span class="text-sm text-slate-500">Chưa có RBAC role nào.</span>
+                      <label class="flex items-center gap-3">
+                        <input type="checkbox"
+                               [checked]="user()!.roles.includes(role.code)"
+                               (change)="toggleUserRole(role.code, $any($event.target).checked)"
+                               [disabled]="processing() || (user()!.roles.length <= 1 && user()!.roles.includes(role.code))"
+                               class="h-5 w-5 rounded border-slate-300 text-slate-900 focus:ring-slate-400 disabled:opacity-50" />
+                        <span class="text-sm font-medium text-slate-800" [class.opacity-50]="processing()">{{ role.name }}</span>
+                      </label>
                     }
                   </div>
                 </div>
@@ -283,19 +272,30 @@ export class UserDetailComponent implements OnInit {
     });
   }
 
-  changeRole(roleCode: string): void {
-    if (!this.user() || roleCode === this.user()!.role) {
+  toggleUserRole(roleCode: string, isChecked: boolean): void {
+    const currentUser = this.user();
+    if (!currentUser) return;
+
+    let newRoles = [...currentUser.roles];
+    if (isChecked) {
+      if (!newRoles.includes(roleCode)) newRoles.push(roleCode);
+    } else {
+      newRoles = newRoles.filter((r) => r !== roleCode);
+    }
+
+    if (newRoles.length === 0) {
+      this.errorMsg.set('Người dùng phải có ít nhất 1 role.');
       return;
     }
 
     this.processing.set(true);
     this.errorMsg.set('');
 
-    this.userService.updateRole(this.user()!.id, roleCode).subscribe({
-      next: (updatedUser) => {
-        this.user.set(updatedUser);
+    this.userService.assignRoles(currentUser.id, newRoles).subscribe({
+      next: (response) => {
+        this.user.set({ ...currentUser, roles: response.assignedRoles });
         this.processing.set(false);
-        this.successMsg.set(`Đã cập nhật role thành "${this.getRoleName(updatedUser.role)}".`);
+        this.successMsg.set(`Đã cập nhật roles thành công.`);
         this.clearSuccessLater();
       },
       error: (error: HttpErrorResponse) => {

@@ -176,17 +176,18 @@ import {
                     </td>
 
                     <td class="px-6 py-4">
-                      <select
-                        [ngModel]="user.role"
-                        (ngModelChange)="changeRole(user, $event)"
-                        [disabled]="isBusy(user.id)"
-                        class="w-full min-w-44 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
+                      <div class="flex flex-col gap-2">
                         @for (role of roleOptions(); track role.id) {
-                          <option [value]="role.code">{{ role.name }}</option>
+                          <label class="flex items-center gap-2">
+                            <input type="checkbox"
+                                   [checked]="user.roles.includes(role.code)"
+                                   (change)="toggleUserRole(user, role.code, $any($event.target).checked)"
+                                   [disabled]="isBusy(user.id) || (user.roles.length <= 1 && user.roles.includes(role.code))"
+                                   class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400 disabled:opacity-50" />
+                            <span class="text-sm text-slate-700" [class.opacity-50]="isBusy(user.id)">{{ role.name }}</span>
+                          </label>
                         }
-                      </select>
-                      <p class="mt-1 text-xs text-slate-500">{{ user.role }}</p>
+                      </div>
                     </td>
 
                     <td class="px-6 py-4">
@@ -472,19 +473,28 @@ export class UserListComponent implements OnInit {
     });
   }
 
-  changeRole(user: AdminUser, roleCode: string): void {
-    if (!roleCode || roleCode === user.role) {
+  toggleUserRole(user: AdminUser, roleCode: string, isChecked: boolean): void {
+    let newRoles = [...user.roles];
+    if (isChecked) {
+      if (!newRoles.includes(roleCode)) newRoles.push(roleCode);
+    } else {
+      newRoles = newRoles.filter((r) => r !== roleCode);
+    }
+
+    if (newRoles.length === 0) {
+      this.errorMsg.set('Người dùng phải có ít nhất 1 role.');
       return;
     }
 
     this.processingUserId.set(user.id);
     this.errorMsg.set('');
 
-    this.userService.updateRole(user.id, roleCode).subscribe({
-      next: (updatedUser) => {
+    this.userService.assignRoles(user.id, newRoles).subscribe({
+      next: (response) => {
+        const updatedUser = { ...user, roles: response.assignedRoles };
         this.upsertUser(updatedUser);
         this.processingUserId.set(null);
-        this.successMsg.set(`Đã cập nhật role của "${updatedUser.username}" thành "${this.getRoleName(updatedUser.role)}".`);
+        this.successMsg.set(`Đã cập nhật role cho "${user.username}".`);
         this.clearSuccessLater();
       },
       error: (error: HttpErrorResponse) => {

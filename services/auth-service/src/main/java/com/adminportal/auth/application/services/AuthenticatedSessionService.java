@@ -49,10 +49,8 @@ public class AuthenticatedSessionService {
         userSessionRevocationService.storeNewSession(newToken);
         log.info("Token created for userId={}", user.getId());
 
-        Set<String> permissionCodes = runtimePermissionService.getPermissionCodes(user.getUsername());
-        List<String> authorities = new ArrayList<>();
-        authorities.add(user.getRole());
-        authorities.addAll(permissionCodes);
+        Set<String> allAuths = runtimePermissionService.getAllAuthorities(user.getUsername());
+        List<String> authorities = new ArrayList<>(allAuths);
 
         return LoginResponse.success(
             generatedToken.value(),

@@ -152,8 +152,7 @@ export class AuthService {
   }
 
   isAdmin(): boolean {
-    const role = this._state().user?.role ?? '';
-    return role.replace(/^ROLE_/, '').toUpperCase() === 'ADMIN';
+    return this.hasAuthority('ROLE_ADMIN');
   }
 
   /* ────────────────────────────────────────────
