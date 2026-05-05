@@ -6,6 +6,7 @@ import com.adminportal.auth.application.port.out.TokenCachePort;
 import com.adminportal.auth.application.port.out.TokenRepositoryPort;
 import com.adminportal.auth.application.port.out.UserRepositoryPort;
 import com.adminportal.auth.application.services.UserSessionRevocationService;
+import com.adminportal.auth.application.services.UsernamePasswordHashService;
 import com.adminportal.auth.domain.entity.PasswordResetToken;
 import com.adminportal.auth.domain.entity.Token;
 import com.adminportal.auth.domain.entity.User;
@@ -51,10 +52,11 @@ class ResetPasswordUseCaseImplTest {
     @BeforeEach
     void setUp() {
         UserSessionRevocationService userSessionRevocationService = new UserSessionRevocationService(tokenRepository, tokenCache);
+        UsernamePasswordHashService hashService = new UsernamePasswordHashService(new BCryptPasswordEncoder(12));
         resetPasswordUseCase = new ResetPasswordUseCaseImpl(
             passwordResetTokenRepository,
             userRepository,
-            new BCryptPasswordEncoder(12),
+            hashService,
             userSessionRevocationService
         );
     }
@@ -102,6 +104,7 @@ class ResetPasswordUseCaseImplTest {
 
         resetPasswordUseCase.execute(new ResetPasswordRequest("valid-token", "SecurePass@1234"));
 
+        // Hash is still BCrypt format but now bound to the username
         assertTrue(user.getPasswordHash().startsWith("$2"));
         assertTrue(resetToken.isUsed());
         verify(tokenCache).evict("jti-1");

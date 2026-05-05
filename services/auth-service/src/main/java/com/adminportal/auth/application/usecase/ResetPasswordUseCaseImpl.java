@@ -5,11 +5,11 @@ import com.adminportal.auth.application.port.in.ResetPasswordUseCase;
 import com.adminportal.auth.application.port.out.PasswordResetTokenRepositoryPort;
 import com.adminportal.auth.application.port.out.UserRepositoryPort;
 import com.adminportal.auth.application.services.UserSessionRevocationService;
+import com.adminportal.auth.application.services.UsernamePasswordHashService;
 import com.adminportal.auth.domain.entity.PasswordResetToken;
 import com.adminportal.auth.domain.entity.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,16 +31,16 @@ public class ResetPasswordUseCaseImpl implements ResetPasswordUseCase {
 
     private final PasswordResetTokenRepositoryPort passwordResetTokenRepository;
     private final UserRepositoryPort userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final UsernamePasswordHashService passwordHashService;
     private final UserSessionRevocationService userSessionRevocationService;
 
     public ResetPasswordUseCaseImpl(PasswordResetTokenRepositoryPort passwordResetTokenRepository,
                                     UserRepositoryPort userRepository,
-                                    PasswordEncoder passwordEncoder,
+                                    UsernamePasswordHashService passwordHashService,
                                     UserSessionRevocationService userSessionRevocationService) {
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.passwordHashService = passwordHashService;
         this.userSessionRevocationService = userSessionRevocationService;
     }
 
@@ -59,7 +59,7 @@ public class ResetPasswordUseCaseImpl implements ResetPasswordUseCase {
         User user = userRepository.findById(resetToken.getUserId())
             .orElseThrow(() -> new IllegalArgumentException("Invalid reset token"));
 
-        user.changePassword(passwordEncoder.encode(request.newPassword()));
+        user.changePassword(passwordHashService.encode(user.getUsername(), request.newPassword()));
         userRepository.save(user);
 
         userSessionRevocationService.revokeAll(user.getId());

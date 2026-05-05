@@ -37,7 +37,7 @@
             "changeme"
           ],
           "dbSchema": [
-            "public"
+            "auth"
           ],
           "usersTable": [
             "users"

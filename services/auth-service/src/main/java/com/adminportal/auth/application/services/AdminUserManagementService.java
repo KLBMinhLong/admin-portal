@@ -11,7 +11,7 @@ import com.adminportal.auth.domain.entity.Role;
 import com.adminportal.auth.domain.entity.User;
 import com.adminportal.auth.domain.exception.ResourceConflictException;
 import com.adminportal.auth.domain.exception.ResourceNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import com.adminportal.auth.application.services.UsernamePasswordHashService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,14 +34,14 @@ public class AdminUserManagementService {
 
     private final UserRepositoryPort userRepository;
     private final RoleRepositoryPort roleRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final UsernamePasswordHashService passwordHashService;
 
     public AdminUserManagementService(UserRepositoryPort userRepository,
                                       RoleRepositoryPort roleRepository,
-                                      PasswordEncoder passwordEncoder) {
+                                      UsernamePasswordHashService passwordHashService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.passwordHashService = passwordHashService;
     }
 
     @Transactional(readOnly = true)
@@ -78,7 +78,7 @@ public class AdminUserManagementService {
         User user = User.create(
             username,
             email,
-            passwordEncoder.encode(request.password()),
+            passwordHashService.encode(username, request.password()),
             toPrimaryRole(role.getCode()),
             normalizeName(request.firstName()),
             normalizeName(request.lastName())

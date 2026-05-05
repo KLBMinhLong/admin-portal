@@ -138,7 +138,7 @@ services:
     container_name: portal-auth-service
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
-      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-adminportal}
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-adminportal}?currentSchema=auth
       DB_USERNAME: ${POSTGRES_USER:-portaluser}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
       REDIS_HOST: redis
@@ -186,7 +186,7 @@ services:
     container_name: portal-domain-service
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
-      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-adminportal}
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-adminportal}?currentSchema=domain
       DB_USERNAME: ${POSTGRES_USER:-portaluser}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
       REDIS_HOST: redis

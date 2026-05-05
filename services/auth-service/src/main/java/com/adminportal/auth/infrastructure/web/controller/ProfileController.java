@@ -16,7 +16,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import com.adminportal.auth.application.services.UsernamePasswordHashService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,18 +24,18 @@ import org.springframework.web.bind.annotation.*;
 public class ProfileController {
 
     private final UserRepositoryPort userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final UsernamePasswordHashService passwordHashService;
     private final SecretGenerator secretGenerator;
     private final QrDataFactory qrDataFactory;
     private final QrGenerator qrGenerator;
 
     public ProfileController(UserRepositoryPort userRepository,
-                             PasswordEncoder passwordEncoder,
+                             UsernamePasswordHashService passwordHashService,
                              SecretGenerator secretGenerator,
                              QrDataFactory qrDataFactory,
                              QrGenerator qrGenerator) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.passwordHashService = passwordHashService;
         this.secretGenerator = secretGenerator;
         this.qrDataFactory = qrDataFactory;
         this.qrGenerator = qrGenerator;
@@ -64,11 +64,11 @@ public class ProfileController {
         User user = userRepository.findByUsername(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!passwordEncoder.matches(req.oldPassword(), user.getPasswordHash())) {
+        if (!passwordHashService.matches(user.getUsername(), req.oldPassword(), user.getPasswordHash())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
-        user.changePassword(passwordEncoder.encode(req.newPassword()));
+        user.changePassword(passwordHashService.encode(user.getUsername(), req.newPassword()));
         userRepository.save(user);
 
         return ResponseEntity.ok().build();

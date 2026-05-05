@@ -22,9 +22,12 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: domain
   flyway:
     enabled: true
     locations: classpath:db/migration
+    schemas: domain
+    default-schema: domain
     baseline-on-migrate: true
     baseline-version: 0
     table: flyway_schema_history_domain

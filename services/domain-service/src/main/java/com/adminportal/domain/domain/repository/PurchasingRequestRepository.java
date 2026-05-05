@@ -13,7 +13,7 @@ public interface PurchasingRequestRepository extends JpaRepository<PurchasingReq
     /**
      * Lấy giá trị tiếp theo của sequence để sinh request number.
      */
-    @Query(value = "SELECT nextval('seq_request_number')", nativeQuery = true)
+    @Query(value = "SELECT nextval('domain.seq_request_number')", nativeQuery = true)
     long nextRequestSequence();
 
     @Query("SELECT r.status, COUNT(r) FROM PurchasingRequest r GROUP BY r.status")
@@ -22,10 +22,10 @@ public interface PurchasingRequestRepository extends JpaRepository<PurchasingReq
     @Query("SELECT r.status, COUNT(r) FROM PurchasingRequest r WHERE r.requestedBy = :username GROUP BY r.status")
     java.util.List<Object[]> countRequestsByStatusForUser(@org.springframework.data.repository.query.Param("username") String username);
 
-    @Query(value = "SELECT EXTRACT(MONTH FROM requested_date) as month, SUM(total_amount) as total FROM purchasing_requests WHERE EXTRACT(YEAR FROM requested_date) = :year GROUP BY EXTRACT(MONTH FROM requested_date)", nativeQuery = true)
+    @Query(value = "SELECT EXTRACT(MONTH FROM requested_date) as month, SUM(total_amount) as total FROM domain.purchasing_requests WHERE EXTRACT(YEAR FROM requested_date) = :year GROUP BY EXTRACT(MONTH FROM requested_date)", nativeQuery = true)
     java.util.List<Object[]> sumTotalAmountByMonthInYear(@org.springframework.data.repository.query.Param("year") int year);
 
-    @Query(value = "SELECT EXTRACT(MONTH FROM requested_date) as month, SUM(total_amount) as total FROM purchasing_requests WHERE EXTRACT(YEAR FROM requested_date) = :year AND requested_by = :username GROUP BY EXTRACT(MONTH FROM requested_date)", nativeQuery = true)
+    @Query(value = "SELECT EXTRACT(MONTH FROM requested_date) as month, SUM(total_amount) as total FROM domain.purchasing_requests WHERE EXTRACT(YEAR FROM requested_date) = :year AND requested_by = :username GROUP BY EXTRACT(MONTH FROM requested_date)", nativeQuery = true)
     java.util.List<Object[]> sumTotalAmountByMonthInYearForUser(@org.springframework.data.repository.query.Param("year") int year, @org.springframework.data.repository.query.Param("username") String username);
 
     @Query("SELECT r FROM PurchasingRequest r WHERE r.status = 'PENDING_APPROVAL' ORDER BY r.totalAmount DESC")

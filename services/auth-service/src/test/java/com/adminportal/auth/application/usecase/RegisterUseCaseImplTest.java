@@ -4,6 +4,7 @@ import com.adminportal.auth.application.dto.request.RegisterRequest;
 import com.adminportal.auth.application.dto.response.RegisterResponse;
 import com.adminportal.auth.application.port.out.RoleRepositoryPort;
 import com.adminportal.auth.application.port.out.UserRepositoryPort;
+import com.adminportal.auth.application.services.UsernamePasswordHashService;
 import com.adminportal.auth.domain.entity.Role;
 import com.adminportal.auth.domain.entity.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +37,8 @@ class RegisterUseCaseImplTest {
 
     @BeforeEach
     void setUp() {
-        registerUseCase = new RegisterUseCaseImpl(userRepository, roleRepository, new BCryptPasswordEncoder(12));
+        UsernamePasswordHashService hashService = new UsernamePasswordHashService(new BCryptPasswordEncoder(12));
+        registerUseCase = new RegisterUseCaseImpl(userRepository, roleRepository, hashService);
         defaultRole = Role.create("USER", "User", "Default role");
     }
 
@@ -68,6 +70,7 @@ class RegisterUseCaseImplTest {
         assertEquals("john_doe", response.username());
         assertEquals("john@example.com", response.email());
         assertFalse(response.emailVerified());
+        // Hash is still BCrypt format but now bound to the username
         assertTrue(savedUser.getPasswordHash().startsWith("$2"));
     }
 

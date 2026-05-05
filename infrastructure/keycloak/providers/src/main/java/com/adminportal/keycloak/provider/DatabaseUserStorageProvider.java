@@ -39,7 +39,7 @@ final class DatabaseUserStorageProvider implements UserStorageProvider, UserLook
         this.dbUsername = ProviderConfiguration.getRequired(model, ProviderConfiguration.DB_USERNAME);
         this.dbPassword = ProviderConfiguration.getRequired(model, ProviderConfiguration.DB_PASSWORD);
         String schema = ProviderConfiguration.sanitizeIdentifier(
-            ProviderConfiguration.getOptional(model, ProviderConfiguration.DB_SCHEMA, "public"),
+            ProviderConfiguration.getOptional(model, ProviderConfiguration.DB_SCHEMA, "auth"),
             ProviderConfiguration.DB_SCHEMA
         );
         String usersTable = ProviderConfiguration.sanitizeIdentifier(
@@ -94,10 +94,13 @@ final class DatabaseUserStorageProvider implements UserStorageProvider, UserLook
 
         String externalId = StorageId.externalId(user.getId());
         ProviderUser stored = findByExternalId(externalId).orElse(null);
-        return stored != null
-            && stored.enabled()
-            && stored.passwordHash() != null
-            && BCrypt.checkpw(input.getChallengeResponse(), stored.passwordHash());
+        if (stored == null || !stored.enabled() || stored.passwordHash() == null) {
+            return false;
+        }
+        // Bind password check to the username: hash = BCrypt(username:rawPassword)
+        String combined = stored.username().toLowerCase(java.util.Locale.ROOT)
+            + ":" + input.getChallengeResponse();
+        return BCrypt.checkpw(combined, stored.passwordHash());
     }
 
     @Override

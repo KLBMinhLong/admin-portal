@@ -14,7 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import com.adminportal.auth.application.services.UsernamePasswordHashService;
 
 import java.util.LinkedHashSet;
 import java.util.Optional;
@@ -35,13 +35,13 @@ class AdminUserManagementServiceTest {
     private RoleRepositoryPort roleRepository;
 
     @Mock
-    private PasswordEncoder passwordEncoder;
+    private UsernamePasswordHashService passwordHashService;
 
     private AdminUserManagementService adminUserManagementService;
 
     @BeforeEach
     void setUp() {
-        adminUserManagementService = new AdminUserManagementService(userRepository, roleRepository, passwordEncoder);
+        adminUserManagementService = new AdminUserManagementService(userRepository, roleRepository, passwordHashService);
     }
 
     @Test
@@ -50,7 +50,7 @@ class AdminUserManagementServiceTest {
         when(userRepository.findByUsername("new_user")).thenReturn(Optional.empty());
         when(userRepository.findByEmail("new.user@example.com")).thenReturn(Optional.empty());
         when(roleRepository.findByCode("USER")).thenReturn(Optional.of(userRole));
-        when(passwordEncoder.encode("StrongPassword@123")).thenReturn("$2-hash");
+        when(passwordHashService.encode("new_user", "StrongPassword@123")).thenReturn("$2-hash");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         AdminUserDto createdUser = adminUserManagementService.createUser(new AdminUserCreateRequest(

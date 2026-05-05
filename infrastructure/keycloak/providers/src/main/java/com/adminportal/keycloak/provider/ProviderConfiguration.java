@@ -79,7 +79,7 @@ final class ProviderConfiguration {
                 "jdbc:postgresql://postgres:5432/adminportal"),
             stringProperty(DB_USERNAME, "DB Username", "Database username for reading the users table.", "portaluser"),
             stringProperty(DB_PASSWORD, "DB Password", "Database password for reading the users table.", "changeme"),
-            stringProperty(DB_SCHEMA, "DB Schema", "Schema that stores the application users table.", "public"),
+            stringProperty(DB_SCHEMA, "DB Schema", "Schema that stores the application users table.", "auth"),
             stringProperty(USERS_TABLE, "Users Table", "Application users table used for login.", "users"),
             booleanProperty(SEARCHABLE, "Searchable", "Expose users in Keycloak admin search.", true)
         );

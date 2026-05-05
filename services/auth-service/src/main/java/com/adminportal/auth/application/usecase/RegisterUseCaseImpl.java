@@ -5,11 +5,11 @@ import com.adminportal.auth.application.dto.response.RegisterResponse;
 import com.adminportal.auth.application.port.in.RegisterUseCase;
 import com.adminportal.auth.application.port.out.RoleRepositoryPort;
 import com.adminportal.auth.application.port.out.UserRepositoryPort;
+import com.adminportal.auth.application.services.UsernamePasswordHashService;
 import com.adminportal.auth.domain.entity.Role;
 import com.adminportal.auth.domain.entity.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,14 +30,14 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
 
     private final UserRepositoryPort userRepository;
     private final RoleRepositoryPort roleRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final UsernamePasswordHashService passwordHashService;
 
     public RegisterUseCaseImpl(UserRepositoryPort userRepository,
                                RoleRepositoryPort roleRepository,
-                               PasswordEncoder passwordEncoder) {
+                               UsernamePasswordHashService passwordHashService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.passwordHashService = passwordHashService;
     }
 
     @Override
@@ -49,7 +49,7 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
         validatePasswordPolicy(request.password());
         validateUniqueUser(normalizedUsername, normalizedEmail);
 
-        String passwordHash = passwordEncoder.encode(request.password());
+        String passwordHash = passwordHashService.encode(normalizedUsername, request.password());
         Role defaultRole = roleRepository.findByCode(DEFAULT_RBAC_ROLE)
             .orElseThrow(() -> new IllegalStateException("Default RBAC role not found: " + DEFAULT_RBAC_ROLE));
 
