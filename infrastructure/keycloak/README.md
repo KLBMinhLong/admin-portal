@@ -2,7 +2,7 @@
 
 Primary login path:
 - `adminportal-db-user-provider`
-  - Reads `public.users` from the main PostgreSQL database.
+  - Reads `auth.user` from the PostgreSQL database.
   - Used by Keycloak direct grant when `auth-service` calls `/protocol/openid-connect/token`.
 
 Future-only provider:

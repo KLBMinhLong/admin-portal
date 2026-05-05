@@ -105,6 +105,11 @@ services:
       KC_DB_USERNAME: ${POSTGRES_USER:-portaluser}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
       KC_DB_SCHEMA: keycloak
+      # Main DB access for User Storage Provider (Custom SPI)
+      USER_DB_JDBC_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-adminportal}
+      USER_DB_DB_USERNAME: ${POSTGRES_USER:-portaluser}
+      USER_DB_DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      USER_DB_DB_SCHEMA: auth
       KEYCLOAK_ADMIN: ${KC_ADMIN:-admin}
       KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:-admin}
       KC_HTTP_PORT: 8080

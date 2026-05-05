@@ -24,19 +24,39 @@ final class ProviderConfiguration {
     }
 
     static String getRequired(ComponentModel model, String key) {
+        // 1. Try Environment Variable first (e.g. USER_DB_PASSWORD)
+        String envKey = "USER_DB_" + key.replaceAll("([A-Z])", "_$1").toUpperCase();
+        String envValue = System.getenv(envKey);
+        if (envValue != null && !envValue.isBlank()) {
+            return envValue;
+        }
+
+        // 2. Fallback to Keycloak Component Config (UI)
         String value = model.getConfig().getFirst(key);
         if (value == null || value.isBlank()) {
-            throw new IllegalStateException("Missing provider config: " + key);
+            throw new IllegalStateException("Missing provider config: " + key + " (and env var " + envKey + " not set)");
         }
         return value;
     }
 
     static String getOptional(ComponentModel model, String key, String defaultValue) {
+        String envKey = "USER_DB_" + key.replaceAll("([A-Z])", "_$1").toUpperCase();
+        String envValue = System.getenv(envKey);
+        if (envValue != null && !envValue.isBlank()) {
+            return envValue;
+        }
+
         String value = model.getConfig().getFirst(key);
         return value == null || value.isBlank() ? defaultValue : value;
     }
 
     static boolean getBoolean(ComponentModel model, String key, boolean defaultValue) {
+        String envKey = "USER_DB_" + key.replaceAll("([A-Z])", "_$1").toUpperCase();
+        String envValue = System.getenv(envKey);
+        if (envValue != null && !envValue.isBlank()) {
+            return Boolean.parseBoolean(envValue);
+        }
+
         String value = model.getConfig().getFirst(key);
         return value == null || value.isBlank() ? defaultValue : Boolean.parseBoolean(value);
     }
@@ -77,8 +97,8 @@ final class ProviderConfiguration {
         return List.of(
             stringProperty(JDBC_URL, "JDBC URL", "PostgreSQL connection string for the application database.",
                 "jdbc:postgresql://postgres:5432/adminportal"),
-            stringProperty(DB_USERNAME, "DB Username", "Database username for reading the users table.", "portaluser"),
-            stringProperty(DB_PASSWORD, "DB Password", "Database password for reading the users table.", "changeme"),
+            stringProperty(DB_USERNAME, "DB Username", "Database username for reading the users table.", ""),
+            stringProperty(DB_PASSWORD, "DB Password", "Database password for reading the users table.", ""),
             stringProperty(DB_SCHEMA, "DB Schema", "Schema that stores the application users table.", "auth"),
             stringProperty(USERS_TABLE, "Users Table", "Application users table used for login.", "users"),
             booleanProperty(SEARCHABLE, "Searchable", "Expose users in Keycloak admin search.", true)
