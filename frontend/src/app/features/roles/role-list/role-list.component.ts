@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RoleManagementService } from '@core/services/role-management.service';
@@ -8,6 +8,7 @@ import {
   PageHeaderComponent, CardComponent, BadgeComponent, IconComponent, 
   ButtonComponent, FormFieldComponent, InputComponent, ModalComponent
 } from '@shared/components';
+import { RoleFormComponent } from '../components/role-form/role-form.component';
 
 @Component({
   selector: 'app-role-list',
@@ -15,7 +16,8 @@ import {
   imports: [
     CommonModule, ReactiveFormsModule,
     PageHeaderComponent, CardComponent, BadgeComponent, IconComponent,
-    ButtonComponent, FormFieldComponent, InputComponent, ModalComponent
+    ButtonComponent, FormFieldComponent, InputComponent, ModalComponent,
+    RoleFormComponent
   ],
   template: `
     <div class="flex flex-col gap-6">
@@ -87,33 +89,13 @@ import {
         [title]="isEdit() ? 'Cập nhật Role' : 'Thêm Role mới'"
         (closed)="closeModal()"
       >
-        <form [formGroup]="roleForm" (ngSubmit)="saveRole()">
-          <div class="space-y-4">
-            <app-form-field label="Mã Role" fieldId="roleCode" [required]="!isEdit()" [error]="getFieldError('code')">
-              <app-input formControlName="code" placeholder="VD: FINANCE_MANAGER" [hasError]="hasFieldError('code')" />
-              @if (!isEdit()) {
-                <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-wider">Mã định danh duy nhất, không chứa khoảng trắng</p>
-              }
-            </app-form-field>
-            
-            <app-form-field label="Tên hiển thị" fieldId="roleName" [required]="true" [error]="getFieldError('name')">
-              <app-input formControlName="name" placeholder="VD: Quản lý Tài chính" [hasError]="hasFieldError('name')" />
-            </app-form-field>
-            
-            <app-form-field label="Mô tả" fieldId="roleDesc">
-              <textarea formControlName="description" rows="3" placeholder="Mô tả chức năng của role này..."
-                class="w-full px-3 py-2 border rounded-lg text-sm outline-none transition-colors duration-200 border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none">
-              </textarea>
-            </app-form-field>
-          </div>
-          
-          <div class="mt-6 flex justify-end gap-3">
-            <app-button type="button" variant="secondary" (onClick)="closeModal()">Hủy</app-button>
-            <app-button type="submit" variant="primary" [disabled]="roleForm.invalid">
-              Lưu thông tin
-            </app-button>
-          </div>
-        </form>
+        <app-role-form 
+          [isEdit]="isEdit()" 
+          [initialData]="editingRole()" 
+          (submitted)="saveRole($event)" 
+          (cancelled)="closeModal()" 
+          #roleFormComponent 
+        />
       </app-modal>
     </div>
   `,
@@ -122,21 +104,12 @@ export class RoleListComponent implements OnInit {
   roles = signal<AdminRole[]>([]);
   showModal = signal(false);
   isEdit = signal(false);
-  editingRoleId: number | null = null;
-  
-  roleForm: FormGroup;
+  editingRole = signal<AdminRole | null>(null);
 
-  private fb = inject(FormBuilder);
+  @ViewChild('roleFormComponent') roleFormComponent!: RoleFormComponent;
+
   private roleService = inject(RoleManagementService);
   private toastService = inject(ToastService);
-
-  constructor() {
-    this.roleForm = this.fb.group({
-      code: ['', [Validators.required, Validators.pattern('^[A-Z0-9_]+$')]],
-      name: ['', Validators.required],
-      description: ['']
-    });
-  }
 
   ngOnInit(): void {
     this.loadRoles();
@@ -149,37 +122,15 @@ export class RoleListComponent implements OnInit {
     });
   }
 
-  hasFieldError(field: string): boolean {
-    const control = this.roleForm.get(field);
-    return !!(control && control.invalid && (control.dirty || control.touched));
-  }
-
-  getFieldError(field: string): string {
-    const control = this.roleForm.get(field);
-    if (!control || !control.errors || (!control.dirty && !control.touched)) return '';
-    
-    if (control.errors['required']) return 'Trường này là bắt buộc';
-    if (control.errors['pattern']) return 'Mã Role chỉ chứa ký tự in hoa, số và dấu gạch dưới';
-    return 'Dữ liệu không hợp lệ';
-  }
-
   openCreateModal(): void {
     this.isEdit.set(false);
-    this.editingRoleId = null;
-    this.roleForm.reset();
-    this.roleForm.get('code')?.enable();
+    this.editingRole.set(null);
     this.showModal.set(true);
   }
 
   openEditModal(role: AdminRole): void {
     this.isEdit.set(true);
-    this.editingRoleId = role.id;
-    this.roleForm.patchValue({
-      code: role.code,
-      name: role.name,
-      description: role.description
-    });
-    this.roleForm.get('code')?.disable();
+    this.editingRole.set(role);
     this.showModal.set(true);
   }
 
@@ -187,22 +138,25 @@ export class RoleListComponent implements OnInit {
     this.showModal.set(false);
   }
 
-  saveRole(): void {
-    if (this.roleForm.invalid) {
-      this.roleForm.markAllAsTouched();
-      return;
+  saveRole(roleData: any): void {
+    if (this.roleFormComponent) {
+      this.roleFormComponent.setSubmitting(true);
     }
 
-    const roleData = this.roleForm.getRawValue();
+    const currentRole = this.editingRole();
 
-    if (this.isEdit() && this.editingRoleId) {
-      this.roleService.updateRole(this.editingRoleId, roleData).subscribe({
+    if (this.isEdit() && currentRole) {
+      this.roleService.updateRole(currentRole.id, roleData).subscribe({
         next: () => {
           this.toastService.success('Thành công', 'Đã cập nhật Role.');
           this.loadRoles();
           this.closeModal();
+          if (this.roleFormComponent) this.roleFormComponent.setSubmitting(false);
         },
-        error: () => this.toastService.error('Lỗi', 'Không thể cập nhật Role.')
+        error: () => {
+          this.toastService.error('Lỗi', 'Không thể cập nhật Role.');
+          if (this.roleFormComponent) this.roleFormComponent.setSubmitting(false);
+        }
       });
     } else {
       this.roleService.createRole(roleData).subscribe({
@@ -210,8 +164,12 @@ export class RoleListComponent implements OnInit {
           this.toastService.success('Thành công', 'Đã thêm Role mới.');
           this.loadRoles();
           this.closeModal();
+          if (this.roleFormComponent) this.roleFormComponent.setSubmitting(false);
         },
-        error: () => this.toastService.error('Lỗi', 'Không thể thêm Role mới.')
+        error: () => {
+          this.toastService.error('Lỗi', 'Không thể thêm Role mới.');
+          if (this.roleFormComponent) this.roleFormComponent.setSubmitting(false);
+        }
       });
     }
   }

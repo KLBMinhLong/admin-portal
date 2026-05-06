@@ -17,6 +17,8 @@ import {
   PageHeaderComponent, CardComponent, ButtonComponent, BadgeComponent,
   FormFieldComponent, InputComponent, SkeletonComponent
 } from '@shared/components';
+import { UserDisplayPipe } from '@shared/pipes/user-display.pipe';
+import { RoleDisplayPipe } from '@shared/pipes/role-display.pipe';
 
 @Component({
   selector: 'app-user-detail',
@@ -24,7 +26,8 @@ import {
   imports: [
     CommonModule, ReactiveFormsModule, RouterLink,
     PageHeaderComponent, CardComponent, ButtonComponent, BadgeComponent,
-    FormFieldComponent, InputComponent, SkeletonComponent
+    FormFieldComponent, InputComponent, SkeletonComponent,
+    UserDisplayPipe, RoleDisplayPipe
   ],
   template: `
     @if (loading()) {
@@ -46,7 +49,7 @@ import {
             </a>
             <div class="flex items-start gap-4">
               <div class="flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-900 text-lg font-semibold text-white shadow-sm">
-                {{ getUserInitials(user()!) }}
+                {{ user()! | userDisplay:'initials' }}
               </div>
               <div>
                 <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">User Detail</p>
@@ -57,7 +60,7 @@ import {
                     {{ getStatusConfig().label }}
                   </app-badge>
                   <app-badge variant="info">
-                    {{ user()!.roles.length > 0 ? getRoleName(user()!.roles[0]) : 'Chưa có role' }}
+                    {{ user()!.roles.length > 0 ? (user()!.roles[0] | roleDisplay:roleOptions()) : 'Chưa có role' }}
                   </app-badge>
                 </div>
               </div>
@@ -115,7 +118,7 @@ import {
               <div class="mt-6 grid gap-4 md:grid-cols-2">
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Họ và tên</p>
-                  <p class="mt-2 text-sm font-medium text-slate-900">{{ getDisplayName(user()!) }}</p>
+                  <p class="mt-2 text-sm font-medium text-slate-900">{{ user()! | userDisplay:'displayName' }}</p>
                 </div>
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Username</p>
@@ -324,27 +327,6 @@ export class UserDetailComponent implements OnInit {
         this.toastService.error('Lỗi', error.error?.message || 'Không thể cập nhật trạng thái người dùng.');
       },
     });
-  }
-
-  getDisplayName(user: AdminUser): string {
-    const fullName = `${user.lastName ?? ''} ${user.firstName ?? ''}`.trim();
-    return fullName || 'Chưa cập nhật họ tên';
-  }
-
-  getUserInitials(user: AdminUser): string {
-    const displayName = this.getDisplayName(user);
-    if (displayName !== 'Chưa cập nhật họ tên') {
-      return displayName
-        .split(' ')
-        .slice(0, 2)
-        .map((part) => part.charAt(0).toUpperCase())
-        .join('');
-    }
-    return user.username.charAt(0).toUpperCase();
-  }
-
-  getRoleName(roleCode: string): string {
-    return this.roleOptions().find((role) => role.code === roleCode)?.name ?? formatRoleCode(roleCode);
   }
 
   getStatusConfig() {

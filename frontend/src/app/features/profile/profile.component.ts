@@ -1,20 +1,20 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { ProfileService, ProfileDto } from './profile.service';
+import { ProfileService, ProfileDto, ChangePasswordDto } from './profile.service';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { 
   PageHeaderComponent, CardComponent, BadgeComponent, IconComponent, 
   ButtonComponent, FormFieldComponent, InputComponent, AlertComponent 
 } from '@shared/components';
+import { PasswordFormComponent } from './components/password-form/password-form.component';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule,
+    CommonModule,
     PageHeaderComponent, CardComponent, BadgeComponent, IconComponent,
-    ButtonComponent, FormFieldComponent, InputComponent, AlertComponent
+    ButtonComponent, PasswordFormComponent
   ],
   template: `
     <div class="space-y-6">
@@ -54,34 +54,7 @@ import {
               Đổi mật khẩu
             </h3>
             
-            <form [formGroup]="pwdForm" (ngSubmit)="changePassword()" class="space-y-4">
-              @if (pwdError()) {
-                <app-alert variant="error" [message]="pwdError()" />
-              }
-              
-              <app-form-field label="Mật khẩu hiện tại" fieldId="oldPassword" [required]="true" [error]="getFieldError('oldPassword')">
-                <app-input formControlName="oldPassword" type="password" placeholder="Nhập mật khẩu hiện tại" [hasError]="hasFieldError('oldPassword')" />
-              </app-form-field>
-              
-              <app-form-field label="Mật khẩu mới" fieldId="newPassword" [required]="true" [error]="getFieldError('newPassword')">
-                <app-input formControlName="newPassword" type="password" placeholder="Nhập mật khẩu mới" [hasError]="hasFieldError('newPassword')" />
-                <!-- Password Strength Meter -->
-                <div class="mt-2 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden flex">
-                  <div class="h-full transition-all duration-300" [ngClass]="getStrengthColor()" [style.width]="getStrengthPercentage()"></div>
-                </div>
-                <p class="text-[10px] text-slate-500 mt-1">Độ mạnh: {{ getStrengthText() }}</p>
-              </app-form-field>
-
-              <app-form-field label="Xác nhận mật khẩu mới" fieldId="confirmPassword" [required]="true" [error]="getFieldError('confirmPassword') || (pwdForm.hasError('passwordMismatch') && pwdForm.get('confirmPassword')?.touched ? 'Mật khẩu xác nhận không khớp.' : '')">
-                <app-input formControlName="confirmPassword" type="password" placeholder="Nhập lại mật khẩu mới" [hasError]="hasFieldError('confirmPassword') || !!(pwdForm.hasError('passwordMismatch') && pwdForm.get('confirmPassword')?.touched)" />
-              </app-form-field>
-
-              <div class="flex justify-end pt-2">
-                <app-button type="submit" variant="primary" [loading]="isSubmittingPwd()" [disabled]="pwdForm.invalid">
-                  Cập nhật mật khẩu
-                </app-button>
-              </div>
-            </form>
+            <app-password-form (submitted)="changePassword($event)" #pwdFormComponent />
           </app-card>
 
           <!-- Xác thực 2 bước (2FA) -->
@@ -125,24 +98,12 @@ import {
 })
 export class ProfileComponent implements OnInit {
   profile = signal<ProfileDto | null>(null);
-  
-  pwdForm: FormGroup;
-  pwdError = signal('');
-  isSubmittingPwd = signal(false);
-
   qrCodeUrl = signal<string | null>(null);
 
-  private fb = inject(FormBuilder);
+  @ViewChild('pwdFormComponent') pwdFormComponent!: PasswordFormComponent;
+
   private profileService = inject(ProfileService);
   private toastService = inject(ToastService);
-
-  constructor() {
-    this.pwdForm = this.fb.group({
-      oldPassword: ['', Validators.required],
-      newPassword: ['', [Validators.required, Validators.minLength(8)]],
-      confirmPassword: ['', Validators.required]
-    }, { validators: this.passwordMatchValidator });
-  }
 
   ngOnInit() {
     this.loadProfile();
@@ -154,45 +115,25 @@ export class ProfileComponent implements OnInit {
     });
   }
 
-  passwordMatchValidator(g: AbstractControl): ValidationErrors | null {
-    return g.get('newPassword')?.value === g.get('confirmPassword')?.value
-      ? null : { passwordMismatch: true };
-  }
-
-  hasFieldError(field: string): boolean {
-    const control = this.pwdForm.get(field);
-    return !!(control && control.invalid && (control.dirty || control.touched));
-  }
-
-  getFieldError(field: string): string {
-    const control = this.pwdForm.get(field);
-    if (!control || !control.errors || (!control.dirty && !control.touched)) return '';
-    
-    if (control.errors['required']) return 'Trường này là bắt buộc';
-    if (control.errors['minlength']) return 'Mật khẩu phải có ít nhất 8 ký tự';
-    return 'Dữ liệu không hợp lệ';
-  }
-
-  changePassword() {
-    if (this.pwdForm.invalid) {
-      this.pwdForm.markAllAsTouched();
-      return;
+  changePassword(dto: ChangePasswordDto) {
+    if (this.pwdFormComponent) {
+      this.pwdFormComponent.setSubmitting(true);
+      this.pwdFormComponent.setError('');
     }
 
-    this.pwdError.set('');
-    this.isSubmittingPwd.set(true);
-    
-    const { oldPassword, newPassword } = this.pwdForm.value;
-
-    this.profileService.changePassword({ oldPassword, newPassword }).subscribe({
+    this.profileService.changePassword(dto).subscribe({
       next: () => {
         this.toastService.success('Thành công', 'Mật khẩu đã được đổi thành công!');
-        this.pwdForm.reset();
-        this.isSubmittingPwd.set(false);
+        if (this.pwdFormComponent) {
+          this.pwdFormComponent.resetForm();
+          this.pwdFormComponent.setSubmitting(false);
+        }
       },
       error: () => {
-        this.pwdError.set('Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu cũ.');
-        this.isSubmittingPwd.set(false);
+        if (this.pwdFormComponent) {
+          this.pwdFormComponent.setError('Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu cũ.');
+          this.pwdFormComponent.setSubmitting(false);
+        }
       }
     });
   }
@@ -208,30 +149,5 @@ export class ProfileComponent implements OnInit {
         this.toastService.info('Thông báo', 'Đã tắt 2FA.');
       }
     });
-  }
-
-  // Helper cho Password Strength
-  getStrengthPercentage(): string {
-    const len = this.pwdForm.get('newPassword')?.value?.length || 0;
-    if (len === 0) return '0%';
-    if (len < 6) return '33%';
-    if (len < 10) return '66%';
-    return '100%';
-  }
-
-  getStrengthColor(): string {
-    const len = this.pwdForm.get('newPassword')?.value?.length || 0;
-    if (len === 0) return 'bg-transparent';
-    if (len < 6) return 'bg-red-500';
-    if (len < 10) return 'bg-yellow-500';
-    return 'bg-green-500';
-  }
-
-  getStrengthText(): string {
-    const len = this.pwdForm.get('newPassword')?.value?.length || 0;
-    if (len === 0) return 'Chưa nhập';
-    if (len < 6) return 'Yếu';
-    if (len < 10) return 'Trung bình';
-    return 'Mạnh';
   }
 }
