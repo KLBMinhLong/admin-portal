@@ -3,6 +3,7 @@ import { RxStomp } from '@stomp/rx-stomp';
 import { API_URL } from '@core/tokens/config.token';
 import { AuthService } from '../auth/auth.service';
 import { LoggingService } from './logging.service';
+import { inject } from '@angular/core';
 
 @Injectable({
   providedIn: 'root'

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_URL } from '@core/tokens/config.token';
-
+import { inject } from '@angular/core';
 export interface CommentDto {
   id?: number;
   authorName?: string;
