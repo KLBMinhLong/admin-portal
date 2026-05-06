@@ -1,39 +1,64 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, TemplateRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 import { DashboardService, DashboardData } from './dashboard.service';
+import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
+import { StatCardComponent } from '@shared/components/stat-card/stat-card.component';
+import { CardComponent } from '@shared/components/card/card.component';
+import { DataTableComponent } from '@shared/components/data-table/data-table.component';
+import { TableColumn } from '@shared/components/data-table/data-table.models';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 
+/**
+ * Dashboard page — Smart Component.
+ * Hiển thị KPI stats, charts, top pending requests.
+ * UI delegate cho shared Dumb Components (stat-card, card, data-table).
+ */
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, BaseChartDirective],
+  imports: [
+    CommonModule, BaseChartDirective,
+    PageHeaderComponent, StatCardComponent, CardComponent,
+    DataTableComponent, EmptyStateComponent,
+  ],
   template: `
-    <h1 class="text-2xl font-bold text-slate-900 mb-6">Dashboard thống kê</h1>
+    <app-page-header
+      title="Dashboard thống kê"
+      subtitle="Overview"
+      description="Tổng quan hoạt động mua sắm và phê duyệt."
+    />
 
     <!-- Stat cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 transition-all hover:shadow-md">
-        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Tổng yêu cầu</p>
-        <p class="text-2xl font-bold text-slate-900">{{ totalRequests() }}</p>
-      </div>
-      <div class="bg-white rounded-xl border-l-4 border-l-amber-500 border border-slate-200 shadow-sm p-5 transition-all hover:shadow-md">
-        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Chờ duyệt</p>
-        <p class="text-2xl font-bold text-amber-600">{{ pendingRequests() }}</p>
-      </div>
-      <div class="bg-white rounded-xl border-l-4 border-l-green-500 border border-slate-200 shadow-sm p-5 transition-all hover:shadow-md">
-        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Đã duyệt</p>
-        <p class="text-2xl font-bold text-green-600">{{ approvedRequests() }}</p>
-      </div>
-      <div class="bg-white rounded-xl border-l-4 border-l-red-500 border border-slate-200 shadow-sm p-5 transition-all hover:shadow-md">
-        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Từ chối</p>
-        <p class="text-2xl font-bold text-red-600">{{ rejectedRequests() }}</p>
-      </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 mb-6">
+      <app-stat-card
+        label="Tổng yêu cầu"
+        [value]="totalRequests()"
+      />
+      <app-stat-card
+        label="Chờ duyệt"
+        [value]="pendingRequests()"
+        accentColor="border-l-amber-500"
+        valueColor="text-amber-600"
+      />
+      <app-stat-card
+        label="Đã duyệt"
+        [value]="approvedRequests()"
+        accentColor="border-l-green-500"
+        valueColor="text-green-600"
+      />
+      <app-stat-card
+        label="Từ chối"
+        [value]="rejectedRequests()"
+        accentColor="border-l-red-500"
+        valueColor="text-red-600"
+      />
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
       <!-- Pie Chart -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 lg:col-span-1">
+      <app-card padding="lg">
         <h2 class="text-base font-semibold text-slate-900 mb-4">Trạng thái yêu cầu</h2>
         <div class="aspect-square flex items-center justify-center">
           <canvas baseChart
@@ -42,26 +67,31 @@ import { DashboardService, DashboardData } from './dashboard.service';
                   [options]="pieChartOptions">
           </canvas>
         </div>
-      </div>
+      </app-card>
 
       <!-- Bar Chart -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 lg:col-span-2">
-        <h2 class="text-base font-semibold text-slate-900 mb-4">Tổng chi phí mua sắm theo tháng (VND)</h2>
-        <div class="w-full h-72">
-          <canvas baseChart
-                  [data]="barChartData"
-                  [type]="barChartType"
-                  [options]="barChartOptions">
-          </canvas>
-        </div>
+      <div class="lg:col-span-2">
+        <app-card padding="lg">
+          <h2 class="text-base font-semibold text-slate-900 mb-4">Tổng chi phí mua sắm theo tháng (VND)</h2>
+          <div class="w-full h-72">
+            <canvas baseChart
+                    [data]="barChartData"
+                    [type]="barChartType"
+                    [options]="barChartOptions">
+            </canvas>
+          </div>
+        </app-card>
       </div>
     </div>
 
-    <!-- Leaderboard -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-8">
-      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-        <h2 class="text-base font-semibold text-slate-900">Top 5 yêu cầu đang chờ duyệt có giá trị cao nhất</h2>
+    <!-- Leaderboard Table -->
+    <app-card padding="none">
+      <div cardHeader class="px-6 py-4 border-b border-slate-100 bg-slate-50">
+        <h2 class="text-base font-semibold text-slate-900">
+          Top 5 yêu cầu đang chờ duyệt có giá trị cao nhất
+        </h2>
       </div>
+
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
@@ -78,7 +108,7 @@ import { DashboardService, DashboardData } from './dashboard.service';
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center gap-3">
                     <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                          [ngClass]="i === 0 ? 'bg-amber-100 text-amber-700' : (i === 1 ? 'bg-slate-200 text-slate-600' : (i === 2 ? 'bg-orange-100 text-orange-700' : 'bg-blue-50 text-blue-600'))">
+                          [ngClass]="getRankClass(i)">
                       {{ i + 1 }}
                     </span>
                     <span class="text-sm font-medium text-slate-900">{{ req.requestNumber }}</span>
@@ -90,14 +120,19 @@ import { DashboardService, DashboardData } from './dashboard.service';
               </tr>
             } @empty {
               <tr>
-                <td colspan="4" class="px-6 py-8 text-center text-sm text-slate-500">Không có yêu cầu nào đang chờ duyệt.</td>
+                <td colspan="4">
+                  <app-empty-state
+                    icon="file-text"
+                    title="Không có yêu cầu nào đang chờ duyệt"
+                  />
+                </td>
               </tr>
             }
           </tbody>
         </table>
       </div>
-    </div>
-  `
+    </app-card>
+  `,
 })
 export class DashboardComponent implements OnInit {
   data = signal<DashboardData | null>(null);
@@ -125,7 +160,7 @@ export class DashboardComponent implements OnInit {
     labels: ['Chờ duyệt', 'Đã duyệt', 'Từ chối', 'Khác'],
     datasets: [{
       data: [0, 0, 0, 0],
-      backgroundColor: ['#f59e0b', '#22c55e', '#ef4444', '#94a3b8'], // amber-500, green-500, red-500, slate-400
+      backgroundColor: ['#f59e0b', '#22c55e', '#ef4444', '#94a3b8'],
       borderWidth: 0
     }]
   };
@@ -156,6 +191,16 @@ export class DashboardComponent implements OnInit {
       this.data.set(res);
       this.updateCharts(res);
     });
+  }
+
+  /** CSS class cho ranking badge theo vị trí */
+  getRankClass(index: number): string {
+    const classes = [
+      'bg-amber-100 text-amber-700',
+      'bg-slate-200 text-slate-600',
+      'bg-orange-100 text-orange-700',
+    ];
+    return classes[index] || 'bg-blue-50 text-blue-600';
   }
 
   updateCharts(res: DashboardData) {

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '@env/environment';
 import { EncryptedPayload } from './encrypted-payload.model';
+import { LoggingService } from '../services/logging.service';
 
 /**
  * AES-256-GCM Encryption Service.
@@ -27,12 +28,12 @@ export class AesGcmEncryptionService {
   private readonly rawKeyBytes: Uint8Array | null;
   private cryptoKey: CryptoKey | null = null;
 
-  constructor() {
+  constructor(private loggingService: LoggingService) {
     this.enabled = environment.encryption?.enabled ?? false;
     if (this.enabled && environment.encryption?.secretKey) {
       this.rawKeyBytes = new TextEncoder().encode(environment.encryption.secretKey);
       if (this.rawKeyBytes.length !== 32) {
-        console.error('[AesGcmEncryptionService] Secret key must be exactly 32 bytes. Got:', this.rawKeyBytes.length);
+        this.loggingService.error(`[AesGcmEncryptionService] Secret key must be exactly 32 bytes. Got: ${this.rawKeyBytes.length}`);
         this.rawKeyBytes = null;
       }
     } else {

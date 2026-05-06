@@ -6,4 +6,8 @@ export const environment = {
     enabled: true,
     secretKey: '__ENCRYPT_SECRET__', // Placeholder sẽ được replace bởi Docker entrypoint
   },
+  logging: {
+    level: 'WARN', // Only show WARN and ERROR in prod console
+    sendErrorToServer: true, // Auto send ERRORs to backend
+  }
 };

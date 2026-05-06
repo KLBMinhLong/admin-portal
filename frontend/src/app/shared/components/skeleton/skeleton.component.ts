@@ -59,7 +59,6 @@ export type SkeletonVariant = 'text' | 'circle' | 'rect' | 'table-row';
       @default {
         <div
           class="skeleton rounded-xl"
-          [class.rounded-full]="variant === 'circle'"
           [style.width]="width"
           [style.height]="variant === 'text' ? '1rem' : height"
         ></div>

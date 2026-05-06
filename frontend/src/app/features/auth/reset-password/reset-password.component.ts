@@ -4,19 +4,27 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { FormFieldComponent } from '@shared/components/form-field/form-field.component';
+import { InputComponent } from '@shared/components/input/input.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { AlertComponent } from '@shared/components/alert/alert.component';
 
+/**
+ * Reset Password page — Smart Component.
+ */
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [
+    CommonModule, ReactiveFormsModule, RouterLink,
+    FormFieldComponent, InputComponent, ButtonComponent, AlertComponent,
+  ],
   template: `
     <h2 class="text-xl font-semibold text-slate-900 mb-2">Đặt lại mật khẩu</h2>
     <p class="text-sm text-slate-500 mb-6">Nhập mật khẩu mới cho tài khoản của bạn.</p>
 
     @if (successMsg()) {
-      <div class="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-sm text-green-700">
-        {{ successMsg() }}
-      </div>
+      <app-alert variant="success" class="mb-4">{{ successMsg() }}</app-alert>
       <div class="text-center mt-4">
         <a routerLink="/auth/login"
           class="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors cursor-pointer">
@@ -25,51 +33,51 @@ import { HttpErrorResponse } from '@angular/common/http';
       </div>
     } @else {
       @if (errorMsg()) {
-        <div class="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700" role="alert">
+        <app-alert variant="error" class="mb-4" [dismissible]="true" (dismissed)="errorMsg.set('')">
           {{ errorMsg() }}
-        </div>
+        </app-alert>
       }
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
-        <div>
-          <label for="reset-password" class="block text-sm font-medium text-slate-700 mb-1">
-            Mật khẩu mới <span class="text-red-500">*</span>
-          </label>
-          <input id="reset-password" type="password" formControlName="newPassword" autocomplete="new-password"
-            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm
-                   focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none
-                   transition-colors duration-200"
-            placeholder="Tối thiểu 12 ký tự" />
-          @if (form.get('newPassword')?.touched && form.get('newPassword')?.hasError('minlength')) {
-            <p class="mt-1 text-xs text-red-600">Mật khẩu tối thiểu 12 ký tự</p>
-          }
-        </div>
+        <app-form-field
+          label="Mật khẩu mới"
+          fieldId="reset-password"
+          [required]="true"
+          [error]="form.get('newPassword')?.touched && form.get('newPassword')?.hasError('minlength') ? 'Mật khẩu tối thiểu 12 ký tự' : ''"
+        >
+          <app-input
+            formControlName="newPassword"
+            fieldId="reset-password"
+            type="password"
+            placeholder="Tối thiểu 12 ký tự"
+            autocomplete="new-password"
+            [hasError]="!!(form.get('newPassword')?.touched && form.get('newPassword')?.invalid)"
+          />
+        </app-form-field>
 
-        <div>
-          <label for="reset-confirm" class="block text-sm font-medium text-slate-700 mb-1">
-            Xác nhận mật khẩu <span class="text-red-500">*</span>
-          </label>
-          <input id="reset-confirm" type="password" formControlName="confirmPassword"
-            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm
-                   focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none
-                   transition-colors duration-200"
-            placeholder="Nhập lại mật khẩu mới" />
-          @if (form.get('confirmPassword')?.touched && passwordMismatch()) {
-            <p class="mt-1 text-xs text-red-600">Mật khẩu không khớp</p>
-          }
-        </div>
+        <app-form-field
+          label="Xác nhận mật khẩu"
+          fieldId="reset-confirm"
+          [required]="true"
+          [error]="form.get('confirmPassword')?.touched && passwordMismatch() ? 'Mật khẩu không khớp' : ''"
+        >
+          <app-input
+            formControlName="confirmPassword"
+            fieldId="reset-confirm"
+            type="password"
+            placeholder="Nhập lại mật khẩu mới"
+            [hasError]="!!(form.get('confirmPassword')?.touched && passwordMismatch())"
+          />
+        </app-form-field>
 
-        <button type="submit" [disabled]="loading()"
-          class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium
-                 rounded-lg transition-colors duration-200 cursor-pointer
-                 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                 disabled:bg-slate-300 disabled:cursor-not-allowed">
-          @if (loading()) {
-            Đang đặt lại...
-          } @else {
-            Đặt lại mật khẩu
-          }
-        </button>
+        <app-button
+          type="submit"
+          [loading]="loading()"
+          [disabled]="loading()"
+          [fullWidth]="true"
+        >
+          {{ loading() ? 'Đang đặt lại...' : 'Đặt lại mật khẩu' }}
+        </app-button>
       </form>
     }
   `,

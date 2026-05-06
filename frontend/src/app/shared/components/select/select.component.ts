@@ -50,9 +50,8 @@ export interface SelectOption {
       [value]="value()"
       (change)="onChange($event)"
       (blur)="onTouched()"
-      class="w-full px-3 py-2 border rounded-lg text-sm outline-none
-             transition-colors duration-200 appearance-none
-             bg-no-repeat bg-right pr-8 cursor-pointer"
+      class="app-select w-full px-3 py-2 border rounded-lg text-sm outline-none
+             transition-colors duration-200 appearance-none pr-8 cursor-pointer"
       [class.border-slate-300]="!hasError"
       [class.focus:ring-2]="true"
       [class.focus:ring-blue-500]="!hasError"
@@ -62,9 +61,6 @@ export interface SelectOption {
       [class.focus:border-red-500]="hasError"
       [class.bg-slate-50]="isDisabled()"
       [class.cursor-not-allowed]="isDisabled()"
-      [style.background-image]="'url(\"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3E%3Cpath stroke=%27%236b7280%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27M6 8l4 4 4-4%27/%3E%3C/svg%3E\")'"
-      [style.background-size]="'1.5em 1.5em'"
-      [style.background-position]="'right 0.5rem center'"
     >
       @if (placeholder) {
         <option value="" disabled [selected]="!value()">{{ placeholder }}</option>
@@ -77,6 +73,12 @@ export interface SelectOption {
   styles: [`
     :host {
       display: block;
+    }
+    .app-select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+      background-size: 1.5em 1.5em;
+      background-position: right 0.5rem center;
+      background-repeat: no-repeat;
     }
   `],
 })

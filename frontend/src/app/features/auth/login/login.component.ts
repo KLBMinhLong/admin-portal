@@ -4,90 +4,74 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { FormFieldComponent } from '@shared/components/form-field/form-field.component';
+import { InputComponent } from '@shared/components/input/input.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { AlertComponent } from '@shared/components/alert/alert.component';
 
+/**
+ * Login page — Smart Component.
+ * Chỉ chứa logic nghiệp vụ (gọi AuthService, điều hướng).
+ * UI delegate cho shared Dumb Components.
+ */
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [
+    CommonModule, ReactiveFormsModule, RouterLink,
+    FormFieldComponent, InputComponent, ButtonComponent, AlertComponent,
+  ],
   template: `
     <h2 class="text-xl font-semibold text-slate-900 mb-6">Đăng nhập</h2>
 
     <!-- Error Alert -->
     @if (errorMsg()) {
-      <div
-        class="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 flex items-start gap-2"
-        role="alert"
-      >
-        <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-        </svg>
-        <span>{{ errorMsg() }}</span>
-      </div>
+      <app-alert variant="error" class="mb-4" [dismissible]="true" (dismissed)="errorMsg.set('')">
+        {{ errorMsg() }}
+      </app-alert>
     }
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
       <!-- Username -->
-      <div>
-        <label for="login-username" class="block text-sm font-medium text-slate-700 mb-1">
-          Tên đăng nhập
-        </label>
-        <input
-          id="login-username"
-          type="text"
+      <app-form-field
+        label="Tên đăng nhập"
+        fieldId="login-username"
+        [error]="getFieldError('username')"
+      >
+        <app-input
           formControlName="username"
-          autocomplete="username"
-          class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm
-                 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none
-                 transition-colors duration-200"
+          fieldId="login-username"
           placeholder="Nhập tên đăng nhập"
+          autocomplete="username"
+          [hasError]="hasFieldError('username')"
         />
-        @if (form.get('username')?.touched && form.get('username')?.hasError('required')) {
-          <p class="mt-1 text-xs text-red-600">Vui lòng nhập tên đăng nhập</p>
-        }
-      </div>
+      </app-form-field>
 
       <!-- Password -->
-      <div>
-        <label for="login-password" class="block text-sm font-medium text-slate-700 mb-1">
-          Mật khẩu
-        </label>
-        <input
-          id="login-password"
-          type="password"
+      <app-form-field
+        label="Mật khẩu"
+        fieldId="login-password"
+        [error]="getFieldError('password')"
+      >
+        <app-input
           formControlName="password"
-          autocomplete="current-password"
-          class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm
-                 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none
-                 transition-colors duration-200"
+          fieldId="login-password"
+          type="password"
           placeholder="Nhập mật khẩu"
+          autocomplete="current-password"
+          [hasError]="hasFieldError('password')"
         />
-        @if (form.get('password')?.touched && form.get('password')?.hasError('required')) {
-          <p class="mt-1 text-xs text-red-600">Vui lòng nhập mật khẩu</p>
-        }
-      </div>
+      </app-form-field>
 
       <!-- Submit -->
-      <button
+      <app-button
         type="submit"
+        [loading]="loading()"
         [disabled]="loading()"
-        class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium
-               rounded-lg transition-colors duration-200 cursor-pointer
-               focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-               disabled:bg-slate-300 disabled:cursor-not-allowed"
+        [fullWidth]="true"
       >
-        @if (loading()) {
-          <span class="inline-flex items-center gap-2">
-            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-            Đang đăng nhập...
-          </span>
-        } @else {
-          Đăng nhập
-        }
-      </button>
+        {{ loading() ? 'Đang đăng nhập...' : 'Đăng nhập' }}
+      </app-button>
     </form>
 
     <!-- Links -->
@@ -132,6 +116,20 @@ export class LoginComponent {
       username: ['', Validators.required],
       password: ['', Validators.required],
     });
+  }
+
+  /** Lấy error message cho field (chỉ khi touched) */
+  getFieldError(field: string): string {
+    const ctrl = this.form.get(field);
+    if (!ctrl?.touched || ctrl.valid) return '';
+    if (ctrl.hasError('required')) return `Vui lòng nhập ${field === 'username' ? 'tên đăng nhập' : 'mật khẩu'}`;
+    return '';
+  }
+
+  /** Kiểm tra field có lỗi không */
+  hasFieldError(field: string): boolean {
+    const ctrl = this.form.get(field);
+    return !!(ctrl?.touched && ctrl.invalid);
   }
 
   onSubmit(): void {

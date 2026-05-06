@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { RxStomp } from '@stomp/rx-stomp';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../auth/auth.service';
+import { LoggingService } from './logging.service';
 
 @Injectable({
   providedIn: 'root'
@@ -9,7 +10,7 @@ import { AuthService } from '../auth/auth.service';
 export class WebsocketService {
   private rxStomp: RxStomp;
 
-  constructor(private authService: AuthService) {
+  constructor(private authService: AuthService, private loggingService: LoggingService) {
     this.rxStomp = new RxStomp();
     
     // Gateway URL is http://localhost:8000, so WS is ws://localhost:8000/ws
@@ -24,7 +25,7 @@ export class WebsocketService {
       heartbeatOutgoing: 20000,
       reconnectDelay: 5000,
       debug: (msg: string): void => {
-        console.log(new Date(), msg);
+        this.loggingService.debug(`[Websocket] ${msg}`);
       }
     });
 

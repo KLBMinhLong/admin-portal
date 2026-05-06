@@ -4,11 +4,21 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { RouterLink } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { FormFieldComponent } from '@shared/components/form-field/form-field.component';
+import { InputComponent } from '@shared/components/input/input.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { AlertComponent } from '@shared/components/alert/alert.component';
 
+/**
+ * Forgot Password page — Smart Component.
+ */
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [
+    CommonModule, ReactiveFormsModule, RouterLink,
+    FormFieldComponent, InputComponent, ButtonComponent, AlertComponent,
+  ],
   template: `
     <h2 class="text-xl font-semibold text-slate-900 mb-2">Quên mật khẩu</h2>
     <p class="text-sm text-slate-500 mb-6">
@@ -16,41 +26,40 @@ import { HttpErrorResponse } from '@angular/common/http';
     </p>
 
     @if (successMsg()) {
-      <div class="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-sm text-green-700">
-        {{ successMsg() }}
-      </div>
+      <app-alert variant="success" class="mb-4">{{ successMsg() }}</app-alert>
     }
 
     @if (errorMsg()) {
-      <div class="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700" role="alert">
+      <app-alert variant="error" class="mb-4" [dismissible]="true" (dismissed)="errorMsg.set('')">
         {{ errorMsg() }}
-      </div>
+      </app-alert>
     }
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
-      <div>
-        <label for="forgot-email" class="block text-sm font-medium text-slate-700 mb-1">Email</label>
-        <input id="forgot-email" type="email" formControlName="email" autocomplete="email"
-          class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm
-                 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none
-                 transition-colors duration-200"
-          placeholder="example@company.com" />
-        @if (form.get('email')?.touched && form.get('email')?.invalid) {
-          <p class="mt-1 text-xs text-red-600">Vui lòng nhập email hợp lệ</p>
-        }
-      </div>
+      <app-form-field
+        label="Email"
+        fieldId="forgot-email"
+        [required]="true"
+        [error]="form.get('email')?.touched && form.get('email')?.invalid ? 'Vui lòng nhập email hợp lệ' : ''"
+      >
+        <app-input
+          formControlName="email"
+          fieldId="forgot-email"
+          type="email"
+          placeholder="example@company.com"
+          autocomplete="email"
+          [hasError]="!!(form.get('email')?.touched && form.get('email')?.invalid)"
+        />
+      </app-form-field>
 
-      <button type="submit" [disabled]="loading()"
-        class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium
-               rounded-lg transition-colors duration-200 cursor-pointer
-               focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-               disabled:bg-slate-300 disabled:cursor-not-allowed">
-        @if (loading()) {
-          Đang gửi...
-        } @else {
-          Gửi link đặt lại mật khẩu
-        }
-      </button>
+      <app-button
+        type="submit"
+        [loading]="loading()"
+        [disabled]="loading()"
+        [fullWidth]="true"
+      >
+        {{ loading() ? 'Đang gửi...' : 'Gửi link đặt lại mật khẩu' }}
+      </app-button>
     </form>
 
     <div class="mt-6 text-center text-sm">

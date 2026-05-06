@@ -14,6 +14,7 @@ import {
   TwoFactorVerifyRequest,
   SessionResponse,
 } from '../models/auth.models';
+import { LoggingService } from '../services/logging.service';
 
 const TOKEN_KEY = 'auth_token_enc';
 const USER_KEY = 'auth_user_enc';
@@ -55,6 +56,7 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private router: Router,
+    private loggingService: LoggingService,
   ) {
     this.restoreSession();
   }
@@ -253,7 +255,7 @@ export class AuthService {
       const dataB64 = this.bufferToBase64(cipherBuffer);
       localStorage.setItem(key, `${ivB64}.${dataB64}`);
     } catch (err) {
-      console.error(`[AuthService] Failed to encrypt and store ${key}:`, err);
+      this.loggingService.error(`[AuthService] Failed to encrypt and store ${key}:`, err);
     }
   }
 
@@ -272,7 +274,7 @@ export class AuthService {
       result.token = await this.decryptValue(cryptoKey, tokenEnc);
       result.user = await this.decryptValue(cryptoKey, userEnc);
     } catch (err) {
-      console.error('[AuthService] Failed to decrypt stored session:', err);
+      this.loggingService.error('[AuthService] Failed to decrypt stored session:', err);
       // Xóa dữ liệu hỏng
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);

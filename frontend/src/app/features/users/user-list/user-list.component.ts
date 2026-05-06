@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal, TemplateRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -13,86 +13,107 @@ import {
   formatRoleCode,
 } from '@core/models/user.models';
 
+// Shared Components
+import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
+import { ButtonComponent } from '@shared/components/button/button.component';
+import { StatCardComponent } from '@shared/components/stat-card/stat-card.component';
+import { SearchBarComponent } from '@shared/components/search-bar/search-bar.component';
+import { AlertComponent } from '@shared/components/alert/alert.component';
+import { BadgeComponent } from '@shared/components/badge/badge.component';
+import { SkeletonComponent } from '@shared/components/skeleton/skeleton.component';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { ModalComponent } from '@shared/components/modal/modal.component';
+import { FormFieldComponent } from '@shared/components/form-field/form-field.component';
+import { InputComponent } from '@shared/components/input/input.component';
+import { SelectComponent, SelectOption } from '@shared/components/select/select.component';
+import { CardComponent } from '@shared/components/card/card.component';
+import { ToastService } from '@shared/components/toast/toast.service';
+
+/**
+ * User List page — Smart Component.
+ * Quản lý danh sách người dùng, CRUD, role assignment.
+ * UI delegate cho shared Dumb Components.
+ */
 @Component({
   selector: 'app-user-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink],
+  imports: [
+    CommonModule, FormsModule, ReactiveFormsModule, RouterLink,
+    PageHeaderComponent, ButtonComponent, StatCardComponent,
+    SearchBarComponent, AlertComponent, BadgeComponent,
+    SkeletonComponent, EmptyStateComponent, ModalComponent,
+    FormFieldComponent, InputComponent, SelectComponent, CardComponent,
+  ],
   template: `
     <div class="flex flex-col gap-6">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">User Management</p>
-          <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">Quản lý người dùng</h1>
-          <p class="mt-2 max-w-2xl text-sm text-slate-600">
-            Quản trị tài khoản, role thực tế trong RBAC, trạng thái hoạt động và thông tin hồ sơ người dùng.
-          </p>
-        </div>
-        <div class="flex flex-wrap gap-3">
-          <button
-            type="button"
-            (click)="loadData()"
+      <!-- Page Header -->
+      <app-page-header
+        subtitle="User Management"
+        title="Quản lý người dùng"
+        description="Quản trị tài khoản, role thực tế trong RBAC, trạng thái hoạt động và thông tin hồ sơ người dùng."
+      >
+        <div actions class="flex flex-wrap gap-3">
+          <app-button
+            variant="secondary"
+            icon="refresh"
             [disabled]="loading()"
-            class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            (click)="loadData()"
           >
             Tải lại
-          </button>
-          <button
-            type="button"
-            (click)="openCreateModal()"
+          </app-button>
+          <app-button
+            icon="plus"
             [disabled]="loading() || roleOptions().length === 0"
-            class="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            (click)="openCreateModal()"
           >
             Tạo người dùng mới
-          </button>
+          </app-button>
         </div>
-      </div>
+      </app-page-header>
 
+      <!-- Error Alert -->
       @if (errorMsg()) {
-        <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <app-alert variant="error" [dismissible]="true" (dismissed)="errorMsg.set('')">
           {{ errorMsg() }}
-        </div>
+        </app-alert>
       }
 
-      @if (successMsg()) {
-        <div class="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          {{ successMsg() }}
-        </div>
-      }
-
+      <!-- Stat Cards -->
       <div class="grid gap-4 md:grid-cols-3">
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Tổng tài khoản</p>
-          <p class="mt-3 text-3xl font-bold text-slate-900">{{ allUsers().length }}</p>
-          <p class="mt-2 text-sm text-slate-500">Bao gồm mọi trạng thái và mọi role trong hệ thống.</p>
-        </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Đang hoạt động</p>
-          <p class="mt-3 text-3xl font-bold text-emerald-600">{{ activeCount() }}</p>
-          <p class="mt-2 text-sm text-slate-500">Người dùng có thể đăng nhập và thao tác trên hệ thống.</p>
-        </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Đã bật 2FA</p>
-          <p class="mt-3 text-3xl font-bold text-blue-600">{{ twoFactorCount() }}</p>
-          <p class="mt-2 text-sm text-slate-500">Tài khoản đang sử dụng xác thực hai lớp.</p>
-        </div>
+        <app-stat-card
+          label="Tổng tài khoản"
+          [value]="allUsers().length"
+          description="Bao gồm mọi trạng thái và mọi role trong hệ thống."
+        />
+        <app-stat-card
+          label="Đang hoạt động"
+          [value]="activeCount()"
+          valueColor="text-emerald-600"
+          description="Người dùng có thể đăng nhập và thao tác trên hệ thống."
+        />
+        <app-stat-card
+          label="Đã bật 2FA"
+          [value]="twoFactorCount()"
+          valueColor="text-blue-600"
+          description="Tài khoản đang sử dụng xác thực hai lớp."
+        />
       </div>
 
-      <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <!-- Filters -->
+      <app-card>
         <div class="grid gap-3 lg:grid-cols-[1.7fr_1fr_1fr]">
-          <label class="block">
+          <div>
             <span class="mb-1.5 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Tìm kiếm</span>
-            <input
-              [ngModel]="searchQuery()"
-              (ngModelChange)="searchQuery.set($event)"
-              type="text"
+            <app-search-bar
               placeholder="Username, email, họ tên..."
-              class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+              [value]="searchQuery()"
+              (valueChange)="searchQuery.set($event)"
             />
-          </label>
+          </div>
 
-          <label class="block">
-            <span class="mb-1.5 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Role</span>
+          <app-form-field label="Role" fieldId="filter-role">
             <select
+              id="filter-role"
               [ngModel]="selectedRole()"
               (ngModelChange)="selectedRole.set($event)"
               class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
@@ -102,11 +123,11 @@ import {
                 <option [value]="role.code">{{ role.name }}</option>
               }
             </select>
-          </label>
+          </app-form-field>
 
-          <label class="block">
-            <span class="mb-1.5 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Trạng thái</span>
+          <app-form-field label="Trạng thái" fieldId="filter-status">
             <select
+              id="filter-status"
               [ngModel]="selectedStatus()"
               (ngModelChange)="selectedStatus.set($event)"
               class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
@@ -115,23 +136,14 @@ import {
               <option value="active">Hoạt động</option>
               <option value="inactive">Đã khóa</option>
             </select>
-          </label>
+          </app-form-field>
         </div>
-      </div>
+      </app-card>
 
+      <!-- Users Table -->
       <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         @if (loading()) {
-          <div class="space-y-0">
-            @for (item of [1, 2, 3, 4, 5, 6]; track item) {
-              <div class="grid grid-cols-[2.2fr_1.1fr_0.9fr_0.9fr_1fr] gap-4 border-b border-slate-100 px-6 py-4">
-                <div class="skeleton h-10 w-full rounded-xl"></div>
-                <div class="skeleton h-10 w-full rounded-xl"></div>
-                <div class="skeleton h-10 w-full rounded-xl"></div>
-                <div class="skeleton h-10 w-full rounded-xl"></div>
-                <div class="skeleton h-10 w-full rounded-xl"></div>
-              </div>
-            }
-          </div>
+          <app-skeleton variant="table-row" [rows]="6" [cols]="5" />
         } @else {
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-200">
@@ -148,6 +160,7 @@ import {
               <tbody class="divide-y divide-slate-100">
                 @for (user of filteredUsers(); track user.id) {
                   <tr class="align-top transition hover:bg-slate-50/70">
+                    <!-- User Info -->
                     <td class="px-6 py-4">
                       <div class="flex items-start gap-3">
                         <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-sm font-semibold text-white">
@@ -157,7 +170,7 @@ import {
                           <div class="flex flex-wrap items-center gap-2">
                             <p class="text-sm font-semibold text-slate-900">{{ user.username }}</p>
                             @if (user.emailVerified) {
-                              <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">Email đã xác thực</span>
+                              <app-badge variant="success" size="sm">Email đã xác thực</app-badge>
                             }
                           </div>
                           <p class="mt-1 text-sm text-slate-600">{{ user.email }}</p>
@@ -165,9 +178,7 @@ import {
                           @if (user.roles.length > 0) {
                             <div class="mt-2 flex flex-wrap gap-2">
                               @for (roleCode of user.roles; track roleCode) {
-                                <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600">
-                                  {{ getRoleName(roleCode) }}
-                                </span>
+                                <app-badge variant="neutral" size="sm">{{ getRoleName(roleCode) }}</app-badge>
                               }
                             </div>
                           }
@@ -175,6 +186,7 @@ import {
                       </div>
                     </td>
 
+                    <!-- Role Checkboxes -->
                     <td class="px-6 py-4">
                       <div class="flex flex-col gap-2">
                         @for (role of roleOptions(); track role.id) {
@@ -190,47 +202,56 @@ import {
                       </div>
                     </td>
 
+                    <!-- Status -->
                     <td class="px-6 py-4">
-                      <span class="inline-flex rounded-full border px-2.5 py-1 text-xs font-medium" [class]="getStatusConfig(user).class">
-                        {{ getStatusConfig(user).label }}
-                      </span>
+                      <app-badge
+                        [variant]="user.active ? 'success' : 'error'"
+                        [dot]="true"
+                      >
+                        {{ user.active ? 'Hoạt động' : 'Đã khóa' }}
+                      </app-badge>
                     </td>
 
+                    <!-- Security -->
                     <td class="px-6 py-4 text-sm text-slate-600">
                       <p>{{ user.twoFactorEnabled ? '2FA đã bật' : '2FA chưa bật' }}</p>
                     </td>
 
+                    <!-- Created At -->
                     <td class="px-6 py-4 text-sm text-slate-500">
                       {{ user.createdAt | date:'dd/MM/yyyy HH:mm' }}
                     </td>
 
+                    <!-- Actions -->
                     <td class="px-6 py-4">
                       <div class="flex justify-end gap-2">
-                        <a
+                        <app-button
+                          variant="secondary"
+                          size="sm"
                           [routerLink]="['/users', user.id]"
-                          class="inline-flex items-center rounded-xl border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
                         >
                           Xem chi tiết
-                        </a>
-                        <button
-                          type="button"
-                          (click)="toggleActive(user)"
+                        </app-button>
+                        <app-button
+                          [variant]="user.active ? 'danger' : 'primary'"
+                          size="sm"
                           [disabled]="isBusy(user.id)"
-                          class="inline-flex items-center rounded-xl border px-3 py-2 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-60"
-                          [class]="user.active
-                            ? 'border-red-200 text-red-700 hover:bg-red-50'
-                            : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'"
+                          [loading]="isBusy(user.id)"
+                          (click)="toggleActive(user)"
                         >
-                          {{ isBusy(user.id) ? 'Đang xử lý...' : (user.active ? 'Khóa' : 'Mở khóa') }}
-                        </button>
+                          {{ user.active ? 'Khóa' : 'Mở khóa' }}
+                        </app-button>
                       </div>
                     </td>
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="6" class="px-6 py-16 text-center">
-                      <p class="text-sm font-semibold text-slate-900">Không tìm thấy người dùng phù hợp</p>
-                      <p class="mt-2 text-sm text-slate-500">Thử thay đổi bộ lọc hoặc tạo người dùng mới.</p>
+                    <td colspan="6">
+                      <app-empty-state
+                        icon="users"
+                        title="Không tìm thấy người dùng phù hợp"
+                        message="Thử thay đổi bộ lọc hoặc tạo người dùng mới."
+                      />
                     </td>
                   </tr>
                 }
@@ -238,104 +259,90 @@ import {
             </table>
           </div>
 
-          <div class="border-t border-slate-200 bg-slate-50 px-6 py-3 text-xs text-slate-500">
-            Hiển thị {{ filteredUsers().length }} / {{ allUsers().length }} người dùng
-          </div>
+          @if (filteredUsers().length > 0) {
+            <div class="border-t border-slate-200 bg-slate-50 px-6 py-3 text-xs text-slate-500">
+              Hiển thị {{ filteredUsers().length }} / {{ allUsers().length }} người dùng
+            </div>
+          }
         }
       </div>
     </div>
 
-    @if (showCreateModal()) {
-      <div class="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-sm"></div>
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white shadow-2xl">
-          <div class="flex items-start justify-between border-b border-slate-200 px-6 py-5">
-            <div>
-              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Create User</p>
-              <h2 class="mt-2 text-xl font-bold text-slate-900">Tạo người dùng mới</h2>
-              <p class="mt-1 text-sm text-slate-500">Tài khoản mới sẽ được gán role thật trong hệ RBAC ngay khi tạo.</p>
-            </div>
-            <button
-              type="button"
-              (click)="closeCreateModal()"
-              class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+    <!-- Create User Modal -->
+    <app-modal
+      [open]="showCreateModal()"
+      title="Tạo người dùng mới"
+      subtitle="Create User"
+      description="Tài khoản mới sẽ được gán role thật trong hệ RBAC ngay khi tạo."
+      size="lg"
+      (closed)="closeCreateModal()"
+    >
+      <form [formGroup]="createForm" (ngSubmit)="submitCreateUser()" modalBody class="space-y-5 px-6 py-6">
+        <div class="grid gap-4 md:grid-cols-2">
+          <app-form-field label="Username" fieldId="create-username" [required]="true">
+            <app-input formControlName="username" fieldId="create-username" />
+          </app-form-field>
+
+          <app-form-field label="Email" fieldId="create-email" [required]="true">
+            <app-input formControlName="email" fieldId="create-email" type="email" />
+          </app-form-field>
+
+          <app-form-field label="Tên" fieldId="create-firstName">
+            <app-input formControlName="firstName" fieldId="create-firstName" />
+          </app-form-field>
+
+          <app-form-field label="Họ" fieldId="create-lastName">
+            <app-input formControlName="lastName" fieldId="create-lastName" />
+          </app-form-field>
+
+          <app-form-field
+            label="Mật khẩu"
+            fieldId="create-password"
+            [required]="true"
+            hint="Ít nhất 12 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt."
+            class="md:col-span-2"
+          >
+            <app-input formControlName="password" fieldId="create-password" type="password" />
+          </app-form-field>
+
+          <app-form-field label="Role" fieldId="create-role" [required]="true">
+            <select
+              id="create-role"
+              formControlName="roleCode"
+              class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
             >
-              ✕
-            </button>
-          </div>
+              @for (role of roleOptions(); track role.id) {
+                <option [value]="role.code">{{ role.name }}</option>
+              }
+            </select>
+          </app-form-field>
 
-          <form [formGroup]="createForm" (ngSubmit)="submitCreateUser()" class="space-y-5 px-6 py-6">
-            <div class="grid gap-4 md:grid-cols-2">
-              <label class="block">
-                <span class="mb-1.5 block text-sm font-medium text-slate-700">Username</span>
-                <input formControlName="username" type="text" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200" />
-              </label>
-
-              <label class="block">
-                <span class="mb-1.5 block text-sm font-medium text-slate-700">Email</span>
-                <input formControlName="email" type="email" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200" />
-              </label>
-
-              <label class="block">
-                <span class="mb-1.5 block text-sm font-medium text-slate-700">Tên</span>
-                <input formControlName="firstName" type="text" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200" />
-              </label>
-
-              <label class="block">
-                <span class="mb-1.5 block text-sm font-medium text-slate-700">Họ</span>
-                <input formControlName="lastName" type="text" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200" />
-              </label>
-
-              <label class="block md:col-span-2">
-                <span class="mb-1.5 block text-sm font-medium text-slate-700">Mật khẩu</span>
-                <input formControlName="password" type="password" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200" />
-                <p class="mt-1 text-xs text-slate-500">Ít nhất 12 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt.</p>
-              </label>
-
-              <label class="block">
-                <span class="mb-1.5 block text-sm font-medium text-slate-700">Role</span>
-                <select formControlName="roleCode" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200">
-                  @for (role of roleOptions(); track role.id) {
-                    <option [value]="role.code">{{ role.name }}</option>
-                  }
-                </select>
-              </label>
-
-              <label class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <input formControlName="active" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400" />
-                <span>
-                  <span class="block text-sm font-medium text-slate-700">Kích hoạt ngay</span>
-                  <span class="block text-xs text-slate-500">Nếu bỏ chọn, tài khoản được tạo nhưng chưa thể đăng nhập.</span>
-                </span>
-              </label>
-            </div>
-
-            @if (createFormError()) {
-              <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {{ createFormError() }}
-              </div>
-            }
-
-            <div class="flex justify-end gap-3 border-t border-slate-200 pt-5">
-              <button
-                type="button"
-                (click)="closeCreateModal()"
-                class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-              >
-                Hủy
-              </button>
-              <button
-                type="submit"
-                [disabled]="createForm.invalid || createSubmitting()"
-                class="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {{ createSubmitting() ? 'Đang tạo...' : 'Tạo người dùng' }}
-              </button>
-            </div>
-          </form>
+          <label class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <input formControlName="active" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400" />
+            <span>
+              <span class="block text-sm font-medium text-slate-700">Kích hoạt ngay</span>
+              <span class="block text-xs text-slate-500">Nếu bỏ chọn, tài khoản được tạo nhưng chưa thể đăng nhập.</span>
+            </span>
+          </label>
         </div>
+
+        @if (createFormError()) {
+          <app-alert variant="error">{{ createFormError() }}</app-alert>
+        }
+      </form>
+
+      <div modalFooter class="flex justify-end gap-3 border-t border-slate-200 px-6 py-4">
+        <app-button variant="secondary" (click)="closeCreateModal()">Hủy</app-button>
+        <app-button
+          type="submit"
+          [loading]="createSubmitting()"
+          [disabled]="createForm.invalid || createSubmitting()"
+          (click)="submitCreateUser()"
+        >
+          {{ createSubmitting() ? 'Đang tạo...' : 'Tạo người dùng' }}
+        </app-button>
       </div>
-    }
+    </app-modal>
   `,
 })
 export class UserListComponent implements OnInit {
@@ -343,7 +350,6 @@ export class UserListComponent implements OnInit {
   roleOptions = signal<AdminUserRoleOption[]>([]);
   loading = signal(true);
   errorMsg = signal('');
-  successMsg = signal('');
   processingUserId = signal<string | null>(null);
   showCreateModal = signal(false);
   createSubmitting = signal(false);
@@ -389,6 +395,7 @@ export class UserListComponent implements OnInit {
   constructor(
     private readonly formBuilder: FormBuilder,
     private readonly userService: UserManagementService,
+    private readonly toast: ToastService,
   ) {}
 
   ngOnInit(): void {
@@ -463,8 +470,7 @@ export class UserListComponent implements OnInit {
         this.allUsers.update((users) => [createdUser, ...users]);
         this.createSubmitting.set(false);
         this.showCreateModal.set(false);
-        this.successMsg.set(`Đã tạo người dùng "${createdUser.username}" với role "${this.getRoleName(createdUser.role)}".`);
-        this.clearSuccessLater();
+        this.toast.success(`Đã tạo người dùng "${createdUser.username}" với role "${this.getRoleName(createdUser.role)}".`);
       },
       error: (error: HttpErrorResponse) => {
         this.createSubmitting.set(false);
@@ -494,8 +500,7 @@ export class UserListComponent implements OnInit {
         const updatedUser = { ...user, roles: response.assignedRoles };
         this.upsertUser(updatedUser);
         this.processingUserId.set(null);
-        this.successMsg.set(`Đã cập nhật role cho "${user.username}".`);
-        this.clearSuccessLater();
+        this.toast.success(`Đã cập nhật role cho "${user.username}".`);
       },
       error: (error: HttpErrorResponse) => {
         this.processingUserId.set(null);
@@ -513,12 +518,11 @@ export class UserListComponent implements OnInit {
       next: (updatedUser) => {
         this.upsertUser(updatedUser);
         this.processingUserId.set(null);
-        this.successMsg.set(
+        this.toast.success(
           updatedUser.active
             ? `Đã mở khóa tài khoản "${updatedUser.username}".`
             : `Đã khóa tài khoản "${updatedUser.username}".`
         );
-        this.clearSuccessLater();
       },
       error: (error: HttpErrorResponse) => {
         this.processingUserId.set(null);
@@ -552,17 +556,9 @@ export class UserListComponent implements OnInit {
     return this.roleOptions().find((role) => role.code === roleCode)?.name ?? formatRoleCode(roleCode);
   }
 
-  getStatusConfig(user: AdminUser) {
-    return user.active ? USER_STATUS_CONFIG.active : USER_STATUS_CONFIG.inactive;
-  }
-
   private upsertUser(updatedUser: AdminUser): void {
     this.allUsers.update((users) =>
       users.map((user) => (user.id === updatedUser.id ? updatedUser : user))
     );
-  }
-
-  private clearSuccessLater(): void {
-    setTimeout(() => this.successMsg.set(''), 3000);
   }
 }
