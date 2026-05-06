@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -12,112 +12,105 @@ import {
   USER_STATUS_CONFIG,
   formatRoleCode,
 } from '@core/models/user.models';
+import { ToastService } from '@shared/components/toast/toast.service';
+import { 
+  PageHeaderComponent, CardComponent, ButtonComponent, BadgeComponent,
+  FormFieldComponent, InputComponent, SkeletonComponent
+} from '@shared/components';
 
 @Component({
   selector: 'app-user-detail',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [
+    CommonModule, ReactiveFormsModule, RouterLink,
+    PageHeaderComponent, CardComponent, ButtonComponent, BadgeComponent,
+    FormFieldComponent, InputComponent, SkeletonComponent
+  ],
   template: `
     @if (loading()) {
-      <div class="space-y-4">
-        <div class="skeleton h-8 w-56 rounded-xl"></div>
-        <div class="skeleton h-72 w-full rounded-3xl"></div>
+      <div class="space-y-6">
+        <app-skeleton variant="text" width="200px" height="32px" />
+        <app-skeleton variant="card" height="300px" />
       </div>
     } @else if (user()) {
       <div class="space-y-6">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
           <div class="flex items-start gap-4">
             <a
               routerLink="/users"
-              class="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-300 bg-white text-slate-600 transition hover:bg-slate-50"
+              class="mt-1 flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-300 bg-white text-slate-600 transition hover:bg-slate-50"
             >
-              ←
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
             </a>
             <div class="flex items-start gap-4">
-              <div class="flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-900 text-lg font-semibold text-white">
+              <div class="flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-900 text-lg font-semibold text-white shadow-sm">
                 {{ getUserInitials(user()!) }}
               </div>
               <div>
                 <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">User Detail</p>
-                <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">{{ user()!.username }}</h1>
-                <p class="mt-2 text-sm text-slate-500">{{ user()!.email }}</p>
+                <h1 class="mt-1 text-3xl font-bold tracking-tight text-slate-900">{{ user()!.username }}</h1>
+                <p class="mt-1 text-sm text-slate-500">{{ user()!.email }}</p>
                 <div class="mt-3 flex flex-wrap gap-2">
-                  <span class="inline-flex rounded-full border px-2.5 py-1 text-xs font-medium" [class]="getStatusConfig().class">
+                  <app-badge [variant]="user()!.active ? 'success' : 'default'">
                     {{ getStatusConfig().label }}
-                  </span>
-                  <span class="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
+                  </app-badge>
+                  <app-badge variant="info">
                     {{ user()!.roles.length > 0 ? getRoleName(user()!.roles[0]) : 'Chưa có role' }}
-                  </span>
+                  </app-badge>
                 </div>
               </div>
             </div>
           </div>
           <div class="flex flex-wrap gap-3">
-            <button
+            <app-button
               type="button"
-              (click)="toggleActive()"
-              [disabled]="processing()"
-              class="rounded-xl border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60"
-              [class]="user()!.active
-                ? 'border-red-200 text-red-700 hover:bg-red-50'
-                : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'"
+              (onClick)="toggleActive()"
+              [loading]="processing()"
+              [variant]="user()!.active ? 'danger' : 'success'"
             >
-              {{ processing() ? 'Đang xử lý...' : (user()!.active ? 'Khóa tài khoản' : 'Mở khóa tài khoản') }}
-            </button>
+              {{ user()!.active ? 'Khóa tài khoản' : 'Mở khóa tài khoản' }}
+            </app-button>
           </div>
         </div>
 
-        @if (successMsg()) {
-          <div class="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-            {{ successMsg() }}
-          </div>
-        }
-
-        @if (errorMsg()) {
-          <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {{ errorMsg() }}
-          </div>
-        }
-
         <div class="grid gap-6 xl:grid-cols-[1.4fr_0.9fr]">
+          <!-- Left Column -->
           <div class="space-y-6">
-            <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h2 class="text-lg font-bold text-slate-900">Thông tin hồ sơ</h2>
-                  <p class="mt-1 text-sm text-slate-500">Cập nhật email và thông tin hiển thị của người dùng.</p>
-                </div>
-              </div>
+            <app-card>
+              <h2 class="text-lg font-bold text-slate-900">Thông tin hồ sơ</h2>
+              <p class="mt-1 text-sm text-slate-500">Cập nhật email và thông tin hiển thị của người dùng.</p>
 
               <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="mt-6 grid gap-4 md:grid-cols-2">
-                <label class="block md:col-span-2">
-                  <span class="mb-1.5 block text-sm font-medium text-slate-700">Email</span>
-                  <input formControlName="email" type="email" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200" />
-                </label>
+                <div class="md:col-span-2">
+                  <app-form-field label="Email" fieldId="email" [required]="true" [error]="getFieldError('email')">
+                    <app-input formControlName="email" type="email" [hasError]="hasFieldError('email')" />
+                  </app-form-field>
+                </div>
 
-                <label class="block">
-                  <span class="mb-1.5 block text-sm font-medium text-slate-700">Tên</span>
-                  <input formControlName="firstName" type="text" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200" />
-                </label>
+                <app-form-field label="Tên" fieldId="firstName">
+                  <app-input formControlName="firstName" type="text" />
+                </app-form-field>
 
-                <label class="block">
-                  <span class="mb-1.5 block text-sm font-medium text-slate-700">Họ</span>
-                  <input formControlName="lastName" type="text" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200" />
-                </label>
+                <app-form-field label="Họ" fieldId="lastName">
+                  <app-input formControlName="lastName" type="text" />
+                </app-form-field>
 
                 <div class="md:col-span-2 flex justify-end pt-2">
-                  <button
+                  <app-button
                     type="submit"
-                    [disabled]="profileForm.invalid || profileSubmitting()"
-                    class="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    variant="primary"
+                    [disabled]="profileForm.invalid"
+                    [loading]="profileSubmitting()"
                   >
-                    {{ profileSubmitting() ? 'Đang lưu...' : 'Lưu thông tin' }}
-                  </button>
+                    Lưu thông tin
+                  </app-button>
                 </div>
               </form>
-            </div>
+            </app-card>
 
-            <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <app-card>
               <h2 class="text-lg font-bold text-slate-900">Metadata tài khoản</h2>
               <div class="mt-6 grid gap-4 md:grid-cols-2">
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -137,32 +130,33 @@ import {
                   <p class="mt-2 text-sm font-medium text-slate-900">{{ user()!.updatedAt | date:'dd/MM/yyyy HH:mm' }}</p>
                 </div>
               </div>
-            </div>
+            </app-card>
           </div>
 
+          <!-- Right Column -->
           <div class="space-y-6">
-            <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <app-card>
               <h2 class="text-lg font-bold text-slate-900">Role và truy cập</h2>
               <div class="mt-5 space-y-4">
                 <div class="block">
-                  <span class="mb-1.5 block text-sm font-medium text-slate-700">Chỉ định Roles</span>
-                  <div class="space-y-3 rounded-xl border border-slate-300 bg-slate-50 p-4">
+                  <span class="mb-2 block text-sm font-medium text-slate-700">Chỉ định Roles</span>
+                  <div class="space-y-3 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
                     @for (role of roleOptions(); track role.id) {
-                      <label class="flex items-center gap-3">
+                      <label class="flex items-center gap-3 cursor-pointer">
                         <input type="checkbox"
                                [checked]="user()!.roles.includes(role.code)"
                                (change)="toggleUserRole(role.code, $any($event.target).checked)"
                                [disabled]="processing() || (user()!.roles.length <= 1 && user()!.roles.includes(role.code))"
-                               class="h-5 w-5 rounded border-slate-300 text-slate-900 focus:ring-slate-400 disabled:opacity-50" />
+                               class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50" />
                         <span class="text-sm font-medium text-slate-800" [class.opacity-50]="processing()">{{ role.name }}</span>
                       </label>
                     }
                   </div>
                 </div>
               </div>
-            </div>
+            </app-card>
 
-            <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <app-card>
               <h2 class="text-lg font-bold text-slate-900">Bảo mật</h2>
               <div class="mt-5 space-y-3">
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -172,13 +166,13 @@ import {
                   </p>
                 </div>
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Xác thực hai lớp</p>
+                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Xác thực hai lớp (2FA)</p>
                   <p class="mt-2 text-sm font-medium" [class]="user()!.twoFactorEnabled ? 'text-emerald-700' : 'text-slate-600'">
-                    {{ user()!.twoFactorEnabled ? 'Đã bật 2FA' : 'Chưa bật 2FA' }}
+                    {{ user()!.twoFactorEnabled ? 'Đã bật 2FA' : 'Chưa bật' }}
                   </p>
                 </div>
               </div>
-            </div>
+            </app-card>
           </div>
         </div>
       </div>
@@ -191,21 +185,18 @@ export class UserDetailComponent implements OnInit {
   loading = signal(true);
   processing = signal(false);
   profileSubmitting = signal(false);
-  successMsg = signal('');
-  errorMsg = signal('');
+
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly userService = inject(UserManagementService);
+  private readonly toastService = inject(ToastService);
 
   profileForm = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     firstName: [''],
     lastName: [''],
   });
-
-  constructor(
-    private readonly formBuilder: FormBuilder,
-    private readonly route: ActivatedRoute,
-    private readonly router: Router,
-    private readonly userService: UserManagementService,
-  ) {}
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -232,9 +223,23 @@ export class UserDetailComponent implements OnInit {
       },
       error: () => {
         this.loading.set(false);
+        this.toastService.error('Lỗi', 'Không thể tải thông tin người dùng.');
         this.router.navigate(['/users']);
       },
     });
+  }
+
+  hasFieldError(field: string): boolean {
+    const control = this.profileForm.get(field);
+    return !!(control && control.invalid && (control.dirty || control.touched));
+  }
+
+  getFieldError(field: string): string {
+    const control = this.profileForm.get(field);
+    if (!control || !control.errors || (!control.dirty && !control.touched)) return '';
+    if (control.errors['required']) return 'Trường này là bắt buộc';
+    if (control.errors['email']) return 'Email không hợp lệ';
+    return 'Dữ liệu không hợp lệ';
   }
 
   saveProfile(): void {
@@ -244,7 +249,6 @@ export class UserDetailComponent implements OnInit {
     }
 
     this.profileSubmitting.set(true);
-    this.errorMsg.set('');
 
     const raw = this.profileForm.getRawValue();
     const payload: UpdateAdminUserRequest = {
@@ -262,12 +266,11 @@ export class UserDetailComponent implements OnInit {
           lastName: updatedUser.lastName ?? '',
         });
         this.profileSubmitting.set(false);
-        this.successMsg.set('Đã cập nhật hồ sơ người dùng.');
-        this.clearSuccessLater();
+        this.toastService.success('Thành công', 'Đã cập nhật hồ sơ người dùng.');
       },
       error: (error: HttpErrorResponse) => {
         this.profileSubmitting.set(false);
-        this.errorMsg.set(error.error?.message || 'Không thể cập nhật hồ sơ người dùng.');
+        this.toastService.error('Lỗi', error.error?.message || 'Không thể cập nhật hồ sơ người dùng.');
       },
     });
   }
@@ -284,23 +287,21 @@ export class UserDetailComponent implements OnInit {
     }
 
     if (newRoles.length === 0) {
-      this.errorMsg.set('Người dùng phải có ít nhất 1 role.');
+      this.toastService.error('Lỗi', 'Người dùng phải có ít nhất 1 role.');
       return;
     }
 
     this.processing.set(true);
-    this.errorMsg.set('');
 
     this.userService.assignRoles(currentUser.id, newRoles).subscribe({
       next: (response) => {
         this.user.set({ ...currentUser, roles: response.assignedRoles });
         this.processing.set(false);
-        this.successMsg.set(`Đã cập nhật roles thành công.`);
-        this.clearSuccessLater();
+        this.toastService.success('Thành công', 'Đã cập nhật roles thành công.');
       },
       error: (error: HttpErrorResponse) => {
         this.processing.set(false);
-        this.errorMsg.set(error.error?.message || 'Không thể cập nhật role người dùng.');
+        this.toastService.error('Lỗi', error.error?.message || 'Không thể cập nhật role người dùng.');
       },
     });
   }
@@ -311,18 +312,16 @@ export class UserDetailComponent implements OnInit {
     }
 
     this.processing.set(true);
-    this.errorMsg.set('');
 
     this.userService.toggleActive(this.user()!.id).subscribe({
       next: (updatedUser) => {
         this.user.set(updatedUser);
         this.processing.set(false);
-        this.successMsg.set(updatedUser.active ? 'Đã mở khóa tài khoản.' : 'Đã khóa tài khoản.');
-        this.clearSuccessLater();
+        this.toastService.success('Thành công', updatedUser.active ? 'Đã mở khóa tài khoản.' : 'Đã khóa tài khoản.');
       },
       error: (error: HttpErrorResponse) => {
         this.processing.set(false);
-        this.errorMsg.set(error.error?.message || 'Không thể cập nhật trạng thái người dùng.');
+        this.toastService.error('Lỗi', error.error?.message || 'Không thể cập nhật trạng thái người dùng.');
       },
     });
   }
@@ -350,9 +349,5 @@ export class UserDetailComponent implements OnInit {
 
   getStatusConfig() {
     return this.user()?.active ? USER_STATUS_CONFIG.active : USER_STATUS_CONFIG.inactive;
-  }
-
-  private clearSuccessLater(): void {
-    setTimeout(() => this.successMsg.set(''), 3000);
   }
 }

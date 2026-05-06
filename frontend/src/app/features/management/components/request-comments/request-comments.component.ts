@@ -1,9 +1,10 @@
-import { Component, Input, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, signal, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '@core/auth/auth.service';
 import { RequestCommentService, CommentDto } from '@core/services/request-comment.service';
 import { WebsocketService } from '@core/services/websocket.service';
+import { ToastService } from '@shared/components/toast/toast.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -80,11 +81,10 @@ export class RequestCommentsComponent implements OnInit, OnDestroy {
   isSending = signal(false);
   private wsSubscription?: Subscription;
 
-  constructor(
-    private authService: AuthService,
-    private commentService: RequestCommentService,
-    private wsService: WebsocketService
-  ) {}
+  private authService = inject(AuthService);
+  private commentService = inject(RequestCommentService);
+  private wsService = inject(WebsocketService);
+  private toastService = inject(ToastService);
 
   ngOnInit() {
     this.loadComments();
@@ -132,6 +132,7 @@ export class RequestCommentsComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.isSending.set(false);
+        this.toastService.error('Lỗi', 'Không thể gửi bình luận. Vui lòng thử lại.');
       }
     });
   }
