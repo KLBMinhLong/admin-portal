@@ -1,24 +1,51 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RequestStatus, STATUS_CONFIG } from '@core/models/request.models';
+import { BadgeComponent, BadgeVariant } from '../badge/badge.component';
 
+/**
+ * Status Badge Component — hiển thị trạng thái workflow yêu cầu.
+ *
+ * Nâng cấp: dùng app-badge bên trong, mapping RequestStatus → BadgeVariant.
+ * Giữ nguyên selector và @Input API cho backward compatibility.
+ *
+ * @example
+ * <app-status-badge [status]="request.status" />
+ * <app-status-badge status="APPROVED" />
+ *
+ * @see Design System section 2.3 — Status Mapping
+ * @see SHARED-COMPONENTS-STRATEGY.md — Atom component
+ */
 @Component({
   selector: 'app-status-badge',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, BadgeComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <span
-      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-      [ngClass]="[config.bg, config.text]"
-    >
+    <app-badge [variant]="badgeVariant" [dot]="true">
       {{ config.label }}
-    </span>
+    </app-badge>
   `,
 })
 export class StatusBadgeComponent {
+  /** Trạng thái request từ workflow */
   @Input({ required: true }) status!: RequestStatus;
 
+  /** Lấy config hiển thị từ STATUS_CONFIG */
   get config() {
     return STATUS_CONFIG[this.status] || STATUS_CONFIG['DRAFT'];
+  }
+
+  /** Mapping RequestStatus → BadgeVariant */
+  get badgeVariant(): BadgeVariant {
+    const map: Record<RequestStatus, BadgeVariant> = {
+      DRAFT: 'info',
+      SUBMITTED: 'info',
+      PENDING_APPROVAL: 'warning',
+      APPROVED: 'success',
+      REJECTED: 'error',
+      CANCELLED: 'neutral',
+    };
+    return map[this.status] || 'neutral';
   }
 }
