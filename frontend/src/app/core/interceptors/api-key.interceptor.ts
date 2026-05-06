@@ -6,7 +6,8 @@ import {
   HttpEvent,
 } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '@env/environment';
+import { inject } from '@angular/core';
+import { API_KEY } from '../tokens/config.token';
 
 /**
  * Interceptor tự động gắn header x-api-key cho mọi request
@@ -14,6 +15,8 @@ import { environment } from '@env/environment';
  */
 @Injectable()
 export class ApiKeyInterceptor implements HttpInterceptor {
+  private apiKey = inject(API_KEY);
+
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     if (!req.url.includes('/api/')) {
       return next.handle(req);
@@ -21,7 +24,7 @@ export class ApiKeyInterceptor implements HttpInterceptor {
 
     const cloned = req.clone({
       setHeaders: {
-        'x-api-key': environment.apiKey,
+        'x-api-key': this.apiKey,
       },
     });
     return next.handle(cloned);

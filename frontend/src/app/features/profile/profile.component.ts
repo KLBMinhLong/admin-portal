@@ -123,7 +123,7 @@ export class ProfileComponent implements OnInit {
 
     this.profileService.changePassword(dto).subscribe({
       next: () => {
-        this.toastService.success('Thành công', 'Mật khẩu đã được đổi thành công!');
+        this.toastService.success('Mật khẩu đã được đổi thành công!');
         if (this.pwdFormComponent) {
           this.pwdFormComponent.resetForm();
           this.pwdFormComponent.setSubmitting(false);
@@ -143,10 +143,10 @@ export class ProfileComponent implements OnInit {
       this.profile.update(p => p ? { ...p, twoFactorEnabled: res.enabled } : null);
       if (res.enabled && res.qrCodeImage) {
         this.qrCodeUrl.set(res.qrCodeImage);
-        this.toastService.success('Thành công', 'Đã bật 2FA. Vui lòng quét mã QR bên dưới.');
+        this.toastService.success('Đã bật 2FA. Vui lòng quét mã QR bên dưới.');
       } else {
         this.qrCodeUrl.set(null);
-        this.toastService.info('Thông báo', 'Đã tắt 2FA.');
+        this.toastService.info('Đã tắt 2FA.');
       }
     });
   }

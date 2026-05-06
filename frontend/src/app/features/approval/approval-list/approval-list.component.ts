@@ -25,7 +25,7 @@ import {
       @if (loading()) {
         <div class="space-y-4">
           @for (i of [1,2,3]; track i) {
-            <app-skeleton variant="card" height="112px" />
+            <app-skeleton variant="rect" height="112px" />
           }
         </div>
       } @else if (requests().length === 0) {

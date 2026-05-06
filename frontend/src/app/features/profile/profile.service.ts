@@ -18,6 +18,11 @@ export interface Toggle2faResponse {
   qrCodeImage: string;
 }
 
+export interface ChangePasswordDto {
+  oldPassword?: string;
+  newPassword?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })

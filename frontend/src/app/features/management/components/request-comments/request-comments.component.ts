@@ -132,7 +132,7 @@ export class RequestCommentsComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.isSending.set(false);
-        this.toastService.error('Lỗi', 'Không thể gửi bình luận. Vui lòng thử lại.');
+        this.toastService.error('Không thể gửi bình luận. Vui lòng thử lại.');
       }
     });
   }

@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '@env/environment';
+import { inject } from '@angular/core';
+import { API_URL } from '../tokens/config.token';
 import { CreateRequestDto, PurchasingRequest } from '../models/request.models';
 
 /**
@@ -10,7 +11,7 @@ import { CreateRequestDto, PurchasingRequest } from '../models/request.models';
  */
 @Injectable({ providedIn: 'root' })
 export class RequestService {
-  private readonly apiUrl = `${environment.apiBaseUrl}/requests`;
+  private readonly apiUrl = `${inject(API_URL)}/requests`;
 
   constructor(private http: HttpClient) {}
 

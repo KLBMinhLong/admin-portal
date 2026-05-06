@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '@env/environment';
+import { inject } from '@angular/core';
+import { API_URL } from '../tokens/config.token';
 import { AdminRole, AdminPermission, AdminAuditLog, AssignPermissionsRequest } from '../models/role.models';
 
 @Injectable({ providedIn: 'root' })
 export class RoleManagementService {
-  private readonly apiUrl = `${environment.apiBaseUrl}/admin`;
+  private readonly apiUrl = `${inject(API_URL)}/admin`;
 
   constructor(private http: HttpClient) {}
 

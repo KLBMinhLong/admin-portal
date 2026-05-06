@@ -22,8 +22,8 @@ import {
     @if (loading()) {
       <div class="space-y-6">
         <app-skeleton variant="text" width="200px" height="32px" />
-        <app-skeleton variant="card" height="150px" />
-        <app-skeleton variant="card" height="300px" />
+        <app-skeleton variant="rect" height="150px" />
+        <app-skeleton variant="rect" height="300px" />
       </div>
     } @else if (request()) {
       <!-- Header -->
@@ -187,7 +187,7 @@ export class RequestDetailComponent implements OnInit {
       },
       error: () => {
         this.loading.set(false);
-        this.toastService.error('Lỗi', 'Không thể tải chi tiết yêu cầu.');
+        this.toastService.error('Không thể tải chi tiết yêu cầu.');
         this.router.navigate(['/requests']);
       },
     });
@@ -202,11 +202,11 @@ export class RequestDetailComponent implements OnInit {
       next: (updated) => {
         this.submitting.set(false);
         this.request.set(updated);
-        this.toastService.success('Thành công', 'Yêu cầu đã được gửi phê duyệt thành công!');
+        this.toastService.success('Yêu cầu đã được gửi phê duyệt thành công!');
       },
       error: () => {
         this.submitting.set(false);
-        this.toastService.error('Lỗi', 'Không thể gửi yêu cầu phê duyệt.');
+        this.toastService.error('Không thể gửi yêu cầu phê duyệt.');
       },
     });
   }

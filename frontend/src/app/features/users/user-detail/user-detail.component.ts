@@ -33,7 +33,7 @@ import { RoleDisplayPipe } from '@shared/pipes/role-display.pipe';
     @if (loading()) {
       <div class="space-y-6">
         <app-skeleton variant="text" width="200px" height="32px" />
-        <app-skeleton variant="card" height="300px" />
+        <app-skeleton variant="rect" height="300px" />
       </div>
     } @else if (user()) {
       <div class="space-y-6">
@@ -56,7 +56,7 @@ import { RoleDisplayPipe } from '@shared/pipes/role-display.pipe';
                 <h1 class="mt-1 text-3xl font-bold tracking-tight text-slate-900">{{ user()!.username }}</h1>
                 <p class="mt-1 text-sm text-slate-500">{{ user()!.email }}</p>
                 <div class="mt-3 flex flex-wrap gap-2">
-                  <app-badge [variant]="user()!.active ? 'success' : 'default'">
+                  <app-badge [variant]="user()!.active ? 'success' : 'neutral'">
                     {{ getStatusConfig().label }}
                   </app-badge>
                   <app-badge variant="info">
@@ -71,7 +71,7 @@ import { RoleDisplayPipe } from '@shared/pipes/role-display.pipe';
               type="button"
               (onClick)="toggleActive()"
               [loading]="processing()"
-              [variant]="user()!.active ? 'danger' : 'success'"
+              [variant]="user()!.active ? 'danger' : 'primary'"
             >
               {{ user()!.active ? 'Khóa tài khoản' : 'Mở khóa tài khoản' }}
             </app-button>
@@ -226,7 +226,7 @@ export class UserDetailComponent implements OnInit {
       },
       error: () => {
         this.loading.set(false);
-        this.toastService.error('Lỗi', 'Không thể tải thông tin người dùng.');
+        this.toastService.error('Không thể tải thông tin người dùng.');
         this.router.navigate(['/users']);
       },
     });
@@ -269,11 +269,11 @@ export class UserDetailComponent implements OnInit {
           lastName: updatedUser.lastName ?? '',
         });
         this.profileSubmitting.set(false);
-        this.toastService.success('Thành công', 'Đã cập nhật hồ sơ người dùng.');
+        this.toastService.success('Đã cập nhật hồ sơ người dùng.');
       },
       error: (error: HttpErrorResponse) => {
         this.profileSubmitting.set(false);
-        this.toastService.error('Lỗi', error.error?.message || 'Không thể cập nhật hồ sơ người dùng.');
+        this.toastService.error(error.error?.message || 'Không thể cập nhật hồ sơ người dùng.');
       },
     });
   }
@@ -290,7 +290,7 @@ export class UserDetailComponent implements OnInit {
     }
 
     if (newRoles.length === 0) {
-      this.toastService.error('Lỗi', 'Người dùng phải có ít nhất 1 role.');
+      this.toastService.error('Người dùng phải có ít nhất 1 role.');
       return;
     }
 
@@ -300,11 +300,11 @@ export class UserDetailComponent implements OnInit {
       next: (response) => {
         this.user.set({ ...currentUser, roles: response.assignedRoles });
         this.processing.set(false);
-        this.toastService.success('Thành công', 'Đã cập nhật roles thành công.');
+        this.toastService.success('Đã cập nhật roles thành công.');
       },
       error: (error: HttpErrorResponse) => {
         this.processing.set(false);
-        this.toastService.error('Lỗi', error.error?.message || 'Không thể cập nhật role người dùng.');
+        this.toastService.error(error.error?.message || 'Không thể cập nhật role người dùng.');
       },
     });
   }
@@ -320,11 +320,11 @@ export class UserDetailComponent implements OnInit {
       next: (updatedUser) => {
         this.user.set(updatedUser);
         this.processing.set(false);
-        this.toastService.success('Thành công', updatedUser.active ? 'Đã mở khóa tài khoản.' : 'Đã khóa tài khoản.');
+        this.toastService.success(updatedUser.active ? 'Đã mở khóa tài khoản.' : 'Đã khóa tài khoản.');
       },
       error: (error: HttpErrorResponse) => {
         this.processing.set(false);
-        this.toastService.error('Lỗi', error.error?.message || 'Không thể cập nhật trạng thái người dùng.');
+        this.toastService.error(error.error?.message || 'Không thể cập nhật trạng thái người dùng.');
       },
     });
   }

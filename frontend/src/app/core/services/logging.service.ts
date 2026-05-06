@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '@env/environment';
+import { inject } from '@angular/core';
+import { API_URL, LOGGING_CONFIG } from '../tokens/config.token';
 
 export enum LogLevel {
   DEBUG = 0,
@@ -20,7 +21,8 @@ export class LoggingService {
   }
 
   private setLevelFromEnv() {
-    switch(environment.logging.level.toUpperCase()) {
+    const config = inject(LOGGING_CONFIG);
+    switch(config.level.toUpperCase()) {
       case 'DEBUG': this.level = LogLevel.DEBUG; break;
       case 'INFO': this.level = LogLevel.INFO; break;
       case 'WARN': this.level = LogLevel.WARN; break;
@@ -51,7 +53,8 @@ export class LoggingService {
     if (this.level <= LogLevel.ERROR) {
       this.formatAndLog('ERROR', message, error, traceId);
       
-      if (environment.logging.sendErrorToServer) {
+      const config = inject(LOGGING_CONFIG);
+      if (config.sendErrorToServer) {
         this.sendToServer(message, error, traceId);
       }
     }
@@ -122,7 +125,8 @@ export class LoggingService {
     };
 
     // Note: Use fire-and-forget for logs so it doesn't block UI or trigger further errors.
-    this.http.post(`${environment.apiBaseUrl}/logs/error`, payload).subscribe({
+    const apiUrl = inject(API_URL);
+    this.http.post(`${apiUrl}/logs/error`, payload).subscribe({
       next: () => {},
       error: () => {} // Do not log error of log API to avoid infinite loop
     });

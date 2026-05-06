@@ -70,7 +70,7 @@ import {
 })
 export class InputComponent implements ControlValueAccessor {
   /** Type attribute cho input */
-  @Input() type: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' = 'text';
+  @Input() type: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'date' = 'text';
 
   /** ID cho liên kết với label */
   @Input() fieldId = '';

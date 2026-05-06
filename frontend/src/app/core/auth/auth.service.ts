@@ -2,7 +2,8 @@ import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, catchError, finalize, from, map, of, shareReplay, switchMap, tap, throwError } from 'rxjs';
-import { environment } from '@env/environment';
+import { inject } from '@angular/core';
+import { API_URL, ENCRYPTION_CONFIG } from '../tokens/config.token';
 import {
   AuthState,
   LoginRequest,
@@ -29,9 +30,10 @@ const USER_KEY = 'auth_user_enc';
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly apiUrl = `${environment.apiBaseUrl}/auth`;
+  private readonly apiUrl = `${inject(API_URL)}/auth`;
 
   /* ─── Encryption helpers ─── */
+  private readonly encryptionConfig = inject(ENCRYPTION_CONFIG);
   private readonly ENC_KEY_HEX = this.deriveKeyHex();
   private cryptoKey: CryptoKey | null = null;
   private readonly IV_LENGTH = 12;
@@ -69,7 +71,9 @@ export class AuthService {
       tap((res) => {
         if (res.requiresTwoFactor) {
           this.twoFactorChallenge = res.challenge;
+          this.loggingService.info(`[Auth] User '${req.username}' requires 2FA verification`);
         } else if (res.token && res.user) {
+          this.loggingService.info(`[Auth] User '${res.user.username}' logged in successfully`);
           this.setSession(res.token, res.user);
         }
       }),
@@ -95,6 +99,7 @@ export class AuthService {
       tap((res) => {
         if (res.token && res.user) {
           this.twoFactorChallenge = null;
+          this.loggingService.info(`[Auth] User '${res.user.username}' verified 2FA and logged in successfully`);
           this.setSession(res.token, res.user);
         }
       }),
@@ -105,7 +110,11 @@ export class AuthService {
    *  REGISTER
    * ──────────────────────────────────────────── */
   register(req: RegisterRequest): Observable<RegisterResponse> {
-    return this.http.post<RegisterResponse>(`${this.apiUrl}/register`, req);
+    return this.http.post<RegisterResponse>(`${this.apiUrl}/register`, req).pipe(
+      tap((res) => {
+        this.loggingService.info(`[Auth] User '${req.username}' registered successfully`);
+      })
+    );
   }
 
   /* ────────────────────────────────────────────
@@ -113,12 +122,20 @@ export class AuthService {
    * ──────────────────────────────────────────── */
   forgotPassword(email: string): Observable<void> {
     const req: ForgotPasswordRequest = { email };
-    return this.http.post<void>(`${this.apiUrl}/forgot-password`, req);
+    return this.http.post<void>(`${this.apiUrl}/forgot-password`, req).pipe(
+      tap(() => {
+        this.loggingService.info(`[Auth] Forgot password requested for email: ${email}`);
+      })
+    );
   }
 
   resetPassword(token: string, newPassword: string): Observable<void> {
     const req: ResetPasswordRequest = { token, newPassword };
-    return this.http.post<void>(`${this.apiUrl}/reset-password`, req);
+    return this.http.post<void>(`${this.apiUrl}/reset-password`, req).pipe(
+      tap(() => {
+        this.loggingService.info(`[Auth] Password reset successfully via token`);
+      })
+    );
   }
 
   /* ────────────────────────────────────────────
@@ -126,7 +143,9 @@ export class AuthService {
    * ──────────────────────────────────────────── */
   logout(): void {
     const currentToken = this._state().token;
+    const currentUser = this._state().user;
     if (currentToken) {
+      this.loggingService.info(`[Auth] User '${currentUser?.username || 'unknown'}' logged out`);
       this.http
         .post(`${this.apiUrl}/logout`, null, {
           headers: { Authorization: `Bearer ${currentToken}` },
@@ -212,7 +231,7 @@ export class AuthService {
    * Trả về hex string của 32 bytes.
    */
   private deriveKeyHex(): string {
-    const secret = environment.encryption?.secretKey ?? 'default_local_storage_key_32ch!';
+    const secret = this.encryptionConfig.secretKey || 'default_local_storage_key_32ch!';
     // Sử dụng 32 bytes đầu tiên
     const encoder = new TextEncoder();
     const bytes = encoder.encode(secret);

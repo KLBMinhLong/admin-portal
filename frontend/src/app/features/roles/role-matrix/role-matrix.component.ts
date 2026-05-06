@@ -133,7 +133,7 @@ export class RoleMatrixComponent implements OnInit {
       this.currentAssignments.set(currentMap);
       this.loading.set(false);
     }).catch(() => {
-      this.toastService.error('Lỗi', 'Lỗi khi tải dữ liệu. Vui lòng thử lại.');
+      this.toastService.error('Lỗi khi tải dữ liệu. Vui lòng thử lại.');
       this.loading.set(false);
     });
   }
@@ -178,10 +178,10 @@ export class RoleMatrixComponent implements OnInit {
     }
 
     Promise.all(promises).then(() => {
-      this.toastService.success('Thành công', 'Lưu phân quyền thành công.');
+      this.toastService.success('Lưu phân quyền thành công.');
       this.loadData();
     }).catch(() => {
-      this.toastService.error('Lỗi', 'Lỗi khi lưu phân quyền. Vui lòng thử lại.');
+      this.toastService.error('Lỗi khi lưu phân quyền. Vui lòng thử lại.');
       this.loading.set(false);
     });
   }

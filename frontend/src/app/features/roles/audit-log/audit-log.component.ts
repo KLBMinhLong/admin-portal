@@ -55,7 +55,7 @@ import {
                       {{ log.actorUsername }}
                     </td>
                     <td class="px-6 py-4">
-                      <app-badge variant="default">
+                      <app-badge variant="neutral">
                         {{ log.action }}
                       </app-badge>
                     </td>
@@ -87,7 +87,7 @@ export class AuditLogComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.toastService.error('Lỗi', 'Không thể tải nhật ký phân quyền.');
+        this.toastService.error('Không thể tải nhật ký phân quyền.');
         this.loading.set(false);
       }
     });

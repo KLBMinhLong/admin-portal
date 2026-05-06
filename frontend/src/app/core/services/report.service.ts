@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '@env/environment';
+import { inject } from '@angular/core';
+import { API_URL } from '../tokens/config.token';
 
 export interface ReportType {
   id: string;
@@ -37,7 +38,7 @@ export const REPORT_TYPES: ReportType[] = [
  */
 @Injectable({ providedIn: 'root' })
 export class ReportService {
-  private readonly apiUrl = `${environment.apiBaseUrl}/reports`;
+  private readonly apiUrl = `${inject(API_URL)}/reports`;
 
   constructor(private http: HttpClient) {}
 

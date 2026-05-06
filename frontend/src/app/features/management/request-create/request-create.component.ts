@@ -184,7 +184,7 @@ export class RequestCreateComponent {
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.toastService.error('Lỗi', 'Vui lòng điền đầy đủ thông tin bắt buộc.');
+      this.toastService.error('Vui lòng điền đầy đủ thông tin bắt buộc.');
       return;
     }
 
@@ -196,16 +196,16 @@ export class RequestCreateComponent {
       next: (result) => {
         this.submitting.set(false);
         this.clearDraft();
-        this.toastService.success('Thành công', `Tạo thành công! Mã yêu cầu: ${result.requestNumber}`);
+        this.toastService.success(`Tạo thành công! Mã yêu cầu: ${result.requestNumber}`);
         setTimeout(() => this.router.navigate(['/requests', result.id]), 1500);
       },
       error: (err: HttpErrorResponse) => {
         this.submitting.set(false);
         // A3: Handle idempotent response (409 = đã tạo rồi)
         if (err.status === 409) {
-          this.toastService.error('Cảnh báo', 'Yêu cầu này đã được tạo trước đó. Vui lòng kiểm tra danh sách.');
+          this.toastService.error('Yêu cầu này đã được tạo trước đó. Vui lòng kiểm tra danh sách.');
         } else {
-          this.toastService.error('Lỗi', err.error?.message || 'Đã xảy ra lỗi khi tạo yêu cầu.');
+          this.toastService.error(err.error?.message || 'Đã xảy ra lỗi khi tạo yêu cầu.');
         }
       },
     });

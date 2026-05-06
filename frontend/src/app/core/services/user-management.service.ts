@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '@env/environment';
+import { inject } from '@angular/core';
+import { API_URL } from '../tokens/config.token';
 import {
   AdminUser,
   AdminUserRoleOption,
@@ -12,7 +13,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class UserManagementService {
-  private readonly apiUrl = `${environment.apiBaseUrl}/admin/users`;
+  private readonly apiUrl = `${inject(API_URL)}/admin/users`;
 
   constructor(private http: HttpClient) {}
 

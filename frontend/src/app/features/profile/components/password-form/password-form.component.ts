@@ -14,7 +14,7 @@ import { ChangePasswordDto } from '../../profile.service';
   template: `
     <form [formGroup]="pwdForm" (ngSubmit)="onSubmit()" class="space-y-4">
       @if (error()) {
-        <app-alert variant="error" [message]="error()" />
+        <app-alert variant="error">{{ error() }}</app-alert>
       }
       
       <app-form-field label="Mật khẩu hiện tại" fieldId="oldPassword" [required]="true" [error]="getFieldError('oldPassword')">

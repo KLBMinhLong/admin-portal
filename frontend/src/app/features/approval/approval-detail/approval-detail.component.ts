@@ -24,7 +24,7 @@ import {
     @if (loading()) {
       <div class="space-y-6">
         <app-skeleton variant="text" width="200px" height="32px" />
-        <app-skeleton variant="card" height="300px" />
+        <app-skeleton variant="rect" height="300px" />
       </div>
     } @else if (request()) {
       <!-- Back + Header -->
@@ -181,7 +181,7 @@ export class ApprovalDetailComponent implements OnInit {
       next: (data) => { this.request.set(data); this.loading.set(false); },
       error: () => { 
         this.loading.set(false); 
-        this.toastService.error('Lỗi', 'Không thể tải chi tiết phê duyệt.');
+        this.toastService.error('Không thể tải chi tiết phê duyệt.');
         this.router.navigate(['/approvals']); 
       },
     });
@@ -193,18 +193,18 @@ export class ApprovalDetailComponent implements OnInit {
       next: (updated) => {
         this.processing.set(false);
         this.request.set(updated);
-        this.toastService.success('Thành công', 'Yêu cầu đã được duyệt thành công!');
+        this.toastService.success('Yêu cầu đã được duyệt thành công!');
       },
       error: (err: HttpErrorResponse) => {
         this.processing.set(false);
-        this.toastService.error('Lỗi', err.error?.message || 'Lỗi khi duyệt yêu cầu.');
+        this.toastService.error(err.error?.message || 'Lỗi khi duyệt yêu cầu.');
       },
     });
   }
 
   onReject(): void {
     if (!this.comment.trim()) {
-      this.toastService.error('Lỗi', 'Vui lòng nhập lý do từ chối.');
+      this.toastService.error('Vui lòng nhập lý do từ chối.');
       return;
     }
     this.processing.set(true);
@@ -212,11 +212,11 @@ export class ApprovalDetailComponent implements OnInit {
       next: (updated) => {
         this.processing.set(false);
         this.request.set(updated);
-        this.toastService.success('Thành công', 'Yêu cầu đã bị từ chối.');
+        this.toastService.success('Yêu cầu đã bị từ chối.');
       },
       error: (err: HttpErrorResponse) => {
         this.processing.set(false);
-        this.toastService.error('Lỗi', err.error?.message || 'Lỗi khi từ chối yêu cầu.');
+        this.toastService.error(err.error?.message || 'Lỗi khi từ chối yêu cầu.');
       },
     });
   }

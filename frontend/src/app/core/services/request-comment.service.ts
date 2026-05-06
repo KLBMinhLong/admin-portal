@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { API_URL } from '@core/tokens/config.token';
 
 export interface CommentDto {
   id?: number;
@@ -16,7 +16,8 @@ export interface CommentDto {
   providedIn: 'root'
 })
 export class RequestCommentService {
-  private apiUrl = `${environment.apiBaseUrl}/requests`;
+  private baseUrl = inject(API_URL);
+  private apiUrl = `${this.baseUrl}/requests`;
 
   constructor(private http: HttpClient) {}
 

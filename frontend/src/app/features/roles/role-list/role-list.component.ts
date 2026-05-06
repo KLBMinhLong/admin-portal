@@ -54,7 +54,7 @@ import { RoleFormComponent } from '../components/role-form/role-form.component';
                     <div class="text-xs text-slate-500 mt-1">{{ role.description }}</div>
                   </td>
                   <td class="px-6 py-4">
-                    <app-badge [variant]="role.active ? 'success' : 'default'">
+                    <app-badge [variant]="role.active ? 'success' : 'neutral'">
                       {{ role.active ? 'Đang hoạt động' : 'Vô hiệu hóa' }}
                     </app-badge>
                   </td>
@@ -62,7 +62,7 @@ import { RoleFormComponent } from '../components/role-form/role-form.component';
                     <div class="flex justify-end gap-2">
                       <app-button variant="secondary" size="sm" (onClick)="openEditModal(role)">Sửa</app-button>
                       <app-button 
-                        [variant]="role.active ? 'danger' : 'success'" 
+                        [variant]="role.active ? 'danger' : 'primary'" 
                         size="sm" 
                         (onClick)="toggleActive(role)"
                       >
@@ -85,7 +85,7 @@ import { RoleFormComponent } from '../components/role-form/role-form.component';
 
       <!-- Modal Add/Edit -->
       <app-modal
-        [isOpen]="showModal()"
+        [open]="showModal()"
         [title]="isEdit() ? 'Cập nhật Role' : 'Thêm Role mới'"
         (closed)="closeModal()"
       >
@@ -118,7 +118,7 @@ export class RoleListComponent implements OnInit {
   loadRoles(): void {
     this.roleService.getRoles().subscribe({
       next: (data) => this.roles.set(data || []),
-      error: () => this.toastService.error('Lỗi', 'Không thể tải danh sách Role.')
+      error: () => this.toastService.error('Không thể tải danh sách Role.')
     });
   }
 
@@ -148,26 +148,26 @@ export class RoleListComponent implements OnInit {
     if (this.isEdit() && currentRole) {
       this.roleService.updateRole(currentRole.id, roleData).subscribe({
         next: () => {
-          this.toastService.success('Thành công', 'Đã cập nhật Role.');
+          this.toastService.success('Đã cập nhật Role.');
           this.loadRoles();
           this.closeModal();
           if (this.roleFormComponent) this.roleFormComponent.setSubmitting(false);
         },
         error: () => {
-          this.toastService.error('Lỗi', 'Không thể cập nhật Role.');
+          this.toastService.error('Không thể cập nhật Role.');
           if (this.roleFormComponent) this.roleFormComponent.setSubmitting(false);
         }
       });
     } else {
       this.roleService.createRole(roleData).subscribe({
         next: () => {
-          this.toastService.success('Thành công', 'Đã thêm Role mới.');
+          this.toastService.success('Đã thêm Role mới.');
           this.loadRoles();
           this.closeModal();
           if (this.roleFormComponent) this.roleFormComponent.setSubmitting(false);
         },
         error: () => {
-          this.toastService.error('Lỗi', 'Không thể thêm Role mới.');
+          this.toastService.error('Không thể thêm Role mới.');
           if (this.roleFormComponent) this.roleFormComponent.setSubmitting(false);
         }
       });
@@ -177,10 +177,10 @@ export class RoleListComponent implements OnInit {
   toggleActive(role: AdminRole): void {
     this.roleService.toggleRoleActive(role.id).subscribe({
       next: () => {
-        this.toastService.success('Thành công', `Đã ${role.active ? 'vô hiệu hóa' : 'kích hoạt'} Role.`);
+        this.toastService.success(`Đã ${role.active ? 'vô hiệu hóa' : 'kích hoạt'} Role.`);
         this.loadRoles();
       },
-      error: () => this.toastService.error('Lỗi', 'Không thể thay đổi trạng thái Role.')
+      error: () => this.toastService.error('Không thể thay đổi trạng thái Role.')
     });
   }
 }

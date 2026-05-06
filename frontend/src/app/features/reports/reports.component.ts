@@ -139,12 +139,12 @@ export class ReportsComponent {
       a.click();
       URL.revokeObjectURL(url);
       this.exporting.set(false);
-      this.toastService.success('Thành công', 'Báo cáo đã được xuất thành công.');
+      this.toastService.success('Báo cáo đã được xuất thành công.');
     };
 
     const handleError = (err: HttpErrorResponse) => {
       this.exporting.set(false);
-      this.toastService.error('Lỗi', 'Lỗi khi xuất báo cáo. Vui lòng thử lại.');
+      this.toastService.error('Lỗi khi xuất báo cáo. Vui lòng thử lại.');
     };
 
     switch (report.id) {
@@ -157,7 +157,7 @@ export class ReportsComponent {
       case 'request-detail':
         if (!this.requestId) {
           this.exporting.set(false);
-          this.toastService.error('Lỗi', 'Vui lòng nhập mã yêu cầu.');
+          this.toastService.error('Vui lòng nhập mã yêu cầu.');
           return;
         }
         this.reportService.exportRequestDetail(this.requestId).subscribe({
