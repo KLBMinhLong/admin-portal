@@ -26,16 +26,17 @@ export class AesGcmEncryptionService {
   private readonly TAG_LENGTH_BITS = 128;
 
   private readonly enabled: boolean;
-  private readonly rawKeyBytes: Uint8Array | null;
+  private readonly rawKeyBytes: ArrayBuffer | null;
   private cryptoKey: CryptoKey | null = null;
 
   constructor(private loggingService: LoggingService) {
     const config = inject(ENCRYPTION_CONFIG);
     this.enabled = config.enabled;
     if (this.enabled && config.secretKey) {
-      this.rawKeyBytes = new TextEncoder().encode(config.secretKey);
-      if (this.rawKeyBytes.length !== 32) {
-        this.loggingService.error(`[AesGcmEncryptionService] Secret key must be exactly 32 bytes. Got: ${this.rawKeyBytes.length}`);
+      const secretBytes = new TextEncoder().encode(config.secretKey).slice(0, 32);
+      this.rawKeyBytes = secretBytes.buffer.slice(secretBytes.byteOffset, secretBytes.byteOffset + secretBytes.byteLength);
+      if (secretBytes.length !== 32) {
+        this.loggingService.error(`[AesGcmEncryptionService] Secret key must be exactly 32 bytes. Got: ${secretBytes.length}`);
         this.rawKeyBytes = null;
       }
     } else {
@@ -81,18 +82,18 @@ export class AesGcmEncryptionService {
   async decrypt(payload: EncryptedPayload): Promise<string> {
     const key = await this.getKey();
 
-    const iv = this.base64ToUint8Array(payload.iv);
-    if (iv.length !== this.IV_LENGTH) {
+    const ivBuffer = this.base64ToArrayBuffer(payload.iv);
+    if (new Uint8Array(ivBuffer).length !== this.IV_LENGTH) {
       throw new Error('INVALID_ENCRYPTED_PAYLOAD: IV must be 12 bytes');
     }
 
-    const ciphertext = this.base64ToUint8Array(payload.data);
+    const ciphertextBuffer = this.base64ToArrayBuffer(payload.data);
 
     try {
       const plainBuffer = await crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv, tagLength: this.TAG_LENGTH_BITS },
+        { name: 'AES-GCM', iv: ivBuffer, tagLength: this.TAG_LENGTH_BITS },
         key,
-        ciphertext,
+        ciphertextBuffer,
       );
       return new TextDecoder().decode(plainBuffer);
     } catch (err) {
@@ -131,13 +132,13 @@ export class AesGcmEncryptionService {
     return btoa(binary);
   }
 
-  /** Base64 string → Uint8Array */
-  private base64ToUint8Array(base64: string): Uint8Array {
+  /** Base64 string → ArrayBuffer */
+  private base64ToArrayBuffer(base64: string): ArrayBuffer {
     const binary = atob(base64);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {
       bytes[i] = binary.charCodeAt(i);
     }
-    return bytes;
+    return bytes.buffer;
   }
 }
