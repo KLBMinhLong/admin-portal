@@ -38,7 +38,8 @@ public class AesGcmEncryptionService {
 
             return new EncryptedPayload(
                 Base64.getEncoder().encodeToString(ciphertext),
-                Base64.getEncoder().encodeToString(iv)
+                Base64.getEncoder().encodeToString(iv),
+                null // Static encryption doesn't send key in payload
             );
         } catch (GeneralSecurityException exception) {
             throw new EncryptionConfigException("ENCRYPTION_CONFIG_ERROR", exception);
@@ -46,6 +47,18 @@ public class AesGcmEncryptionService {
     }
 
     public String decrypt(String data, String iv) {
+        return decryptWithKey(data, iv, this.secretKey);
+    }
+
+    /**
+     * Giải mã dữ liệu sử dụng một key cụ thể (Hybrid Encryption).
+     */
+    public String decryptHybrid(String data, String iv, byte[] aesKeyBytes) {
+        SecretKey sessionKey = new SecretKeySpec(aesKeyBytes, "AES");
+        return decryptWithKey(data, iv, sessionKey);
+    }
+
+    private String decryptWithKey(String data, String iv, SecretKey key) {
         assertEnabled();
         try {
             byte[] ivBytes = Base64.getDecoder().decode(iv);
@@ -55,7 +68,7 @@ public class AesGcmEncryptionService {
             byte[] ciphertext = Base64.getDecoder().decode(data);
 
             Cipher cipher = Cipher.getInstance(properties.getAlgorithm());
-            cipher.init(Cipher.DECRYPT_MODE, secretKey, new GCMParameterSpec(TAG_LENGTH_BITS, ivBytes));
+            cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(TAG_LENGTH_BITS, ivBytes));
             byte[] plaintext = cipher.doFinal(ciphertext);
             return new String(plaintext, StandardCharsets.UTF_8);
         } catch (IllegalArgumentException exception) {

@@ -40,7 +40,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         "/api/v1/auth/verify-2fa",
         "/api/v1/auth/register",
         "/api/v1/auth/forgot-password",
-        "/api/v1/auth/reset-password"
+        "/api/v1/auth/reset-password",
+        "/api/v1/auth/security/public-key"
     );
 
     private final TokenCachePort      tokenCache;
@@ -73,12 +74,14 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 1. x-api-key check
-        String incomingKey = request.getHeader(API_KEY_HEADER);
-        if (incomingKey == null || !apiKey.equals(incomingKey)) {
-            log.warn("Invalid x-api-key ip={}", request.getRemoteAddr());
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid API key");
-            return;
+        // 1. x-api-key check (Bỏ qua cho public-key endpoint để FE có thể handshake)
+        if (!requestUri.endsWith("/public-key")) {
+            String incomingKey = request.getHeader(API_KEY_HEADER);
+            if (incomingKey == null || !apiKey.equals(incomingKey)) {
+                log.warn("Invalid x-api-key ip={} path={}", request.getRemoteAddr(), requestUri);
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid API key");
+                return;
+            }
         }
 
         if (PUBLIC_PATHS.contains(requestUri)) {

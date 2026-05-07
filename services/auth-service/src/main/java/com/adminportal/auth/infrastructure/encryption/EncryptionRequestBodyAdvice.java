@@ -1,6 +1,7 @@
 package com.adminportal.auth.infrastructure.encryption;
 
 import com.adminportal.auth.infrastructure.security.Encrypted;
+import com.adminportal.auth.infrastructure.security.RsaEncryptionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
@@ -22,13 +23,16 @@ public class EncryptionRequestBodyAdvice extends RequestBodyAdviceAdapter {
 
     private final ObjectMapper objectMapper;
     private final AesGcmEncryptionService encryptionService;
+    private final RsaEncryptionService rsaEncryptionService;
     private final EncryptionProperties properties;
 
     public EncryptionRequestBodyAdvice(ObjectMapper objectMapper,
                                        AesGcmEncryptionService encryptionService,
+                                       RsaEncryptionService rsaEncryptionService,
                                        EncryptionProperties properties) {
         this.objectMapper = objectMapper;
         this.encryptionService = encryptionService;
+        this.rsaEncryptionService = rsaEncryptionService;
         this.properties = properties;
     }
 
@@ -64,7 +68,20 @@ public class EncryptionRequestBodyAdvice extends RequestBodyAdviceAdapter {
             throw new InvalidEncryptedPayloadException("INVALID_ENCRYPTED_PAYLOAD");
         }
 
-        String decrypted = encryptionService.decrypt(payload.data(), payload.iv());
+        String decrypted;
+        if (payload.key() != null && !payload.key().isBlank()) {
+            // Hybrid Encryption: Giải mã AES key bằng RSA trước
+            try {
+                byte[] aesKey = rsaEncryptionService.decrypt(payload.key());
+                decrypted = encryptionService.decryptHybrid(payload.data(), payload.iv(), aesKey);
+            } catch (Exception e) {
+                throw new DecryptionFailedException("RSA_DECRYPTION_FAILED", e);
+            }
+        } else {
+            // Static Encryption: Dùng key mặc định
+            decrypted = encryptionService.decrypt(payload.data(), payload.iv());
+        }
+        
         byte[] decryptedBytes = decrypted.getBytes(StandardCharsets.UTF_8);
 
         HttpHeaders headers = new HttpHeaders();

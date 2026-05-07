@@ -6,27 +6,22 @@ import {
   HttpEvent,
 } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { inject } from '@angular/core';
-import { API_KEY } from '../tokens/config.token';
 
 /**
- * Interceptor tự động gắn header x-api-key cho mọi request
- * đến các endpoint /api/* (Rule 13 trong DEVELOPMENT-RULES).
+ * ApiKeyInterceptor (DEPRECATED)
+ * 
+ * Chúng ta đã chuyển sang mô hình Public/Secret Key (RSA + AES).
+ * API Key không còn được lưu ở Frontend để tránh lộ thông tin nhạy cảm.
+ * 
+ * Cơ chế bảo mật hiện tại:
+ * 1. Hybrid Encryption (RSA + AES) cho nội dung request.
+ * 2. JWT cho xác thực người dùng.
+ * 3. Gateway (Nginx) có thể tự chèn API Key nếu cần (Server-to-Server).
  */
 @Injectable()
 export class ApiKeyInterceptor implements HttpInterceptor {
-  private apiKey = inject(API_KEY);
-
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    if (!req.url.includes('/api/')) {
-      return next.handle(req);
-    }
-
-    const cloned = req.clone({
-      setHeaders: {
-        'x-api-key': this.apiKey,
-      },
-    });
-    return next.handle(cloned);
+    // Không chèn x-api-key nữa
+    return next.handle(req);
   }
 }

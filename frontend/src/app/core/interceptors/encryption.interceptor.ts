@@ -8,6 +8,7 @@ import {
 } from '@angular/common/http';
 import { Observable, from, switchMap, map } from 'rxjs';
 import { AesGcmEncryptionService } from '../security/aes-gcm-encryption.service';
+import { HybridEncryptionService } from '../security/hybrid-encryption.service';
 import { EncryptedPayload } from '../security/encrypted-payload.model';
 
 /**
@@ -32,9 +33,13 @@ export class EncryptionInterceptor implements HttpInterceptor {
     '/assets/',
     '/camunda/',
     '/engine-rest/',
+    '/auth/security/public-key',
   ];
 
-  constructor(private encryptionService: AesGcmEncryptionService) {}
+  constructor(
+    private encryptionService: AesGcmEncryptionService,
+    private hybridEncryptionService: HybridEncryptionService
+  ) {}
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     // Nếu encryption tắt hoặc URL không cần mã hóa → gửi thẳng
@@ -64,9 +69,9 @@ export class EncryptionInterceptor implements HttpInterceptor {
   ): Observable<HttpEvent<unknown>> {
     const bodyJson = JSON.stringify(req.body);
 
-    return from(this.encryptionService.encrypt(bodyJson)).pipe(
+    // Sử dụng Hybrid Encryption (RSA + AES) cho Request
+    return from(this.hybridEncryptionService.encrypt(bodyJson)).pipe(
       switchMap((encryptedPayload: EncryptedPayload) => {
-        // Tạo request mới với body đã mã hóa
         const encryptedReq = req.clone({
           body: encryptedPayload,
           setHeaders: { 'Content-Type': 'application/json' },
