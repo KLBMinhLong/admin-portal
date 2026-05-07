@@ -1,3 +1,11 @@
+/* ─── Generic Response Wrapper ─── */
+export interface ApiResponse<T> {
+  timestamp: string;
+  status: number;
+  data: T;
+  message: string;
+}
+
 /* ─── Auth Interfaces matching backend DTOs ─── */
 
 export interface LoginRequest {

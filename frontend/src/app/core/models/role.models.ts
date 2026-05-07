@@ -17,13 +17,11 @@ export interface AdminPermission {
 }
 
 export interface AdminAuditLog {
-  id: string;
-  actorUsername: string;
+  actor: string;
   action: string;
-  targetType: string;
-  targetId: string;
+  resource: string;
   details: string;
-  createdAt: string;
+  timestamp: string;
 }
 
 export interface AssignPermissionsRequest {

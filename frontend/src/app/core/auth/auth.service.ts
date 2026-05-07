@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, catchError, of, tap, throwError } from 'rxjs';
+import { Observable, catchError, of, tap, throwError, map } from 'rxjs';
 import { inject } from '@angular/core';
 import { API_URL } from '../tokens/config.token';
 import {
@@ -14,6 +14,7 @@ import {
   ResetPasswordRequest,
   TwoFactorVerifyRequest,
   UserProfile,
+  ApiResponse,
 } from '../models/auth.models';
 import { LoggingService } from '../services/logging.service';
 import { AuthSessionStorageService } from './auth-session-storage.service';
@@ -63,8 +64,9 @@ export class AuthService {
    *  LOGIN
    * ──────────────────────────────────────────── */
   login(req: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, req).pipe(
-      tap((res) => {
+    return this.http.post<ApiResponse<LoginResponse>>(`${this.apiUrl}/login`, req).pipe(
+      tap((wrapper) => {
+        const res = wrapper.data;
         if (res.requiresTwoFactor) {
           this.twoFactorChallenge = res.challenge;
           this.loggingService.info(`[Auth] User '${req.username}' requires 2FA verification`);
@@ -73,6 +75,7 @@ export class AuthService {
           this.setSession(res.token, res.user);
         }
       }),
+      map(wrapper => wrapper.data)
     );
   }
 
@@ -91,14 +94,16 @@ export class AuthService {
       challenge: this.twoFactorChallenge,
       otp,
     };
-    return this.http.post<LoginResponse>(`${this.apiUrl}/verify-2fa`, req).pipe(
-      tap((res) => {
+    return this.http.post<ApiResponse<LoginResponse>>(`${this.apiUrl}/verify-2fa`, req).pipe(
+      tap((wrapper) => {
+        const res = wrapper.data;
         if (res.token && res.user) {
           this.twoFactorChallenge = null;
           this.loggingService.info(`[Auth] User '${res.user.username}' verified 2FA and logged in successfully`);
           this.setSession(res.token, res.user);
         }
       }),
+      map(wrapper => wrapper.data)
     );
   }
 
@@ -106,31 +111,34 @@ export class AuthService {
    *  REGISTER
    * ──────────────────────────────────────────── */
   register(req: RegisterRequest): Observable<RegisterResponse> {
-    return this.http.post<RegisterResponse>(`${this.apiUrl}/register`, req).pipe(
-      tap((res) => {
+    return this.http.post<ApiResponse<RegisterResponse>>(`${this.apiUrl}/register`, req).pipe(
+      tap(() => {
         this.loggingService.info(`[Auth] User '${req.username}' registered successfully`);
-      })
+      }),
+      map(wrapper => wrapper.data)
     );
   }
 
   /* ────────────────────────────────────────────
    *  FORGOT / RESET PASSWORD
    * ──────────────────────────────────────────── */
-  forgotPassword(email: string): Observable<void> {
+  forgotPassword(email: string): Observable<any> {
     const req: ForgotPasswordRequest = { email };
-    return this.http.post<void>(`${this.apiUrl}/forgot-password`, req).pipe(
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/forgot-password`, req).pipe(
       tap(() => {
         this.loggingService.info(`[Auth] Forgot password requested for email: ${email}`);
-      })
+      }),
+      map(wrapper => wrapper.data)
     );
   }
 
-  resetPassword(token: string, newPassword: string): Observable<void> {
+  resetPassword(token: string, newPassword: string): Observable<any> {
     const req: ResetPasswordRequest = { token, newPassword };
-    return this.http.post<void>(`${this.apiUrl}/reset-password`, req).pipe(
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/reset-password`, req).pipe(
       tap(() => {
         this.loggingService.info(`[Auth] Password reset successfully via token`);
-      })
+      }),
+      map(wrapper => wrapper.data)
     );
   }
 
