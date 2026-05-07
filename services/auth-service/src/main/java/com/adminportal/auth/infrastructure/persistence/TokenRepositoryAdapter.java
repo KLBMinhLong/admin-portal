@@ -2,6 +2,7 @@ package com.adminportal.auth.infrastructure.persistence;
 
 import com.adminportal.auth.application.port.out.TokenRepositoryPort;
 import com.adminportal.auth.domain.entity.Token;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
@@ -39,7 +40,14 @@ public class TokenRepositoryAdapter implements TokenRepositoryPort {
     }
 
     @Override
+    @Transactional
     public void revokeAllByUserId(UUID userId) {
         repository.revokeAllByUserId(userId, Instant.now());
+    }
+
+    @Override
+    @Transactional
+    public void deleteAllInactive() {
+        repository.deleteByActiveFalse();
     }
 }

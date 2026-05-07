@@ -23,4 +23,8 @@ interface SpringDataTokenRepository extends JpaRepository<Token, UUID> {
     @Modifying
     @Query("update Token t set t.active = false, t.revokedAt = :revokedAt where t.userId = :userId and t.active = true")
     void revokeAllByUserId(@Param("userId") UUID userId, @Param("revokedAt") Instant revokedAt);
+
+    @Modifying
+    @Query("delete from Token t where t.active = false")
+    void deleteByActiveFalse();
 }

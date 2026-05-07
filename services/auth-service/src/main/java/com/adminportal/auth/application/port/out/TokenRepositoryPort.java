@@ -16,4 +16,6 @@ public interface TokenRepositoryPort {
     List<Token> findActiveByUserId(UUID userId);
 
     void revokeAllByUserId(UUID userId);
+
+    void deleteAllInactive();
 }
