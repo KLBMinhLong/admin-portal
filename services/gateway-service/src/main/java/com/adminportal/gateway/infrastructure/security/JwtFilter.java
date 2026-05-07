@@ -4,6 +4,10 @@ import com.adminportal.gateway.infrastructure.config.GatewaySecurityProperties;
 import com.adminportal.gateway.infrastructure.external.auth.AuthSessionClient;
 import com.adminportal.gateway.infrastructure.support.ErrorResponseWriter;
 import com.adminportal.gateway.infrastructure.support.GatewayRequestAttributes;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JCircuitBreakerFactory;
+import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker;
+import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -15,6 +19,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @Component
+@Slf4j
 public class JwtFilter implements GlobalFilter, Ordered {
 
     private static final String BEARER_PREFIX = "Bearer ";
@@ -23,15 +28,18 @@ public class JwtFilter implements GlobalFilter, Ordered {
     private final JwtProvider jwtProvider;
     private final AuthSessionClient authSessionClient;
     private final ErrorResponseWriter errorResponseWriter;
+    private final ReactiveCircuitBreaker circuitBreaker;
 
     public JwtFilter(GatewaySecurityProperties properties,
                      JwtProvider jwtProvider,
                      AuthSessionClient authSessionClient,
-                     ErrorResponseWriter errorResponseWriter) {
+                     ErrorResponseWriter errorResponseWriter,
+                     ReactiveCircuitBreakerFactory circuitBreakerFactory) {
         this.properties = properties;
         this.jwtProvider = jwtProvider;
         this.authSessionClient = authSessionClient;
         this.errorResponseWriter = errorResponseWriter;
+        this.circuitBreaker = circuitBreakerFactory.create("authServiceCircuitBreaker");
     }
 
     @Override
@@ -43,6 +51,7 @@ public class JwtFilter implements GlobalFilter, Ordered {
 
         String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+            log.warn("[JwtFilter] Missing or invalid Authorization header for path: {}", path);
             return errorResponseWriter.write(exchange, HttpStatus.UNAUTHORIZED, "INVALID_TOKEN", "Missing bearer token");
         }
 
@@ -50,6 +59,7 @@ public class JwtFilter implements GlobalFilter, Ordered {
         try {
             principal = jwtProvider.parse(authHeader.substring(BEARER_PREFIX.length()));
         } catch (RuntimeException exception) {
+            log.error("[JwtFilter] Token parsing failed: {}", exception.getMessage());
             return errorResponseWriter.write(exchange, HttpStatus.UNAUTHORIZED, "INVALID_TOKEN", "Token invalid or revoked");
         }
 
@@ -62,6 +72,10 @@ public class JwtFilter implements GlobalFilter, Ordered {
         String spanId = exchange.getAttributeOrDefault(GatewayRequestAttributes.SPAN_ID, "");
 
         return authSessionClient.validate(authHeader, traceId, spanId)
+            .transform(it -> circuitBreaker.run(it, throwable -> {
+                log.error("[JwtFilter] Circuit Breaker fallback for traceId: {}. Error: {}", traceId, throwable.getMessage());
+                return Mono.error(new AuthSessionClient.DownstreamAuthException("Auth service unavailable (Circuit Breaker)"));
+            }))
             .then(Mono.defer(() -> {
                 ServerHttpRequest request = exchange.getRequest().mutate()
                     .header("X-Authenticated-User", principal.username())
@@ -72,9 +86,15 @@ public class JwtFilter implements GlobalFilter, Ordered {
                 return chain.filter(exchange.mutate().request(request).build());
             }))
             .onErrorResume(AuthSessionClient.InvalidTokenException.class,
-                exception -> errorResponseWriter.write(exchange, HttpStatus.UNAUTHORIZED, "INVALID_TOKEN", "Token invalid or revoked"))
+                exception -> {
+                    log.warn("[JwtFilter] Token validation failed for user: {}", principal.username());
+                    return errorResponseWriter.write(exchange, HttpStatus.UNAUTHORIZED, "INVALID_TOKEN", "Token invalid or revoked");
+                })
             .onErrorResume(AuthSessionClient.DownstreamAuthException.class,
-                exception -> errorResponseWriter.write(exchange, HttpStatus.BAD_GATEWAY, "BAD_GATEWAY", "Auth service unavailable"));
+                exception -> {
+                    log.error("[JwtFilter] Downstream auth error: {}", exception.getMessage());
+                    return errorResponseWriter.write(exchange, HttpStatus.BAD_GATEWAY, "BAD_GATEWAY", exception.getMessage());
+                });
     }
 
     @Override

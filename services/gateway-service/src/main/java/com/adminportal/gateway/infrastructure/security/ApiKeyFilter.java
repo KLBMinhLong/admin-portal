@@ -2,6 +2,7 @@ package com.adminportal.gateway.infrastructure.security;
 
 import com.adminportal.gateway.infrastructure.config.GatewaySecurityProperties;
 import com.adminportal.gateway.infrastructure.support.ErrorResponseWriter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -11,6 +12,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @Component
+@Slf4j
 public class ApiKeyFilter implements GlobalFilter, Ordered {
 
     private final GatewaySecurityProperties properties;
@@ -30,6 +32,8 @@ public class ApiKeyFilter implements GlobalFilter, Ordered {
 
         String incomingKey = exchange.getRequest().getHeaders().getFirst("x-api-key");
         if (incomingKey == null || !incomingKey.equals(properties.getApiKey())) {
+            log.warn("[ApiKey] Invalid API Key from IP: {} for path: {}", 
+                exchange.getRequest().getRemoteAddress(), path);
             return errorResponseWriter.write(exchange, HttpStatus.UNAUTHORIZED, "INVALID_API_KEY", "Invalid API key");
         }
 

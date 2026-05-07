@@ -3,6 +3,7 @@ package com.adminportal.gateway.infrastructure.security;
 import com.adminportal.gateway.infrastructure.config.GatewaySecurityProperties;
 import com.adminportal.gateway.infrastructure.support.ErrorResponseWriter;
 import com.adminportal.gateway.infrastructure.support.GatewayRequestAttributes;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -15,6 +16,7 @@ import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
+@Slf4j
 public class RateLimitFilter implements GlobalFilter, Ordered {
 
     private final ConcurrentHashMap<String, WindowCounter> counters = new ConcurrentHashMap<>();
@@ -40,6 +42,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
             : properties.getRateLimit().getAnonymousPerMinute();
 
         if (!allow(key, limit)) {
+            log.warn("[RateLimit] Limit exceeded for key: {}. Limit: {}/min", key, limit);
             return errorResponseWriter.write(exchange, HttpStatus.TOO_MANY_REQUESTS, "TOO_MANY_REQUESTS", "Rate limit exceeded");
         }
 
