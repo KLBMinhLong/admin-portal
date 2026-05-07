@@ -6,8 +6,10 @@ import com.adminportal.auth.application.port.in.LoginUseCase;
 import com.adminportal.auth.application.port.out.ChallengeStorePort;
 import com.adminportal.auth.application.port.out.KeycloakPort;
 import com.adminportal.auth.application.port.out.UserRepositoryPort;
-import com.adminportal.auth.application.services.AuthenticatedSessionService;
+import com.adminportal.auth.application.service.AuthenticatedSessionService;
 import com.adminportal.auth.domain.entity.User;
+import com.adminportal.auth.domain.exception.BusinessStateException;
+import com.adminportal.auth.domain.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -49,9 +51,9 @@ public class LoginUseCaseImpl implements LoginUseCase {
 
         // Step 2: Lock user row trong transaction de tranh 2 login song song tao 2 token active
         User user = userRepository.findByUsernameForUpdate(normalizedUsername)
-            .orElseThrow(() -> new RuntimeException("User not found: " + normalizedUsername));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + normalizedUsername));
         if (!user.isActive()) {
-            throw new RuntimeException("User inactive: " + normalizedUsername);
+            throw new BusinessStateException("USER_INACTIVE", "User inactive: " + normalizedUsername);
         }
 
         // Step 3: Check 2FA

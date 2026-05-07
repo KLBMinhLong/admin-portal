@@ -3,7 +3,7 @@ package com.adminportal.auth.application.usecase;
 import com.adminportal.auth.application.dto.response.UserPermissionsResponse;
 import com.adminportal.auth.application.port.in.GetUserPermissionsUseCase;
 import com.adminportal.auth.application.port.out.UserRepositoryPort;
-import com.adminportal.auth.application.services.RuntimePermissionService;
+import com.adminportal.auth.application.service.RuntimePermissionService;
 import com.adminportal.auth.domain.entity.Role;
 import com.adminportal.auth.domain.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;

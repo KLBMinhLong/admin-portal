@@ -4,10 +4,13 @@ import com.adminportal.auth.application.dto.request.ResetPasswordRequest;
 import com.adminportal.auth.application.port.in.ResetPasswordUseCase;
 import com.adminportal.auth.application.port.out.PasswordResetTokenRepositoryPort;
 import com.adminportal.auth.application.port.out.UserRepositoryPort;
-import com.adminportal.auth.application.services.UserSessionRevocationService;
-import com.adminportal.auth.application.services.UsernamePasswordHashService;
+import com.adminportal.auth.application.service.UserSessionRevocationService;
+import com.adminportal.auth.application.service.UsernamePasswordHashService;
 import com.adminportal.auth.domain.entity.PasswordResetToken;
 import com.adminportal.auth.domain.entity.User;
+import com.adminportal.auth.domain.exception.BusinessStateException;
+import com.adminportal.auth.domain.exception.InvalidInputException;
+import com.adminportal.auth.domain.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -48,16 +51,16 @@ public class ResetPasswordUseCaseImpl implements ResetPasswordUseCase {
     @Transactional
     public void execute(ResetPasswordRequest request) {
         PasswordResetToken resetToken = passwordResetTokenRepository.findByTokenHash(sha256(request.token()))
-            .orElseThrow(() -> new IllegalArgumentException("Invalid reset token"));
+            .orElseThrow(() -> new BusinessStateException("INVALID_RESET_TOKEN", "Invalid reset token"));
 
         if (resetToken.isExpired() || resetToken.isUsed()) {
-            throw new IllegalArgumentException("Invalid reset token");
+            throw new BusinessStateException("INVALID_RESET_TOKEN", "Invalid reset token");
         }
 
         validatePasswordPolicy(request.newPassword());
 
         User user = userRepository.findById(resetToken.getUserId())
-            .orElseThrow(() -> new IllegalArgumentException("Invalid reset token"));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         user.changePassword(passwordHashService.encode(user.getUsername(), request.newPassword()));
         userRepository.save(user);
@@ -73,19 +76,19 @@ public class ResetPasswordUseCaseImpl implements ResetPasswordUseCase {
 
     private void validatePasswordPolicy(String password) {
         if (password == null || password.length() < 12) {
-            throw new IllegalArgumentException("Password must be at least 12 characters");
+            throw new InvalidInputException("Password must be at least 12 characters");
         }
         if (!HAS_UPPERCASE.matcher(password).matches()) {
-            throw new IllegalArgumentException("Password must contain an uppercase letter");
+            throw new InvalidInputException("Password must contain an uppercase letter");
         }
         if (!HAS_LOWERCASE.matcher(password).matches()) {
-            throw new IllegalArgumentException("Password must contain a lowercase letter");
+            throw new InvalidInputException("Password must contain a lowercase letter");
         }
         if (!HAS_NUMBER.matcher(password).matches()) {
-            throw new IllegalArgumentException("Password must contain a number");
+            throw new InvalidInputException("Password must contain a number");
         }
         if (!HAS_SPECIAL.matcher(password).matches()) {
-            throw new IllegalArgumentException("Password must contain a special character");
+            throw new InvalidInputException("Password must contain a special character");
         }
     }
 

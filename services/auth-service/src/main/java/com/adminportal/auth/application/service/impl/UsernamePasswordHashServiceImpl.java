@@ -1,5 +1,6 @@
-package com.adminportal.auth.application.services;
+package com.adminportal.auth.application.service.impl;
 
+import com.adminportal.auth.application.service.UsernamePasswordHashService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -20,33 +21,20 @@ import java.util.Locale;
  * </p>
  */
 @Component
-public class UsernamePasswordHashService {
+public class UsernamePasswordHashServiceImpl implements UsernamePasswordHashService {
 
     private final PasswordEncoder passwordEncoder;
 
-    public UsernamePasswordHashService(PasswordEncoder passwordEncoder) {
+    public UsernamePasswordHashServiceImpl(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
     }
 
-    /**
-     * Hash a password bound to the given username.
-     *
-     * @param username the account username (will be lowercased)
-     * @param rawPassword the plaintext password
-     * @return the BCrypt hash of "username:rawPassword"
-     */
+    @Override
     public String encode(String username, String rawPassword) {
         return passwordEncoder.encode(combine(username, rawPassword));
     }
 
-    /**
-     * Verify a raw password against a stored hash, bound to the given username.
-     *
-     * @param username the account username (will be lowercased)
-     * @param rawPassword the plaintext password to check
-     * @param encodedPassword the stored BCrypt hash
-     * @return true if the password matches
-     */
+    @Override
     public boolean matches(String username, String rawPassword, String encodedPassword) {
         return passwordEncoder.matches(combine(username, rawPassword), encodedPassword);
     }

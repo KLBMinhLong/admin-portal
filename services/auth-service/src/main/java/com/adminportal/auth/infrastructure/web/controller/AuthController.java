@@ -3,7 +3,7 @@ package com.adminportal.auth.infrastructure.web.controller;
 import com.adminportal.auth.application.dto.request.*;
 import com.adminportal.auth.application.dto.response.*;
 import com.adminportal.auth.application.port.in.*;
-import com.adminportal.auth.application.services.RuntimePermissionService;
+import com.adminportal.auth.application.service.RuntimePermissionService;
 import com.adminportal.auth.infrastructure.security.Encrypted;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

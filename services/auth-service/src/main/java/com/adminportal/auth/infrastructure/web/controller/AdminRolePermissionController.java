@@ -1,21 +1,25 @@
 package com.adminportal.auth.infrastructure.web.controller;
 
+import com.adminportal.auth.application.dto.request.AdminRoleRequest;
 import com.adminportal.auth.application.dto.response.AdminAuditLogDto;
 import com.adminportal.auth.application.dto.response.AdminPermissionDto;
 import com.adminportal.auth.application.dto.response.AdminRoleDto;
-import com.adminportal.auth.application.port.out.PermissionRepositoryPort;
-import com.adminportal.auth.application.port.out.RbacAuditLogRepositoryPort;
-import com.adminportal.auth.application.port.out.RoleRepositoryPort;
+import com.adminportal.auth.application.port.in.RoleManagementUseCase;
 import com.adminportal.auth.infrastructure.security.Encrypted;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * UC-FE-05: Quản lý Role & Permission Matrix
@@ -26,52 +30,40 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v1/admin")
+@Slf4j
 public class AdminRolePermissionController {
 
-    private static final Logger log = LoggerFactory.getLogger(AdminRolePermissionController.class);
+    private final RoleManagementUseCase roleManagementUseCase;
 
-    private final RoleRepositoryPort roleRepository;
-    private final PermissionRepositoryPort permissionRepository;
-    private final RbacAuditLogRepositoryPort auditLogRepository;
-    private final com.adminportal.auth.application.port.in.RoleManagementUseCase roleManagementUseCase;
-
-    public AdminRolePermissionController(RoleRepositoryPort roleRepository,
-                                         PermissionRepositoryPort permissionRepository,
-                                         RbacAuditLogRepositoryPort auditLogRepository,
-                                         com.adminportal.auth.application.port.in.RoleManagementUseCase roleManagementUseCase) {
-        this.roleRepository = roleRepository;
-        this.permissionRepository = permissionRepository;
-        this.auditLogRepository = auditLogRepository;
+    public AdminRolePermissionController(RoleManagementUseCase roleManagementUseCase) {
         this.roleManagementUseCase = roleManagementUseCase;
     }
 
-    @org.springframework.web.bind.annotation.PostMapping("/roles")
+    @PostMapping("/roles")
     @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
     @Encrypted
-    public ResponseEntity<AdminRoleDto> createRole(@jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody com.adminportal.auth.application.dto.request.AdminRoleRequest request) {
+    public ResponseEntity<AdminRoleDto> createRole(@Valid @RequestBody AdminRoleRequest request) {
         return ResponseEntity.ok(roleManagementUseCase.createRole(request));
     }
 
-    @org.springframework.web.bind.annotation.PatchMapping("/roles/{id}")
+    @PatchMapping("/roles/{id}")
     @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
     @Encrypted
-    public ResponseEntity<AdminRoleDto> updateRole(@org.springframework.web.bind.annotation.PathVariable("id") java.util.UUID roleId,
-                                                 @jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody com.adminportal.auth.application.dto.request.AdminRoleRequest request) {
+    public ResponseEntity<AdminRoleDto> updateRole(@PathVariable("id") UUID roleId,
+                                                   @Valid @RequestBody AdminRoleRequest request) {
         return ResponseEntity.ok(roleManagementUseCase.updateRole(roleId, request));
     }
 
-    @org.springframework.web.bind.annotation.PatchMapping("/roles/{id}/toggle-active")
+    @PatchMapping("/roles/{id}/toggle-active")
     @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
-    public ResponseEntity<AdminRoleDto> toggleRoleActive(@org.springframework.web.bind.annotation.PathVariable("id") java.util.UUID roleId) {
+    public ResponseEntity<AdminRoleDto> toggleRoleActive(@PathVariable("id") UUID roleId) {
         return ResponseEntity.ok(roleManagementUseCase.toggleRoleActive(roleId));
     }
 
     @GetMapping("/roles")
     @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
     public ResponseEntity<List<AdminRoleDto>> listRoles() {
-        List<AdminRoleDto> roles = roleRepository.findAllWithPermissions().stream()
-            .map(AdminRoleDto::from)
-            .toList();
+        List<AdminRoleDto> roles = roleManagementUseCase.listRoles();
         log.info("[ADMIN] Listed {} roles", roles.size());
         return ResponseEntity.ok(roles);
     }
@@ -79,18 +71,12 @@ public class AdminRolePermissionController {
     @GetMapping("/permissions")
     @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
     public ResponseEntity<List<AdminPermissionDto>> listPermissions() {
-        List<AdminPermissionDto> permissions = permissionRepository.findAll().stream()
-            .map(AdminPermissionDto::from)
-            .toList();
-        return ResponseEntity.ok(permissions);
+        return ResponseEntity.ok(roleManagementUseCase.listPermissions());
     }
 
     @GetMapping("/audit-logs")
     @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
     public ResponseEntity<List<AdminAuditLogDto>> listAuditLogs() {
-        List<AdminAuditLogDto> logs = auditLogRepository.findTop50ByOrderByCreatedAtDesc().stream()
-            .map(AdminAuditLogDto::from)
-            .toList();
-        return ResponseEntity.ok(logs);
+        return ResponseEntity.ok(roleManagementUseCase.listAuditLogs());
     }
 }

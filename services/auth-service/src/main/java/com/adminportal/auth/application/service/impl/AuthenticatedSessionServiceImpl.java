@@ -1,12 +1,14 @@
-package com.adminportal.auth.application.services;
+package com.adminportal.auth.application.service.impl;
 
 import com.adminportal.auth.application.dto.response.LoginResponse;
 import com.adminportal.auth.application.port.out.GeneratedToken;
 import com.adminportal.auth.application.port.out.TokenGeneratorPort;
+import com.adminportal.auth.application.service.AuthenticatedSessionService;
+import com.adminportal.auth.application.service.RuntimePermissionService;
+import com.adminportal.auth.application.service.UserSessionRevocationService;
 import com.adminportal.auth.domain.entity.Token;
 import com.adminportal.auth.domain.entity.User;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -18,21 +20,22 @@ import java.util.List;
 import java.util.Set;
 
 @Service
-public class AuthenticatedSessionService {
-    private static final Logger log = LoggerFactory.getLogger(AuthenticatedSessionService.class);
+@Slf4j
+public class AuthenticatedSessionServiceImpl implements AuthenticatedSessionService {
 
     private final UserSessionRevocationService userSessionRevocationService;
     private final TokenGeneratorPort tokenGenerator;
     private final RuntimePermissionService runtimePermissionService;
 
-    public AuthenticatedSessionService(UserSessionRevocationService userSessionRevocationService,
-                                       TokenGeneratorPort tokenGenerator,
-                                       RuntimePermissionService runtimePermissionService) {
+    public AuthenticatedSessionServiceImpl(UserSessionRevocationService userSessionRevocationService,
+                                           TokenGeneratorPort tokenGenerator,
+                                           RuntimePermissionService runtimePermissionService) {
         this.userSessionRevocationService = userSessionRevocationService;
         this.tokenGenerator = tokenGenerator;
         this.runtimePermissionService = runtimePermissionService;
     }
 
+    @Override
     public LoginResponse create(User user, String deviceInfo) {
         userSessionRevocationService.revokeAll(user.getId());
 

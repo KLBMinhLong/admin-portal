@@ -7,8 +7,11 @@ import com.adminportal.auth.application.port.out.ChallengeStorePort;
 import com.adminportal.auth.application.port.out.TwoFactorChallenge;
 import com.adminportal.auth.application.port.out.TwoFactorVerifierPort;
 import com.adminportal.auth.application.port.out.UserRepositoryPort;
-import com.adminportal.auth.application.services.AuthenticatedSessionService;
+import com.adminportal.auth.application.service.AuthenticatedSessionService;
 import com.adminportal.auth.domain.entity.User;
+import com.adminportal.auth.domain.exception.BusinessStateException;
+import com.adminportal.auth.domain.exception.InvalidInputException;
+import com.adminportal.auth.domain.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -37,18 +40,18 @@ public class VerifyTwoFactorUseCaseImpl implements VerifyTwoFactorUseCase {
     @Transactional
     public LoginResponse execute(TwoFactorVerifyRequest request) {
         TwoFactorChallenge challenge = challengeStore.find(request.challenge())
-            .orElseThrow(() -> new RuntimeException("2FA challenge expired"));
+            .orElseThrow(() -> new BusinessStateException("TWO_FACTOR_EXPIRED", "2FA challenge expired"));
 
         User user = userRepository.findById(challenge.userId())
-            .orElseThrow(() -> new RuntimeException("User not found: " + challenge.userId()));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + challenge.userId()));
 
         if (!user.isTwoFactorEnabled() || user.getTwoFactorSecret() == null || user.getTwoFactorSecret().isBlank()) {
-            throw new RuntimeException("2FA state changed");
+            throw new BusinessStateException("TWO_FACTOR_STATE_CHANGED", "2FA state changed");
         }
 
         if (!twoFactorVerifier.verifyOtp(user.getTwoFactorSecret(), request.otp())) {
             log.warn("2FA verification failed for userId={}", user.getId());
-            throw new IllegalArgumentException("Invalid 2FA OTP");
+            throw new InvalidInputException("Invalid 2FA OTP");
         }
 
         challengeStore.delete(request.challenge());

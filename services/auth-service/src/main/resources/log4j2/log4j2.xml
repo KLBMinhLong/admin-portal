@@ -10,7 +10,8 @@
     <Property name="LOG_LEVEL">${env:LOG_LEVEL:-INFO}</Property>
     <Property name="LOG_DIR">${env:LOG_DIR:-logs}</Property>
     <Property name="CONSOLE_PATTERN">%style{%d{yyyy-MM-dd HH:mm:ss.SSS}}{cyan} %highlight{%-5level}{FATAL=red blink, ERROR=red, WARN=yellow, INFO=green, DEBUG=blue} %style{[${SERVICE_NAME}]}{magenta} %style{[traceId=%X{traceId:-none}]}{bright_black} %logger{36} - %msg%n%throwable</Property>
-    <Property name="JSON_PATTERN">{"timestamp":"%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ}","level":"%level","service":"${SERVICE_NAME}","traceId":"%X{traceId:-}","spanId":"%X{spanId:-}","thread":"%t","logger":"%logger","message":"%enc{%msg}{JSON}"}%n</Property>
+    <Property name="JSON_PATTERN">{"timestamp":"%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ}","level":"%level","service":"${SERVICE_NAME}","traceId":"%X{traceId:-}","spanId":"%X{spanId:-}","thread":"%t","logger":"%logger","message":"%enc{%msg}{JSON}","context":%X}%n</Property>
+    <Property name="AUDIT_PATTERN">{"timestamp":"%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ}","service":"${SERVICE_NAME}","traceId":"%X{traceId:-}","actor":"%X{actor}","action":"%X{action}","resource":"%X{resource}","details":"%enc{%msg}{JSON}"}%n</Property>
   </Properties>
 
   <Appenders>
@@ -29,12 +30,32 @@
       <DefaultRolloverStrategy max="14"/>
     </RollingFile>
 
+    <RollingFile name="AuditFileAppender"
+                 fileName="${LOG_DIR}/audit.json"
+                 filePattern="${LOG_DIR}/audit-%d{yyyy-MM-dd}-%i.json.gz">
+      <PatternLayout pattern="${AUDIT_PATTERN}"/>
+      <Policies>
+        <TimeBasedTriggeringPolicy interval="1"/>
+        <SizeBasedTriggeringPolicy size="50MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="30"/>
+    </RollingFile>
+
     <Async name="AsyncAppender" bufferSize="4096">
       <AppenderRef ref="JsonFileAppender"/>
+    </Async>
+
+    <Async name="AsyncAuditAppender" bufferSize="1024">
+      <AppenderRef ref="AuditFileAppender"/>
     </Async>
   </Appenders>
 
   <Loggers>
+    <Logger name="AuditLogger" level="INFO" additivity="false">
+      <AppenderRef ref="AsyncAuditAppender"/>
+      <AppenderRef ref="ConsoleAppender"/>
+    </Logger>
+
     <Logger name="com.adminportal" level="${LOG_LEVEL}" additivity="false">
       <AppenderRef ref="ConsoleAppender"/>
       <AppenderRef ref="AsyncAppender"/>

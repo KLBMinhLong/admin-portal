@@ -5,9 +5,11 @@ import com.adminportal.auth.application.dto.response.RegisterResponse;
 import com.adminportal.auth.application.port.in.RegisterUseCase;
 import com.adminportal.auth.application.port.out.RoleRepositoryPort;
 import com.adminportal.auth.application.port.out.UserRepositoryPort;
-import com.adminportal.auth.application.services.UsernamePasswordHashService;
+import com.adminportal.auth.application.service.UsernamePasswordHashService;
 import com.adminportal.auth.domain.entity.Role;
 import com.adminportal.auth.domain.entity.User;
+import com.adminportal.auth.domain.exception.InvalidInputException;
+import com.adminportal.auth.domain.exception.ResourceConflictException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -73,28 +75,28 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
 
     private void validateUniqueUser(String username, String email) {
         if (userRepository.existsByUsername(username)) {
-            throw new IllegalArgumentException("Username already exists");
+            throw new ResourceConflictException("Username already exists");
         }
         if (userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("Email already exists");
+            throw new ResourceConflictException("Email already exists");
         }
     }
 
     private void validatePasswordPolicy(String password) {
         if (password == null || password.length() < 12) {
-            throw new IllegalArgumentException("Password must be at least 12 characters");
+            throw new InvalidInputException("Password must be at least 12 characters");
         }
         if (!HAS_UPPERCASE.matcher(password).matches()) {
-            throw new IllegalArgumentException("Password must contain an uppercase letter");
+            throw new InvalidInputException("Password must contain an uppercase letter");
         }
         if (!HAS_LOWERCASE.matcher(password).matches()) {
-            throw new IllegalArgumentException("Password must contain a lowercase letter");
+            throw new InvalidInputException("Password must contain a lowercase letter");
         }
         if (!HAS_NUMBER.matcher(password).matches()) {
-            throw new IllegalArgumentException("Password must contain a number");
+            throw new InvalidInputException("Password must contain a number");
         }
         if (!HAS_SPECIAL.matcher(password).matches()) {
-            throw new IllegalArgumentException("Password must contain a special character");
+            throw new InvalidInputException("Password must contain a special character");
         }
     }
 

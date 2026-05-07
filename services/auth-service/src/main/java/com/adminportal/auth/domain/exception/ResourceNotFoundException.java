@@ -1,7 +1,7 @@
 package com.adminportal.auth.domain.exception;
 
-public class ResourceNotFoundException extends RuntimeException {
+public class ResourceNotFoundException extends BaseBusinessException {
     public ResourceNotFoundException(String message) {
-        super(message);
+        super("RESOURCE_NOT_FOUND", message);
     }
 }

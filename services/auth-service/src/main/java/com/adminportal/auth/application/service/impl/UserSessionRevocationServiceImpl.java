@@ -1,27 +1,28 @@
-package com.adminportal.auth.application.services;
+package com.adminportal.auth.application.service.impl;
 
 import com.adminportal.auth.application.port.out.TokenCachePort;
 import com.adminportal.auth.application.port.out.TokenRepositoryPort;
+import com.adminportal.auth.application.service.UserSessionRevocationService;
 import com.adminportal.auth.domain.entity.Token;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
-public class UserSessionRevocationService {
-    private static final Logger log = LoggerFactory.getLogger(UserSessionRevocationService.class);
+@Slf4j
+public class UserSessionRevocationServiceImpl implements UserSessionRevocationService {
 
     private final TokenRepositoryPort tokenRepository;
     private final TokenCachePort tokenCache;
 
-    public UserSessionRevocationService(TokenRepositoryPort tokenRepository, TokenCachePort tokenCache) {
+    public UserSessionRevocationServiceImpl(TokenRepositoryPort tokenRepository, TokenCachePort tokenCache) {
         this.tokenRepository = tokenRepository;
         this.tokenCache = tokenCache;
     }
 
+    @Override
     public void revokeAll(UUID userId) {
         List<Token> activeTokens = tokenRepository.findActiveByUserId(userId);
         if (activeTokens.isEmpty()) {
@@ -36,8 +37,10 @@ public class UserSessionRevocationService {
         tokenRepository.saveAll(activeTokens);
     }
 
+    @Override
     public void storeNewSession(Token token) {
         tokenRepository.save(token);
         tokenCache.put(token);
+        log.debug("Stored new session for tokenJti={}", token.getTokenJti());
     }
 }

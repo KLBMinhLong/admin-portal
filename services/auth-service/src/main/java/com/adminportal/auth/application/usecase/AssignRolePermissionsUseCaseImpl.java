@@ -5,8 +5,8 @@ import com.adminportal.auth.application.dto.response.RolePermissionAssignmentRes
 import com.adminportal.auth.application.port.in.AssignRolePermissionsUseCase;
 import com.adminportal.auth.application.port.out.PermissionRepositoryPort;
 import com.adminportal.auth.application.port.out.RoleRepositoryPort;
-import com.adminportal.auth.application.services.RbacAuditService;
-import com.adminportal.auth.application.services.RuntimePermissionService;
+import com.adminportal.auth.application.service.RbacAuditService;
+import com.adminportal.auth.application.service.RuntimePermissionService;
 import com.adminportal.auth.domain.entity.Permission;
 import com.adminportal.auth.domain.entity.Role;
 import com.adminportal.auth.domain.exception.ResourceNotFoundException;

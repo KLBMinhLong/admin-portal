@@ -1,12 +1,13 @@
 package com.adminportal.auth.infrastructure.logging;
 
+import com.adminportal.auth.application.port.out.AuditLoggerPort;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AuditLogger {
+public class AuditLogger implements AuditLoggerPort {
     private static final Logger AUDIT = LogManager.getLogger("AuditLogger");
 
     public void logAudit(String actor, String action, String resource, String details) {

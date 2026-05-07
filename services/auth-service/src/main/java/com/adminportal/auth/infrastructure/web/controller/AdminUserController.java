@@ -5,7 +5,7 @@ import com.adminportal.auth.application.dto.request.AdminUserRoleUpdateRequest;
 import com.adminportal.auth.application.dto.request.AdminUserUpdateRequest;
 import com.adminportal.auth.application.dto.response.AdminUserDto;
 import com.adminportal.auth.application.dto.response.AdminUserRoleOptionDto;
-import com.adminportal.auth.application.services.AdminUserManagementService;
+import com.adminportal.auth.application.service.AdminUserManagementService;
 import com.adminportal.auth.infrastructure.security.Encrypted;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;

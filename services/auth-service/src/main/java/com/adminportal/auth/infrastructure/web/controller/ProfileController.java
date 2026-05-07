@@ -5,6 +5,7 @@ import com.adminportal.auth.application.dto.response.ProfileDto;
 import com.adminportal.auth.application.dto.response.Toggle2faResponse;
 import com.adminportal.auth.application.port.out.UserRepositoryPort;
 import com.adminportal.auth.domain.entity.User;
+import com.adminportal.auth.domain.exception.ResourceNotFoundException;
 import com.adminportal.auth.infrastructure.security.Encrypted;
 import dev.samstevens.totp.exceptions.QrGenerationException;
 import dev.samstevens.totp.qr.QrData;
@@ -16,7 +17,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import com.adminportal.auth.application.services.UsernamePasswordHashService;
+import com.adminportal.auth.application.service.UsernamePasswordHashService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -44,7 +45,7 @@ public class ProfileController {
     @GetMapping
     public ResponseEntity<ProfileDto> getProfile(Authentication authentication) {
         User user = userRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         ProfileDto dto = new ProfileDto(
                 user.getUsername(),
@@ -62,7 +63,7 @@ public class ProfileController {
     @Encrypted
     public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest req, Authentication authentication) {
         User user = userRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (!passwordHashService.matches(user.getUsername(), req.oldPassword(), user.getPasswordHash())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -77,7 +78,7 @@ public class ProfileController {
     @PostMapping("/2fa/toggle")
     public ResponseEntity<Toggle2faResponse> toggle2fa(Authentication authentication) {
         User user = userRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (user.isTwoFactorEnabled()) {
             user.disableTwoFactor();

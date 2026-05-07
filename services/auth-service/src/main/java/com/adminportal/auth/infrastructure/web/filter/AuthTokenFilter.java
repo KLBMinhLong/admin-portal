@@ -2,7 +2,7 @@ package com.adminportal.auth.infrastructure.web.filter;
 
 import com.adminportal.auth.application.port.out.TokenCachePort;
 import com.adminportal.auth.application.port.out.TokenRepositoryPort;
-import com.adminportal.auth.application.services.RuntimePermissionService;
+import com.adminportal.auth.application.service.RuntimePermissionService;
 import com.adminportal.auth.domain.entity.Token;
 import com.adminportal.auth.infrastructure.security.JwtProvider;
 import jakarta.servlet.FilterChain;

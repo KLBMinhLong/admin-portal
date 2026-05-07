@@ -1,7 +1,11 @@
 package com.adminportal.auth.domain.exception;
 
-public class ResourceConflictException extends RuntimeException {
+/**
+ * Exception ném khi có xung đột tài nguyên.
+ * Ví dụ: tạo tài khoản nhưng username đã tồn tại.
+ */
+public class ResourceConflictException extends BaseBusinessException {
     public ResourceConflictException(String message) {
-        super(message);
+        super("RESOURCE_CONFLICT", message);
     }
 }
