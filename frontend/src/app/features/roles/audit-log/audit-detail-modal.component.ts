@@ -24,12 +24,12 @@ import { ModalComponent, BadgeComponent, ButtonComponent, BadgeVariant } from '@
               <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Thời gian</p>
                 <p class="mt-2 text-sm font-medium text-slate-900">
-                  {{ log.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}
+                  {{ log.timestamp | date:'dd/MM/yyyy HH:mm:ss' }}
                 </p>
               </div>
               <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Người thực hiện</p>
-                <p class="mt-2 text-sm font-medium text-slate-900">{{ log.actorUsername }}</p>
+                <p class="mt-2 text-sm font-medium text-slate-900">{{ log.actor }}</p>
               </div>
             </div>
 
@@ -44,15 +44,9 @@ import { ModalComponent, BadgeComponent, ButtonComponent, BadgeVariant } from '@
             </div>
 
             <!-- Đối tượng -->
-            <div class="grid grid-cols-2 gap-4">
-              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Loại đối tượng</p>
-                <p class="mt-2 text-sm font-medium text-slate-900">{{ log.targetType }}</p>
-              </div>
-              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">ID Đối tượng</p>
-                <p class="mt-2 font-mono text-sm text-slate-600 break-all">{{ log.targetId }}</p>
-              </div>
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Đối tượng tác động (Resource)</p>
+              <p class="mt-2 text-sm font-medium text-slate-900">{{ log.resource }}</p>
             </div>
 
             <!-- Chi tiết -->

@@ -129,10 +129,10 @@ import { AuditDetailModalComponent } from './audit-detail-modal.component';
                 @for (log of paginatedLogs(); track log.id) {
                   <tr class="hover:bg-slate-50/50 transition-colors">
                     <td class="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
-                      {{ log.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}
+                      {{ log.timestamp | date:'dd/MM/yyyy HH:mm:ss' }}
                     </td>
                     <td class="px-6 py-4 text-sm font-medium text-slate-900">
-                      {{ log.actorUsername }}
+                      {{ log.actor }}
                     </td>
                     <td class="px-6 py-4">
                       <app-badge [variant]="getActionBadgeVariant(log.action)">
@@ -140,7 +140,7 @@ import { AuditDetailModalComponent } from './audit-detail-modal.component';
                       </app-badge>
                     </td>
                     <td class="px-6 py-4 text-sm text-slate-600">
-                      <span class="font-medium text-slate-900">{{ log.targetType }}</span>
+                      <span class="font-medium text-slate-900">{{ log.resource }}</span>
                     </td>
                     <td class="px-6 py-4 text-right">
                       <app-button
@@ -210,7 +210,7 @@ export class AuditLogComponent implements OnInit {
     const to = this.toDate();
     if (from || to) {
       logs = logs.filter(log => {
-        const logDate = new Date(log.createdAt);
+        const logDate = new Date(log.timestamp);
         if (from && logDate < from) return false;
         if (to && logDate > to) return false;
         return true;
@@ -218,7 +218,7 @@ export class AuditLogComponent implements OnInit {
     }
 
     return logs.sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
   });
 
