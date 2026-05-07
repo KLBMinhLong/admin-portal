@@ -26,10 +26,8 @@ class ForgotPasswordUseCaseImplTest {
 
     @Mock
     private UserRepositoryPort userRepository;
-
     @Mock
     private PasswordResetTokenRepositoryPort passwordResetTokenRepository;
-
     @Mock
     private PasswordResetNotifierPort passwordResetNotifier;
 
@@ -46,7 +44,7 @@ class ForgotPasswordUseCaseImplTest {
 
     @Test
     void shouldGenerateResetTokenAndNotifyWhenEmailExists() {
-        User user = User.create("john.doe", "john@example.com", "$2-hash", "ROLE_USER");
+        User user = User.create("john.doe", "john@example.com", "$2-hash", "ROLE_USER", "John", "Doe");
         PasswordResetToken previousToken = PasswordResetToken.issue(user.getId(), "old-hash", Instant.now().plusSeconds(60));
 
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(user));

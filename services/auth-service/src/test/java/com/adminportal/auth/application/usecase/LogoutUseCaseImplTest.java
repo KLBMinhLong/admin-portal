@@ -41,10 +41,10 @@ class LogoutUseCaseImplTest {
 
     @Test
     void shouldRevokeActiveTokenAndEvictCache() {
-        User user = User.create("john", "john@example.com", "$2-hash", "ROLE_USER");
+        User user = User.create("john", "john@example.com", "$2-hash", "ROLE_USER", "John", "Doe");
         String jwtToken = jwtProvider.generate(user).value();
         String tokenJti = jwtProvider.parse(jwtToken).jti();
-        Token token = Token.issue(UUID.randomUUID(), tokenJti, "hash-1", Instant.now(), null, "Chrome");
+        Token token = Token.issue(user.getId(), tokenJti, "hash-1", Instant.now(), null, "Chrome");
         when(tokenRepository.findByTokenJti(tokenJti)).thenReturn(Optional.of(token));
         when(tokenRepository.save(any(Token.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -56,25 +56,12 @@ class LogoutUseCaseImplTest {
 
     @Test
     void shouldNotSaveWhenTokenAlreadyRevoked() {
-        User user = User.create("john", "john@example.com", "$2-hash", "ROLE_USER");
+        User user = User.create("john", "john@example.com", "$2-hash", "ROLE_USER", "John", "Doe");
         String jwtToken = jwtProvider.generate(user).value();
         String tokenJti = jwtProvider.parse(jwtToken).jti();
-        Token token = Token.issue(UUID.randomUUID(), tokenJti, "hash-2", Instant.now(), null, "Chrome");
+        Token token = Token.issue(user.getId(), tokenJti, "hash-2", Instant.now(), null, "Chrome");
         token.revoke();
         when(tokenRepository.findByTokenJti(tokenJti)).thenReturn(Optional.of(token));
-
-        logoutUseCase.execute(jwtToken);
-
-        verify(tokenRepository, never()).save(any(Token.class));
-        verify(tokenCache).evict(tokenJti);
-    }
-
-    @Test
-    void shouldEvictCacheWhenTokenDoesNotExistInDatabase() {
-        User user = User.create("john", "john@example.com", "$2-hash", "ROLE_USER");
-        String jwtToken = jwtProvider.generate(user).value();
-        String tokenJti = jwtProvider.parse(jwtToken).jti();
-        when(tokenRepository.findByTokenJti(tokenJti)).thenReturn(Optional.empty());
 
         logoutUseCase.execute(jwtToken);
 

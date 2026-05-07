@@ -31,7 +31,7 @@ class RbacAssociationMutationTest {
 
     @Test
     void shouldKeepSameRoleCollectionWhenReassigningUserRoles() throws Exception {
-        User user = User.create("rbac_mutation_user", "rbac_mutation_user@example.com", "$2-test-hash", "ROLE_USER");
+        User user = User.create("rbac_mutation_user", "rbac_mutation_user@example.com", "$2-test-hash", "ROLE_USER", "Mutation", "User");
         Role roleA = Role.create("RBAC_ROLE_A", "RBAC Role A", "Role A");
         Role roleB = Role.create("RBAC_ROLE_B", "RBAC Role B", "Role B");
 

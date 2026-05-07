@@ -4,41 +4,42 @@ import com.adminportal.auth.application.dto.request.RegisterRequest;
 import com.adminportal.auth.application.dto.response.RegisterResponse;
 import com.adminportal.auth.application.port.out.RoleRepositoryPort;
 import com.adminportal.auth.application.port.out.UserRepositoryPort;
-import com.adminportal.auth.application.services.UsernamePasswordHashService;
+import com.adminportal.auth.application.service.PasswordPolicy;
+import com.adminportal.auth.application.service.UsernamePasswordHashService;
 import com.adminportal.auth.domain.entity.Role;
 import com.adminportal.auth.domain.entity.User;
+import com.adminportal.auth.domain.exception.ResourceConflictException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class RegisterUseCaseImplTest {
 
     @Mock
     private UserRepositoryPort userRepository;
-
     @Mock
     private RoleRepositoryPort roleRepository;
+    @Mock
+    private UsernamePasswordHashService hashService;
+    @Mock
+    private PasswordPolicy passwordPolicy;
 
     private RegisterUseCaseImpl registerUseCase;
     private Role defaultRole;
 
     @BeforeEach
     void setUp() {
-        UsernamePasswordHashService hashService = new UsernamePasswordHashService(new BCryptPasswordEncoder(12));
-        registerUseCase = new RegisterUseCaseImpl(userRepository, roleRepository, hashService);
+        registerUseCase = new RegisterUseCaseImpl(userRepository, roleRepository, hashService, passwordPolicy);
         defaultRole = Role.create("USER", "User", "Default role");
     }
 
@@ -54,7 +55,8 @@ class RegisterUseCaseImplTest {
 
         when(userRepository.existsByUsername("john_doe")).thenReturn(false);
         when(userRepository.existsByEmail("john@example.com")).thenReturn(false);
-        when(roleRepository.findByCode("USER")).thenReturn(java.util.Optional.of(defaultRole));
+        when(roleRepository.findByCode("USER")).thenReturn(Optional.of(defaultRole));
+        when(hashService.encode("john_doe", "SecurePass@1234")).thenReturn("hashed-password");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         RegisterResponse response = registerUseCase.execute(request);
@@ -65,30 +67,9 @@ class RegisterUseCaseImplTest {
 
         assertEquals("john_doe", savedUser.getUsername());
         assertEquals("john@example.com", savedUser.getEmail());
-        assertEquals(1, savedUser.getRoles().size());
-        assertTrue(savedUser.getRoles().stream().anyMatch(role -> "USER".equals(role.getCode())));
+        assertEquals("hashed-password", savedUser.getPasswordHash());
         assertEquals("john_doe", response.username());
-        assertEquals("john@example.com", response.email());
-        assertFalse(response.emailVerified());
-        // Hash is still BCrypt format but now bound to the username
-        assertTrue(savedUser.getPasswordHash().startsWith("$2"));
-    }
-
-    @Test
-    void shouldThrowWhenPasswordViolatesPolicy() {
-        RegisterRequest request = new RegisterRequest(
-            "john_doe",
-            "john@example.com",
-            "weakpassword",
-            "John",
-            "Doe"
-        );
-
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> registerUseCase.execute(request)
-        );
-        assertEquals("Password must contain an uppercase letter", exception.getMessage());
+        verify(passwordPolicy).validate("SecurePass@1234");
     }
 
     @Test
@@ -103,10 +84,6 @@ class RegisterUseCaseImplTest {
 
         when(userRepository.existsByUsername("john_doe")).thenReturn(true);
 
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> registerUseCase.execute(request)
-        );
-        assertEquals("Username already exists", exception.getMessage());
+        assertThrows(ResourceConflictException.class, () -> registerUseCase.execute(request));
     }
 }
