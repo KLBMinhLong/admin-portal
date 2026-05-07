@@ -20,7 +20,7 @@ import { AlertComponent } from '@shared/components/alert/alert.component';
     FormFieldComponent, InputComponent, ButtonComponent, AlertComponent,
   ],
   template: `
-    <h2 class="text-xl font-semibold text-slate-900 mb-2">Quên mật khẩu</h2>
+    <h2 class="text-center text-xl font-semibold text-slate-900 mb-2">Quên mật khẩu</h2>
     <p class="text-sm text-slate-500 mb-6">
       Nhập email đã đăng ký. Chúng tôi sẽ gửi link đặt lại mật khẩu.
     </p>
@@ -52,6 +52,7 @@ import { AlertComponent } from '@shared/components/alert/alert.component';
         />
       </app-form-field>
 
+      <div class="flex justify-center">
       <app-button
         type="submit"
         [loading]="loading()"
@@ -60,6 +61,7 @@ import { AlertComponent } from '@shared/components/alert/alert.component';
       >
         {{ loading() ? 'Đang gửi...' : 'Gửi link đặt lại mật khẩu' }}
       </app-button>
+      </div>
     </form>
 
     <div class="mt-6 text-center text-sm">

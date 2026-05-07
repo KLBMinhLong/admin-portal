@@ -20,7 +20,7 @@ import { RegisterFormComponent } from './components/register-form/register-form.
     CommonModule, RouterLink, AlertComponent, RegisterFormComponent
   ],
   template: `
-    <h2 class="text-xl font-semibold text-slate-900 mb-6">Đăng ký tài khoản</h2>
+    <h2 class="text-center text-xl font-semibold text-slate-900 mb-6">Đăng ký tài khoản</h2>
 
     @if (successMsg()) {
       <app-alert variant="success" class="mb-4">
@@ -54,7 +54,7 @@ export class RegisterComponent {
   constructor(
     private authService: AuthService,
     private router: Router,
-  ) {}
+  ) { }
 
   onSubmit(payload: any): void {
     this.loading.set(true);

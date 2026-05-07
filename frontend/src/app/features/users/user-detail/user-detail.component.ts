@@ -69,7 +69,7 @@ import { RoleDisplayPipe } from '@shared/pipes/role-display.pipe';
           <div class="flex flex-wrap gap-3">
             <app-button
               type="button"
-              (onClick)="toggleActive()"
+              (click)="toggleActive()"
               [loading]="processing()"
               [variant]="user()!.active ? 'danger' : 'primary'"
             >

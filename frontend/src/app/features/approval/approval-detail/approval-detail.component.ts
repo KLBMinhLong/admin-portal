@@ -140,7 +140,7 @@ import {
                   icon="check-circle"
                   class="flex-1"
                   [loading]="processing()" 
-                  (onClick)="onApprove()"
+                  (click)="onApprove()"
                 >
                   Duyệt
                 </app-button>
@@ -149,7 +149,7 @@ import {
                   icon="x-circle"
                   class="flex-1"
                   [loading]="processing()" 
-                  (onClick)="onReject()"
+                  (click)="onReject()"
                 >
                   Từ chối
                 </app-button>

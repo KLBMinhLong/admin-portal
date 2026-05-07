@@ -70,6 +70,7 @@ import { AlertComponent } from '@shared/components/alert/alert.component';
           />
         </app-form-field>
 
+        <div class="flex justify-center">
         <app-button
           type="submit"
           [loading]="loading()"
@@ -78,6 +79,7 @@ import { AlertComponent } from '@shared/components/alert/alert.component';
         >
           {{ loading() ? 'Đang đặt lại...' : 'Đặt lại mật khẩu' }}
         </app-button>
+        </div>
       </form>
     }
   `,

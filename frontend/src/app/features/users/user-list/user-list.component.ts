@@ -199,7 +199,7 @@ import { UserCreateFormComponent } from '@features/users/components/user-create-
                           </div>
                           <p class="mt-1 text-sm text-slate-600">{{ user.email }}</p>
                           <p class="mt-1 text-xs text-slate-500">{{ user | userDisplay:'displayName' }}</p>
-                          @if (user.roles.length > 0) {
+                          @if ((user.roles?.length || 0) > 0) {
                             <div class="mt-2 flex flex-wrap gap-2">
                               @for (roleCode of user.roles; track roleCode) {
                                 <app-badge variant="neutral" size="sm">{{ roleCode | roleDisplay:roleOptions() }}</app-badge>
@@ -216,9 +216,9 @@ import { UserCreateFormComponent } from '@features/users/components/user-create-
                         @for (role of roleOptions(); track role.id) {
                           <label class="flex items-center gap-2">
                             <input type="checkbox"
-                                   [checked]="user.roles.includes(role.code)"
+                                   [checked]="user.roles?.includes(role.code) || false"
                                    (change)="toggleUserRole(user, role.code, $any($event.target).checked)"
-                                   [disabled]="isBusy(user.id) || (user.roles.length <= 1 && user.roles.includes(role.code))"
+                                   [disabled]="isBusy(user.id) || ((user.roles?.length || 0) <= 1 && user.roles?.includes(role.code))"
                                    class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400 disabled:opacity-50" />
                             <span class="text-sm text-slate-700" [class.opacity-50]="isBusy(user.id)">{{ role.name }}</span>
                           </label>
@@ -302,6 +302,7 @@ import { UserCreateFormComponent } from '@features/users/components/user-create-
       (closed)="closeCreateModal()"
     >
       <app-user-create-form
+        modalBody
         [roleOptions]="roleOptions()"
         (submitted)="onCreateUserSubmit($event)"
         (cancelled)="closeCreateModal()"
@@ -338,7 +339,7 @@ export class UserListComponent implements OnInit {
         user.lastName ?? '',
       ].some((value) => value.toLowerCase().includes(query));
 
-      const matchesRole = !selectedRole || user.role === selectedRole;
+      const matchesRole = !selectedRole || (user.roles?.includes(selectedRole) || user.role === selectedRole);
       const matchesStatus = !selectedStatus || (selectedStatus === 'active' ? user.active : !user.active);
 
       return matchesQuery && matchesRole && matchesStatus;
@@ -433,7 +434,10 @@ export class UserListComponent implements OnInit {
 
     this.userService.assignRoles(user.id, newRoles).subscribe({
       next: (response) => {
-        const updatedUser = { ...user, roles: response.assignedRoles };
+        const updatedUser: AdminUser = { 
+          ...user, 
+          roles: response.assignedRoles || user.roles || [] 
+        };
         this.upsertUser(updatedUser);
         this.processingUserId.set(null);
         this.toast.success(`Đã cập nhật role cho "${user.username}".`);

@@ -76,7 +76,7 @@ import { PasswordFormComponent } from './components/password-form/password-form.
               </div>
               <app-button 
                 type="button" 
-                (onClick)="toggle2FA()"
+                (click)="toggle2FA()"
                 [variant]="profile()?.twoFactorEnabled ? 'danger' : 'primary'"
                 [icon]="profile()?.twoFactorEnabled ? 'x-circle' : 'shield-check'">
                 {{ profile()?.twoFactorEnabled ? 'Tắt 2FA' : 'Bật 2FA' }}

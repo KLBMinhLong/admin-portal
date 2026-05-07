@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { inject } from '@angular/core';
 import { API_URL } from '../tokens/config.token';
 import {
@@ -18,11 +18,15 @@ export class UserManagementService {
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<AdminUser[]> {
-    return this.http.get<AdminUser[]>(this.apiUrl);
+    return this.http.get<AdminUser[]>(this.apiUrl).pipe(
+      map(users => users.map(u => ({ ...u, roles: u.roles || [] })))
+    );
   }
 
   getById(id: string): Observable<AdminUser> {
-    return this.http.get<AdminUser>(`${this.apiUrl}/${id}`);
+    return this.http.get<AdminUser>(`${this.apiUrl}/${id}`).pipe(
+      map(u => ({ ...u, roles: u.roles || [] }))
+    );
   }
 
   getRoleOptions(): Observable<AdminUserRoleOption[]> {
@@ -30,7 +34,9 @@ export class UserManagementService {
   }
 
   createUser(payload: CreateAdminUserRequest): Observable<AdminUser> {
-    return this.http.post<AdminUser>(this.apiUrl, payload);
+    return this.http.post<AdminUser>(this.apiUrl, payload).pipe(
+      map(u => ({ ...u, roles: u.roles || [] }))
+    );
   }
 
   updateUser(id: string, payload: UpdateAdminUserRequest): Observable<AdminUser> {

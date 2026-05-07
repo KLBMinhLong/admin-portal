@@ -91,7 +91,7 @@ import {
                 variant="primary" 
                 icon="document-arrow-down" 
                 [loading]="exporting()" 
-                (onClick)="exportReport()"
+                (click)="exportReport()"
               >
                 Xuất file PDF
               </app-button>

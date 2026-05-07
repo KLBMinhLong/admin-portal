@@ -45,7 +45,7 @@ import {
           <app-button 
             variant="primary" 
             [loading]="submitting()" 
-            (onClick)="submitRequest()">
+            (click)="submitRequest()">
             Gửi phê duyệt
           </app-button>
         }

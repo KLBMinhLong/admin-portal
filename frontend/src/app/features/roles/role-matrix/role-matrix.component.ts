@@ -19,10 +19,10 @@ import {
     <div class="flex flex-col gap-6">
       <app-page-header title="Ma trận Phân quyền">
         <div actions class="flex gap-3">
-          <app-button variant="secondary" icon="refresh" [disabled]="loading()" (onClick)="loadData()">
+          <app-button variant="secondary" icon="refresh" [disabled]="loading()" (click)="loadData()">
             Tải lại
           </app-button>
-          <app-button variant="primary" icon="check-circle" [disabled]="loading() || !hasChanges()" (onClick)="saveAllChanges()">
+          <app-button variant="primary" icon="check-circle" [disabled]="loading() || !hasChanges()" (click)="saveAllChanges()">
             Lưu thay đổi
           </app-button>
         </div>

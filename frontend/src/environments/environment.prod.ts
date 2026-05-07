@@ -8,6 +8,6 @@ export const environment = {
   },
   logging: {
     level: 'WARN', // Only show WARN and ERROR in prod console
-    sendErrorToServer: true, // Auto send ERRORs to backend
+    sendErrorToServer: false, // Auto send ERRORs to backend (Disabled as endpoint is missing)
   }
 };

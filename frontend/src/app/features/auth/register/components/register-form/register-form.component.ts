@@ -10,11 +10,11 @@ import { IconComponent } from '@shared/components/icon/icon.component';
 function passwordPolicyValidator(control: AbstractControl): ValidationErrors | null {
   const val: string = control.value ?? '';
   const errors: Record<string, boolean> = {};
-  if (val.length < 12)             errors['minlength']   = true;
-  if (!/[A-Z]/.test(val))          errors['noUppercase'] = true;
-  if (!/[a-z]/.test(val))          errors['noLowercase'] = true;
-  if (!/\d/.test(val))             errors['noDigit']     = true;
-  if (/^[a-zA-Z0-9]*$/.test(val)) errors['noSpecial']   = true;
+  if (val.length < 12) errors['minlength'] = true;
+  if (!/[A-Z]/.test(val)) errors['noUppercase'] = true;
+  if (!/[a-z]/.test(val)) errors['noLowercase'] = true;
+  if (!/\d/.test(val)) errors['noDigit'] = true;
+  if (/^[a-zA-Z0-9]*$/.test(val)) errors['noSpecial'] = true;
   return Object.keys(errors).length ? errors : null;
 }
 
@@ -134,6 +134,7 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
       </app-form-field>
 
       <!-- Submit -->
+      <div class="flex justify-center">
       <app-button
         type="submit"
         [loading]="isSubmitting()"
@@ -142,22 +143,23 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
       >
         {{ isSubmitting() ? 'Đang đăng ký...' : 'Đăng ký' }}
       </app-button>
+      </div>
     </form>
   `
 })
 export class RegisterFormComponent {
   submitted = output<any>();
-  
+
   form: FormGroup;
   isSubmitting = signal(false);
 
   /** Password policy rules configuration */
   readonly passwordRules = [
-    { key: 'minlength',   label: 'Ít nhất 12 ký tự' },
+    { key: 'minlength', label: 'Ít nhất 12 ký tự' },
     { key: 'noUppercase', label: 'Có chữ hoa (A-Z)' },
     { key: 'noLowercase', label: 'Có chữ thường (a-z)' },
-    { key: 'noDigit',     label: 'Có chữ số (0-9)' },
-    { key: 'noSpecial',   label: 'Có ký tự đặc biệt' },
+    { key: 'noDigit', label: 'Có chữ số (0-9)' },
+    { key: 'noSpecial', label: 'Có ký tự đặc biệt' },
   ];
 
   get pwdCtrl() { return this.form.get('password'); }

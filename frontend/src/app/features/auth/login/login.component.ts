@@ -22,7 +22,7 @@ import { AlertComponent } from '@shared/components/alert/alert.component';
     FormFieldComponent, InputComponent, ButtonComponent, AlertComponent,
   ],
   template: `
-    <h2 class="text-xl font-semibold text-slate-900 mb-6">Đăng nhập</h2>
+    <h2 class="text-center text-xl font-semibold text-slate-900 mb-6">Đăng nhập</h2>
 
     <!-- Error Alert -->
     @if (errorMsg()) {
@@ -64,6 +64,7 @@ import { AlertComponent } from '@shared/components/alert/alert.component';
       </app-form-field>
 
       <!-- Submit -->
+      <div class="flex justify-center">
       <app-button
         type="submit"
         [loading]="loading()"
@@ -72,6 +73,7 @@ import { AlertComponent } from '@shared/components/alert/alert.component';
       >
         {{ loading() ? 'Đang đăng nhập...' : 'Đăng nhập' }}
       </app-button>
+      </div>
     </form>
 
     <!-- Links -->

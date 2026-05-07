@@ -1,4 +1,4 @@
-import { Component, EventEmitter, input, output, signal, effect } from '@angular/core';
+import { Component, EventEmitter, input, output, signal, effect, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { AdminRole } from '@core/models/role.models';
@@ -38,7 +38,7 @@ import { ButtonComponent } from '@shared/components/button/button.component';
       </app-form-field>
       
       <div class="mt-6 flex justify-end gap-3 pt-2 border-t border-slate-200">
-        <app-button type="button" variant="secondary" (onClick)="onCancel()">Hủy</app-button>
+        <app-button type="button" variant="secondary" (click)="onCancel()">Hủy</app-button>
         <app-button type="submit" variant="primary" [disabled]="roleForm.invalid" [loading]="isSubmitting()">
           Lưu thông tin
         </app-button>
@@ -46,7 +46,7 @@ import { ButtonComponent } from '@shared/components/button/button.component';
     </form>
   `
 })
-export class RoleFormComponent {
+export class RoleFormComponent implements OnInit {
   isEdit = input<boolean>(false);
   initialData = input<AdminRole | null>(null);
   
@@ -57,6 +57,31 @@ export class RoleFormComponent {
 
   roleForm: FormGroup;
 
+  ngOnInit(): void {
+    this.updateForm();
+  }
+
+  private updateForm(): void {
+    const data = this.initialData();
+    const editMode = this.isEdit();
+    
+    if (editMode && data) {
+      this.roleForm.patchValue({
+        code: data.code,
+        name: data.name,
+        description: data.description
+      });
+      this.roleForm.get('code')?.disable();
+    } else {
+      this.roleForm.reset({
+        code: '',
+        name: '',
+        description: ''
+      });
+      this.roleForm.get('code')?.enable();
+    }
+  }
+
   constructor(private fb: FormBuilder) {
     this.roleForm = this.fb.group({
       code: ['', [Validators.required, Validators.pattern('^[A-Z0-9_]+$')]],
@@ -64,21 +89,9 @@ export class RoleFormComponent {
       description: ['']
     });
 
+    // Re-patch if data changes after initial load
     effect(() => {
-      const data = this.initialData();
-      const editMode = this.isEdit();
-      
-      if (editMode && data) {
-        this.roleForm.patchValue({
-          code: data.code,
-          name: data.name,
-          description: data.description
-        });
-        this.roleForm.get('code')?.disable();
-      } else {
-        this.roleForm.reset();
-        this.roleForm.get('code')?.enable();
-      }
+      this.updateForm();
     });
   }
 

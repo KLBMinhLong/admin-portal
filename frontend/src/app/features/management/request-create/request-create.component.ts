@@ -72,7 +72,7 @@ const DRAFT_KEY = 'request_draft';
             <h2 class="text-base font-semibold text-slate-900">
               Danh sách hàng hóa <span class="text-xs font-normal text-slate-400">(tối thiểu 1 mục)</span>
             </h2>
-            <app-button type="button" variant="secondary" size="sm" icon="plus" (onClick)="addItem()">
+            <app-button type="button" variant="secondary" size="sm" icon="plus" (click)="addItem()">
               Thêm mục
             </app-button>
           </div>

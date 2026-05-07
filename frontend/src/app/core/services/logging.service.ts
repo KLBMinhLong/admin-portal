@@ -15,14 +15,15 @@ export enum LogLevel {
 })
 export class LoggingService {
   private level: LogLevel = LogLevel.DEBUG;
+  private readonly config = inject(LOGGING_CONFIG);
+  private readonly apiUrl = inject(API_URL);
 
   constructor(private http: HttpClient) {
     this.setLevelFromEnv();
   }
 
   private setLevelFromEnv() {
-    const config = inject(LOGGING_CONFIG);
-    switch(config.level.toUpperCase()) {
+    switch(this.config.level.toUpperCase()) {
       case 'DEBUG': this.level = LogLevel.DEBUG; break;
       case 'INFO': this.level = LogLevel.INFO; break;
       case 'WARN': this.level = LogLevel.WARN; break;
@@ -53,8 +54,7 @@ export class LoggingService {
     if (this.level <= LogLevel.ERROR) {
       this.formatAndLog('ERROR', message, error, traceId);
       
-      const config = inject(LOGGING_CONFIG);
-      if (config.sendErrorToServer) {
+      if (this.config.sendErrorToServer) {
         this.sendToServer(message, error, traceId);
       }
     }
@@ -125,8 +125,7 @@ export class LoggingService {
     };
 
     // Note: Use fire-and-forget for logs so it doesn't block UI or trigger further errors.
-    const apiUrl = inject(API_URL);
-    this.http.post(`${apiUrl}/logs/error`, payload).subscribe({
+    this.http.post(`${this.apiUrl}/logs/error`, payload).subscribe({
       next: () => {},
       error: () => {} // Do not log error of log API to avoid infinite loop
     });

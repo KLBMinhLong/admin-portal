@@ -4,8 +4,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { RoleManagementService } from '@core/services/role-management.service';
 import { AdminRole } from '@core/models/role.models';
 import { ToastService } from '@shared/components/toast/toast.service';
-import { 
-  PageHeaderComponent, CardComponent, BadgeComponent, IconComponent, 
+import {
+  PageHeaderComponent, CardComponent, BadgeComponent, IconComponent,
   ButtonComponent, FormFieldComponent, InputComponent, ModalComponent
 } from '@shared/components';
 import { RoleFormComponent } from '../components/role-form/role-form.component';
@@ -26,7 +26,7 @@ import { RoleFormComponent } from '../components/role-form/role-form.component';
         description="Quản lý các chức danh và vai trò trong hệ thống"
       >
         <div actions>
-          <app-button variant="primary" icon="plus" (onClick)="openCreateModal()">
+          <app-button variant="primary" icon="plus" (click)="openCreateModal()">
             Thêm Role mới
           </app-button>
         </div>
@@ -60,11 +60,11 @@ import { RoleFormComponent } from '../components/role-form/role-form.component';
                   </td>
                   <td class="px-6 py-4 text-right">
                     <div class="flex justify-end gap-2">
-                      <app-button variant="secondary" size="sm" (onClick)="openEditModal(role)">Sửa</app-button>
+                      <app-button variant="secondary" size="sm" (click)="openEditModal(role)">Sửa</app-button>
                       <app-button 
                         [variant]="role.active ? 'danger' : 'primary'" 
                         size="sm" 
-                        (onClick)="toggleActive(role)"
+                        (click)="toggleActive(role)"
                       >
                         {{ role.active ? 'Vô hiệu hóa' : 'Kích hoạt' }}
                       </app-button>
@@ -89,13 +89,16 @@ import { RoleFormComponent } from '../components/role-form/role-form.component';
         [title]="isEdit() ? 'Cập nhật Role' : 'Thêm Role mới'"
         (closed)="closeModal()"
       >
-        <app-role-form 
-          [isEdit]="isEdit()" 
-          [initialData]="editingRole()" 
-          (submitted)="saveRole($event)" 
-          (cancelled)="closeModal()" 
-          #roleFormComponent 
-        />
+        @if (showModal()) {
+          <app-role-form 
+            modalBody
+            [isEdit]="isEdit()" 
+            [initialData]="editingRole()" 
+            (submitted)="saveRole($event)" 
+            (cancelled)="closeModal()" 
+            #roleFormComponent 
+          />
+        }
       </app-modal>
     </div>
   `,

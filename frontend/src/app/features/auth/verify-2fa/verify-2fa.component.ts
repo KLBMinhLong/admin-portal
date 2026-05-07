@@ -21,7 +21,7 @@ import { AlertComponent } from '@shared/components/alert/alert.component';
     FormFieldComponent, ButtonComponent, AlertComponent,
   ],
   template: `
-    <h2 class="text-xl font-semibold text-slate-900 mb-2">Xác thực hai yếu tố</h2>
+    <h2 class="text-center text-xl font-semibold text-slate-900 mb-2">Xác thực hai yếu tố</h2>
     <p class="text-sm text-slate-500 mb-6">
       Nhập mã OTP 6 số từ ứng dụng xác thực của bạn.
     </p>
@@ -53,6 +53,7 @@ import { AlertComponent } from '@shared/components/alert/alert.component';
           placeholder="● ● ● ● ● ●" />
       </app-form-field>
 
+      <div class="flex justify-center">
       <app-button
         type="submit"
         [loading]="loading()"
@@ -61,6 +62,7 @@ import { AlertComponent } from '@shared/components/alert/alert.component';
       >
         {{ loading() ? 'Đang xác thực...' : 'Xác nhận' }}
       </app-button>
+      </div>
     </form>
   `,
 })
