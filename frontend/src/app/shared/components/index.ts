@@ -19,6 +19,7 @@ export { StatusBadgeComponent } from './status-badge/status-badge.component';
 export { InputComponent } from './input/input.component';
 export { SelectComponent, SelectOption } from './select/select.component';
 export { FormFieldComponent } from './form-field/form-field.component';
+export { DatetimePickerComponent } from './datetime-picker/datetime-picker.component';
 export { AlertComponent, AlertVariant } from './alert/alert.component';
 export { SearchBarComponent } from './search-bar/search-bar.component';
 

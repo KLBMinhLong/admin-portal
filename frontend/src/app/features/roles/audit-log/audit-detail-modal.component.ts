@@ -1,0 +1,126 @@
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AdminAuditLog } from '@core/models/role.models';
+import { ModalComponent, BadgeComponent, ButtonComponent, BadgeVariant } from '@shared/components';
+
+@Component({
+  selector: 'app-audit-detail-modal',
+  standalone: true,
+  imports: [CommonModule, ModalComponent, ButtonComponent, BadgeComponent],
+  template: `
+    <app-modal
+      [open]="open"
+      title="Chi tiết Nhật ký Phân quyền"
+      subtitle="Audit Log Detail"
+      description="Xem thông tin chi tiết về hành động được thực hiện"
+      size="lg"
+      (closed)="onClose()"
+    >
+      <ng-container *ngIf="log">
+        <ng-container modalBody>
+          <div class="space-y-6">
+            <!-- Thông tin cơ bản -->
+            <div class="grid grid-cols-2 gap-4">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Thời gian</p>
+                <p class="mt-2 text-sm font-medium text-slate-900">
+                  {{ log.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}
+                </p>
+              </div>
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Người thực hiện</p>
+                <p class="mt-2 text-sm font-medium text-slate-900">{{ log.actorUsername }}</p>
+              </div>
+            </div>
+
+            <!-- Hành động -->
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Hành động</p>
+              <div class="mt-2 flex items-center gap-2">
+                <app-badge [variant]="getActionBadgeVariant(log.action)">
+                  {{ formatAction(log.action) }}
+                </app-badge>
+              </div>
+            </div>
+
+            <!-- Đối tượng -->
+            <div class="grid grid-cols-2 gap-4">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Loại đối tượng</p>
+                <p class="mt-2 text-sm font-medium text-slate-900">{{ log.targetType }}</p>
+              </div>
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">ID Đối tượng</p>
+                <p class="mt-2 font-mono text-sm text-slate-600 break-all">{{ log.targetId }}</p>
+              </div>
+            </div>
+
+            <!-- Chi tiết -->
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">Chi tiết hành động</p>
+              <div class="bg-white rounded-lg border border-slate-200 p-4 font-mono text-xs text-slate-600 whitespace-pre-wrap overflow-auto max-h-[300px] leading-relaxed">
+                {{ formatDetails(log.details) }}
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-container modalFooter>
+          <div class="flex justify-end gap-3">
+            <app-button
+              type="button"
+              variant="secondary"
+              (click)="onClose()"
+            >
+              Đóng
+            </app-button>
+          </div>
+        </ng-container>
+      </ng-container>
+    </app-modal>
+  `,
+})
+export class AuditDetailModalComponent {
+  @Input() open = false;
+  @Input() log: AdminAuditLog | null = null;
+  @Output() closed = new EventEmitter<void>();
+
+  onClose(): void {
+    this.closed.emit();
+  }
+
+  formatAction(action: string): string {
+    const actions: Record<string, string> = {
+      'USER_ROLE_ASSIGNED': 'Thêm Role',
+      'USER_ROLE_REMOVED': 'Xóa Role',
+      'ROLE_PERMISSION_ASSIGNED': 'Thêm Permission',
+      'ROLE_PERMISSION_REMOVED': 'Xóa Permission',
+      'ROLE_CREATED': 'Tạo Role',
+      'ROLE_UPDATED': 'Cập nhật Role',
+      'ROLE_ACTIVATED': 'Kích hoạt Role',
+      'ROLE_DEACTIVATED': 'Vô hiệu hóa Role',
+    };
+    return actions[action] || action;
+  }
+
+  getActionBadgeVariant(action: string): BadgeVariant {
+    if (action.includes('ASSIGNED') || action.includes('CREATED') || action.includes('ACTIVATED')) {
+      return 'success';
+    }
+    if (action.includes('REMOVED') || action.includes('DEACTIVATED')) {
+      return 'error';
+    }
+    return 'info';
+  }
+
+  formatDetails(details: string): string {
+    // Try to format as JSON if it looks like key-value pairs
+    if (details.includes('=') && !details.includes('{')) {
+      return details
+        .split(',')
+        .map(pair => pair.trim())
+        .join('\n');
+    }
+    return details;
+  }
+}
