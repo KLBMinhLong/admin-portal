@@ -41,16 +41,16 @@ public class AdminUserController {
         return ResponseEntity.ok(ApiResponse.ok(service.listUsers()));
     }
 
+    @GetMapping("/users/role-options")
+    @PreAuthorize("hasAuthority('system.config') and (hasAuthority('user.manage') or hasAuthority('role.manage'))")
+    public ResponseEntity<ApiResponse<List<AdminUserRoleOptionDto>>> listAssignableRoles() {
+        return ResponseEntity.ok(ApiResponse.ok(service.listAssignableRoles()));
+    }
+
     @GetMapping("/users/{id}")
     @PreAuthorize("hasAuthority('system.config') and hasAuthority('user.manage')")
     public ResponseEntity<ApiResponse<AdminUserDto>> getUser(@PathVariable("id") UUID userId) {
         return ResponseEntity.ok(ApiResponse.ok(service.getUser(userId)));
-    }
-
-    @GetMapping("/roles/options")
-    @PreAuthorize("hasAuthority('system.config') and (hasAuthority('user.manage') or hasAuthority('role.manage'))")
-    public ResponseEntity<ApiResponse<List<AdminUserRoleOptionDto>>> listAssignableRoles() {
-        return ResponseEntity.ok(ApiResponse.ok(service.listAssignableRoles()));
     }
 
     @PostMapping("/users")

@@ -17,6 +17,7 @@ export interface AdminPermission {
 }
 
 export interface AdminAuditLog {
+  id: string;
   actor: string;
   action: string;
   resource: string;

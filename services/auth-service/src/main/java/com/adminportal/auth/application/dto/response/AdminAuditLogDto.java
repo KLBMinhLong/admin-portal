@@ -4,19 +4,26 @@ import com.adminportal.auth.domain.entity.RbacAuditLog;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * DTO cho danh sách nhật ký phân quyền hiển thị trên UI.
+ * Thuộc tính khớp với frontend AdminAuditLog model.
+ */
 public record AdminAuditLogDto(
     UUID id,
-    String actorUsername,
+    String actor,
     String action,
-    String targetType,
-    String targetId,
+    String resource,
     String details,
-    Instant createdAt
+    Instant timestamp
 ) {
     public static AdminAuditLogDto from(RbacAuditLog log) {
         return new AdminAuditLogDto(
-            log.getId(), log.getActorUsername(), log.getAction(),
-            log.getTargetType(), log.getTargetId(), log.getDetails(), log.getCreatedAt()
+            log.getId(), 
+            log.getActorUsername(), 
+            log.getAction(),
+            log.getTargetType(), 
+            log.getDetails(), 
+            log.getCreatedAt()
         );
     }
 }
