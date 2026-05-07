@@ -4,12 +4,12 @@ import com.adminportal.auth.application.dto.request.ResetPasswordRequest;
 import com.adminportal.auth.application.port.in.ResetPasswordUseCase;
 import com.adminportal.auth.application.port.out.PasswordResetTokenRepositoryPort;
 import com.adminportal.auth.application.port.out.UserRepositoryPort;
+import com.adminportal.auth.application.service.PasswordPolicy;
 import com.adminportal.auth.application.service.UserSessionRevocationService;
 import com.adminportal.auth.application.service.UsernamePasswordHashService;
 import com.adminportal.auth.domain.entity.PasswordResetToken;
 import com.adminportal.auth.domain.entity.User;
 import com.adminportal.auth.domain.exception.BusinessStateException;
-import com.adminportal.auth.domain.exception.InvalidInputException;
 import com.adminportal.auth.domain.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,30 +21,27 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.List;
-import java.util.regex.Pattern;
 
 @Service
 public class ResetPasswordUseCaseImpl implements ResetPasswordUseCase {
     private static final Logger log = LoggerFactory.getLogger(ResetPasswordUseCaseImpl.class);
 
-    private static final Pattern HAS_UPPERCASE = Pattern.compile(".*[A-Z].*");
-    private static final Pattern HAS_LOWERCASE = Pattern.compile(".*[a-z].*");
-    private static final Pattern HAS_NUMBER = Pattern.compile(".*\\d.*");
-    private static final Pattern HAS_SPECIAL = Pattern.compile(".*[^a-zA-Z0-9].*");
-
     private final PasswordResetTokenRepositoryPort passwordResetTokenRepository;
     private final UserRepositoryPort userRepository;
     private final UsernamePasswordHashService passwordHashService;
     private final UserSessionRevocationService userSessionRevocationService;
+    private final PasswordPolicy passwordPolicy;
 
     public ResetPasswordUseCaseImpl(PasswordResetTokenRepositoryPort passwordResetTokenRepository,
                                     UserRepositoryPort userRepository,
                                     UsernamePasswordHashService passwordHashService,
-                                    UserSessionRevocationService userSessionRevocationService) {
+                                    UserSessionRevocationService userSessionRevocationService,
+                                    PasswordPolicy passwordPolicy) {
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.userRepository = userRepository;
         this.passwordHashService = passwordHashService;
         this.userSessionRevocationService = userSessionRevocationService;
+        this.passwordPolicy = passwordPolicy;
     }
 
     @Override
@@ -57,7 +54,7 @@ public class ResetPasswordUseCaseImpl implements ResetPasswordUseCase {
             throw new BusinessStateException("INVALID_RESET_TOKEN", "Invalid reset token");
         }
 
-        validatePasswordPolicy(request.newPassword());
+        passwordPolicy.validate(request.newPassword());
 
         User user = userRepository.findById(resetToken.getUserId())
             .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -72,24 +69,6 @@ public class ResetPasswordUseCaseImpl implements ResetPasswordUseCase {
         passwordResetTokenRepository.saveAll(activeTokens);
 
         log.info("Password reset completed for userId={}", user.getId());
-    }
-
-    private void validatePasswordPolicy(String password) {
-        if (password == null || password.length() < 12) {
-            throw new InvalidInputException("Password must be at least 12 characters");
-        }
-        if (!HAS_UPPERCASE.matcher(password).matches()) {
-            throw new InvalidInputException("Password must contain an uppercase letter");
-        }
-        if (!HAS_LOWERCASE.matcher(password).matches()) {
-            throw new InvalidInputException("Password must contain a lowercase letter");
-        }
-        if (!HAS_NUMBER.matcher(password).matches()) {
-            throw new InvalidInputException("Password must contain a number");
-        }
-        if (!HAS_SPECIAL.matcher(password).matches()) {
-            throw new InvalidInputException("Password must contain a special character");
-        }
     }
 
     private String sha256(String value) {

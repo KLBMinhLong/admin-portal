@@ -4,6 +4,7 @@ import com.adminportal.auth.application.dto.request.AdminRoleRequest;
 import com.adminportal.auth.application.dto.response.AdminAuditLogDto;
 import com.adminportal.auth.application.dto.response.AdminPermissionDto;
 import com.adminportal.auth.application.dto.response.AdminRoleDto;
+import com.adminportal.auth.application.dto.response.ApiResponse;
 import com.adminportal.auth.application.port.in.RoleManagementUseCase;
 import com.adminportal.auth.infrastructure.security.Encrypted;
 import jakarta.validation.Valid;
@@ -42,41 +43,41 @@ public class AdminRolePermissionController {
     @PostMapping("/roles")
     @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
     @Encrypted
-    public ResponseEntity<AdminRoleDto> createRole(@Valid @RequestBody AdminRoleRequest request) {
-        return ResponseEntity.ok(roleManagementUseCase.createRole(request));
+    public ResponseEntity<ApiResponse<AdminRoleDto>> createRole(@Valid @RequestBody AdminRoleRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(roleManagementUseCase.createRole(request)));
     }
 
     @PatchMapping("/roles/{id}")
     @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
     @Encrypted
-    public ResponseEntity<AdminRoleDto> updateRole(@PathVariable("id") UUID roleId,
-                                                   @Valid @RequestBody AdminRoleRequest request) {
-        return ResponseEntity.ok(roleManagementUseCase.updateRole(roleId, request));
+    public ResponseEntity<ApiResponse<AdminRoleDto>> updateRole(@PathVariable("id") UUID roleId,
+                                                                @Valid @RequestBody AdminRoleRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(roleManagementUseCase.updateRole(roleId, request)));
     }
 
     @PatchMapping("/roles/{id}/toggle-active")
     @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
-    public ResponseEntity<AdminRoleDto> toggleRoleActive(@PathVariable("id") UUID roleId) {
-        return ResponseEntity.ok(roleManagementUseCase.toggleRoleActive(roleId));
+    public ResponseEntity<ApiResponse<AdminRoleDto>> toggleRoleActive(@PathVariable("id") UUID roleId) {
+        return ResponseEntity.ok(ApiResponse.ok(roleManagementUseCase.toggleRoleActive(roleId)));
     }
 
     @GetMapping("/roles")
     @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
-    public ResponseEntity<List<AdminRoleDto>> listRoles() {
+    public ResponseEntity<ApiResponse<List<AdminRoleDto>>> listRoles() {
         List<AdminRoleDto> roles = roleManagementUseCase.listRoles();
         log.info("[ADMIN] Listed {} roles", roles.size());
-        return ResponseEntity.ok(roles);
+        return ResponseEntity.ok(ApiResponse.ok(roles));
     }
 
     @GetMapping("/permissions")
     @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
-    public ResponseEntity<List<AdminPermissionDto>> listPermissions() {
-        return ResponseEntity.ok(roleManagementUseCase.listPermissions());
+    public ResponseEntity<ApiResponse<List<AdminPermissionDto>>> listPermissions() {
+        return ResponseEntity.ok(ApiResponse.ok(roleManagementUseCase.listPermissions()));
     }
 
     @GetMapping("/audit-logs")
     @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
-    public ResponseEntity<List<AdminAuditLogDto>> listAuditLogs() {
-        return ResponseEntity.ok(roleManagementUseCase.listAuditLogs());
+    public ResponseEntity<ApiResponse<List<AdminAuditLogDto>>> listAuditLogs() {
+        return ResponseEntity.ok(ApiResponse.ok(roleManagementUseCase.listAuditLogs()));
     }
 }

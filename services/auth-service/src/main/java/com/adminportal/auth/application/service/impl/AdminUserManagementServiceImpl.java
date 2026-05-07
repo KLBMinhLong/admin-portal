@@ -8,11 +8,12 @@ import com.adminportal.auth.application.dto.response.AdminUserRoleOptionDto;
 import com.adminportal.auth.application.port.out.RoleRepositoryPort;
 import com.adminportal.auth.application.port.out.UserRepositoryPort;
 import com.adminportal.auth.application.service.AdminUserManagementService;
+import com.adminportal.auth.application.service.PasswordPolicy;
 import com.adminportal.auth.application.service.UsernamePasswordHashService;
+import com.adminportal.auth.application.util.DataNormalizer;
 import com.adminportal.auth.domain.entity.Role;
 import com.adminportal.auth.domain.entity.User;
 import com.adminportal.auth.domain.exception.BusinessStateException;
-import com.adminportal.auth.domain.exception.InvalidInputException;
 import com.adminportal.auth.domain.exception.ResourceConflictException;
 import com.adminportal.auth.domain.exception.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -22,31 +23,27 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 @Service
 @Transactional
 @Slf4j
 public class AdminUserManagementServiceImpl implements AdminUserManagementService {
 
-    private static final Pattern HAS_UPPERCASE = Pattern.compile(".*[A-Z].*");
-    private static final Pattern HAS_LOWERCASE = Pattern.compile(".*[a-z].*");
-    private static final Pattern HAS_NUMBER = Pattern.compile(".*\\d.*");
-    private static final Pattern HAS_SPECIAL = Pattern.compile(".*[^a-zA-Z0-9].*");
-
     private final UserRepositoryPort userRepository;
     private final RoleRepositoryPort roleRepository;
     private final UsernamePasswordHashService passwordHashService;
+    private final PasswordPolicy passwordPolicy;
 
     public AdminUserManagementServiceImpl(UserRepositoryPort userRepository,
                                           RoleRepositoryPort roleRepository,
-                                          UsernamePasswordHashService passwordHashService) {
+                                          UsernamePasswordHashService passwordHashService,
+                                          PasswordPolicy passwordPolicy) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordHashService = passwordHashService;
+        this.passwordPolicy = passwordPolicy;
     }
 
     @Override
@@ -78,13 +75,13 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
 
     @Override
     public AdminUserDto createUser(AdminUserCreateRequest request) {
-        String username = normalizeUsername(request.username());
-        String email = normalizeEmail(request.email());
-        String roleCode = normalizeRoleCode(request.roleCode());
+        String username = DataNormalizer.normalizeUsername(request.username());
+        String email = DataNormalizer.normalizeEmail(request.email());
+        String roleCode = DataNormalizer.normalizeRoleCode(request.roleCode());
 
         validateUniqueUsername(username, null);
         validateUniqueEmail(email, null);
-        validatePasswordPolicy(request.password());
+        passwordPolicy.validate(request.password());
 
         Role role = loadRole(roleCode);
         User user = User.create(
@@ -92,8 +89,8 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
             email,
             passwordHashService.encode(username, request.password()),
             toPrimaryRole(role.getCode()),
-            normalizeName(request.firstName()),
-            normalizeName(request.lastName())
+            DataNormalizer.normalizeName(request.firstName()),
+            DataNormalizer.normalizeName(request.lastName())
         );
         user.assignRoles(new LinkedHashSet<>(Set.of(role)));
         if (Boolean.FALSE.equals(request.active())) {
@@ -108,13 +105,13 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
     @Override
     public AdminUserDto updateUser(UUID userId, AdminUserUpdateRequest request) {
         User user = loadUserWithRoles(userId);
-        String email = normalizeEmail(request.email());
+        String email = DataNormalizer.normalizeEmail(request.email());
 
         validateUniqueEmail(email, user.getId());
         user.updateProfile(
             email,
-            normalizeName(request.firstName()),
-            normalizeName(request.lastName())
+            DataNormalizer.normalizeName(request.firstName()),
+            DataNormalizer.normalizeName(request.lastName())
         );
 
         User savedUser = userRepository.save(user);
@@ -125,7 +122,7 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
     @Override
     public AdminUserDto updateRole(UUID userId, AdminUserRoleUpdateRequest request) {
         User user = loadUserWithRoles(userId);
-        Role role = loadRole(normalizeRoleCode(request.roleCode()));
+        Role role = loadRole(DataNormalizer.normalizeRoleCode(request.roleCode()));
 
         user.assignRoles(new LinkedHashSet<>(Set.of(role)));
         user.updateRole(toPrimaryRole(role.getCode()));
@@ -172,52 +169,6 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
             .ifPresent(existing -> {
                 throw new ResourceConflictException("Email đã tồn tại: " + email);
             });
-    }
-
-    private void validatePasswordPolicy(String password) {
-        if (password == null || password.length() < 12) {
-            throw new InvalidInputException("Mật khẩu phải có ít nhất 12 ký tự");
-        }
-        if (!HAS_UPPERCASE.matcher(password).matches()) {
-            throw new InvalidInputException("Mật khẩu phải chứa ít nhất 1 ký tự in hoa");
-        }
-        if (!HAS_LOWERCASE.matcher(password).matches()) {
-            throw new InvalidInputException("Mật khẩu phải chứa ít nhất 1 ký tự in thường");
-        }
-        if (!HAS_NUMBER.matcher(password).matches()) {
-            throw new InvalidInputException("Mật khẩu phải chứa ít nhất 1 chữ số");
-        }
-        if (!HAS_SPECIAL.matcher(password).matches()) {
-            throw new InvalidInputException("Mật khẩu phải chứa ít nhất 1 ký tự đặc biệt");
-        }
-    }
-
-    private String normalizeUsername(String username) {
-        return normalizeRequired(username).toLowerCase(Locale.ROOT);
-    }
-
-    private String normalizeEmail(String email) {
-        return normalizeRequired(email).toLowerCase(Locale.ROOT);
-    }
-
-    private String normalizeRoleCode(String roleCode) {
-        String normalized = normalizeRequired(roleCode).toUpperCase(Locale.ROOT);
-        return normalized.startsWith("ROLE_") ? normalized.substring(5) : normalized;
-    }
-
-    private String normalizeRequired(String value) {
-        if (value == null || value.isBlank()) {
-            throw new InvalidInputException("Giá trị bắt buộc không được để trống");
-        }
-        return value.trim();
-    }
-
-    private String normalizeName(String value) {
-        if (value == null) {
-            return null;
-        }
-        String trimmed = value.trim();
-        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private String toPrimaryRole(String roleCode) {

@@ -48,43 +48,43 @@ public class AuthController {
 
     @PostMapping("/register")
     @Encrypted
-    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(registerUseCase.execute(req));
+    public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(registerUseCase.execute(req)));
     }
 
     @PostMapping("/login")
     @Encrypted
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
-        return ResponseEntity.ok(loginUseCase.execute(req));
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest req) {
+        return ResponseEntity.ok(ApiResponse.ok(loginUseCase.execute(req)));
     }
 
     @PostMapping("/verify-2fa")
     @Encrypted
-    public ResponseEntity<LoginResponse> verifyTwoFactor(@Valid @RequestBody TwoFactorVerifyRequest req) {
-        return ResponseEntity.ok(verifyTwoFactorUseCase.execute(req));
+    public ResponseEntity<ApiResponse<LoginResponse>> verifyTwoFactor(@Valid @RequestBody TwoFactorVerifyRequest req) {
+        return ResponseEntity.ok(ApiResponse.ok(verifyTwoFactorUseCase.execute(req)));
     }
 
     /** FE dang xuat -> BE cam co token */
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@RequestHeader("Idempotency-Key") String idempotencyKey,
-                                       @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<ApiResponse<Void>> logout(@RequestHeader("Idempotency-Key") String idempotencyKey,
+                                                    @RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
         logoutUseCase.execute(token);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success("Logged out successfully"));
     }
 
     @PostMapping("/forgot-password")
     @Encrypted
-    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest req) {
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest req) {
         forgotPasswordUseCase.execute(req);
-        return ResponseEntity.accepted().build();
+        return ResponseEntity.accepted().body(ApiResponse.success("Password reset link sent"));
     }
 
     @PostMapping("/reset-password")
     @Encrypted
-    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest req) {
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest req) {
         resetPasswordUseCase.execute(req);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success("Password reset successfully"));
     }
 
     @GetMapping("/session")

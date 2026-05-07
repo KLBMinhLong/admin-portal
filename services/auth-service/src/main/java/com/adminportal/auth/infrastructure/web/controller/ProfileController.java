@@ -1,6 +1,7 @@
 package com.adminportal.auth.infrastructure.web.controller;
 
 import com.adminportal.auth.application.dto.request.ChangePasswordRequest;
+import com.adminportal.auth.application.dto.response.ApiResponse;
 import com.adminportal.auth.application.dto.response.ProfileDto;
 import com.adminportal.auth.application.dto.response.Toggle2faResponse;
 import com.adminportal.auth.application.port.out.UserRepositoryPort;
@@ -43,7 +44,7 @@ public class ProfileController {
     }
 
     @GetMapping
-    public ResponseEntity<ProfileDto> getProfile(Authentication authentication) {
+    public ResponseEntity<ApiResponse<ProfileDto>> getProfile(Authentication authentication) {
         User user = userRepository.findByUsername(authentication.getName())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
@@ -56,34 +57,34 @@ public class ProfileController {
                 user.isTwoFactorEnabled(),
                 user.getCreatedAt()
         );
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok(ApiResponse.ok(dto));
     }
 
     @PostMapping("/change-password")
     @Encrypted
-    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest req, Authentication authentication) {
+    public ResponseEntity<ApiResponse<Void>> changePassword(@Valid @RequestBody ChangePasswordRequest req, Authentication authentication) {
         User user = userRepository.findByUsername(authentication.getName())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (!passwordHashService.matches(user.getUsername(), req.oldPassword(), user.getPasswordHash())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.success("Invalid old password"));
         }
 
         user.changePassword(passwordHashService.encode(user.getUsername(), req.newPassword()));
         userRepository.save(user);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success("Password changed successfully"));
     }
 
     @PostMapping("/2fa/toggle")
-    public ResponseEntity<Toggle2faResponse> toggle2fa(Authentication authentication) {
+    public ResponseEntity<ApiResponse<Toggle2faResponse>> toggle2fa(Authentication authentication) {
         User user = userRepository.findByUsername(authentication.getName())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (user.isTwoFactorEnabled()) {
             user.disableTwoFactor();
             userRepository.save(user);
-            return ResponseEntity.ok(new Toggle2faResponse(false, null));
+            return ResponseEntity.ok(ApiResponse.ok(new Toggle2faResponse(false, null), "2FA disabled"));
         } else {
             String secret = secretGenerator.generate();
             user.enableTwoFactor(secret);
@@ -100,9 +101,9 @@ public class ProfileController {
                         qrGenerator.generate(data),
                         qrGenerator.getImageMimeType()
                 );
-                return ResponseEntity.ok(new Toggle2faResponse(true, qrCodeImage));
+                return ResponseEntity.ok(ApiResponse.ok(new Toggle2faResponse(true, qrCodeImage), "2FA enabled"));
             } catch (QrGenerationException e) {
-                throw new RuntimeException("Failed to generate QR code", e);
+                throw new IllegalStateException("Failed to generate QR code", e);
             }
         }
     }
