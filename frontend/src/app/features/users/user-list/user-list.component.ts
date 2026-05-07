@@ -37,14 +37,16 @@ import { UserCreateFormComponent } from '@features/users/components/user-create-
  * 
  * Responsibilities:
  *   - Display user list with filtering/search
- *   - Handle user creation, role assignment, status toggle
+ *   - Handle user creation and status toggle
  *   - Orchestrate API calls via UserManagementService
  *   - Manage local state (selected filters, modal visibility)
+ *   - Role management moved to user-detail component
  *
  * Refactoring Notes:
  *   - Formatting logic extracted to UserDisplayPipe, RoleDisplayPipe
  *   - Form logic extracted to UserCreateFormComponent
- *   - Reduced from 500+ lines to ~220 lines (SRP compliance)
+ *   - Role checkboxes removed (user requests redesign)
+ *   - Reduced from 500+ lines to ~180 lines (SRP compliance)
  *   - Each responsibility has a single, clear method
  */
 @Component({
@@ -174,7 +176,6 @@ import { UserCreateFormComponent } from '@features/users/components/user-create-
               <thead class="bg-slate-50">
                 <tr>
                   <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Người dùng</th>
-                  <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Role</th>
                   <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Trạng thái</th>
                   <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Bảo mật</th>
                   <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Tạo lúc</th>
@@ -199,30 +200,14 @@ import { UserCreateFormComponent } from '@features/users/components/user-create-
                           </div>
                           <p class="mt-1 text-sm text-slate-600">{{ user.email }}</p>
                           <p class="mt-1 text-xs text-slate-500">{{ user | userDisplay:'displayName' }}</p>
-                          @if ((user.roles?.length || 0) > 0) {
+                          @if ((user.roles.length || 0) > 0) {
                             <div class="mt-2 flex flex-wrap gap-2">
                               @for (roleCode of user.roles; track roleCode) {
-                                <app-badge variant="neutral" size="sm">{{ roleCode | roleDisplay:roleOptions() }}</app-badge>
+                                <app-badge variant="info" size="sm">{{ roleCode | roleDisplay:roleOptions() }}</app-badge>
                               }
                             </div>
                           }
                         </div>
-                      </div>
-                    </td>
-
-                    <!-- Role Checkboxes -->
-                    <td class="px-6 py-4">
-                      <div class="flex flex-col gap-2">
-                        @for (role of roleOptions(); track role.id) {
-                          <label class="flex items-center gap-2">
-                            <input type="checkbox"
-                                   [checked]="user.roles?.includes(role.code) || false"
-                                   (change)="toggleUserRole(user, role.code, $any($event.target).checked)"
-                                   [disabled]="isBusy(user.id) || ((user.roles?.length || 0) <= 1 && user.roles?.includes(role.code))"
-                                   class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400 disabled:opacity-50" />
-                            <span class="text-sm text-slate-700" [class.opacity-50]="isBusy(user.id)">{{ role.name }}</span>
-                          </label>
-                        }
                       </div>
                     </td>
 
@@ -270,7 +255,7 @@ import { UserCreateFormComponent } from '@features/users/components/user-create-
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="6">
+                    <td colspan="5">
                       <app-empty-state
                         icon="users"
                         title="Không tìm thấy người dùng phù hợp"
@@ -412,40 +397,6 @@ export class UserListComponent implements OnInit {
       error: (error: HttpErrorResponse) => {
         this.createFormComponent.setSubmitting(false);
         this.createFormComponent.setError(error.error?.message || 'Không thể tạo người dùng mới.');
-      },
-    });
-  }
-
-  toggleUserRole(user: AdminUser, roleCode: string, isChecked: boolean): void {
-    let newRoles = [...user.roles];
-    if (isChecked) {
-      if (!newRoles.includes(roleCode)) newRoles.push(roleCode);
-    } else {
-      newRoles = newRoles.filter((r) => r !== roleCode);
-    }
-
-    if (newRoles.length === 0) {
-      this.errorMsg.set('Người dùng phải có ít nhất 1 role.');
-      return;
-    }
-
-    this.processingUserId.set(user.id);
-    this.errorMsg.set('');
-
-    this.userService.assignRoles(user.id, newRoles).subscribe({
-      next: (response) => {
-        const updatedUser: AdminUser = { 
-          ...user, 
-          roles: response.assignedRoles || user.roles || [] 
-        };
-        this.upsertUser(updatedUser);
-        this.processingUserId.set(null);
-        this.toast.success(`Đã cập nhật role cho "${user.username}".`);
-      },
-      error: (error: HttpErrorResponse) => {
-        this.processingUserId.set(null);
-        this.errorMsg.set(error.error?.message || 'Không thể cập nhật role người dùng.');
-        this.loadData();
       },
     });
   }

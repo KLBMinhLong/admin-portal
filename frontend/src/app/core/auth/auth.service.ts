@@ -38,6 +38,9 @@ export class AuthService {
     authorities: [],
   });
 
+  /** Track if session has finished loading from localStorage */
+  private readonly sessionLoaded = signal(false);
+
   /** Read-only computed signals cho components */
   readonly isAuthenticated = computed(() => this._state().isAuthenticated);
   readonly currentUser = computed(() => this._state().user);
@@ -154,7 +157,31 @@ export class AuthService {
    *  SESSION
    * ──────────────────────────────────────────── */
   ensureSessionLoaded(): Observable<boolean> {
-    return of(this._state().isAuthenticated);
+    // If session is already loaded, return immediately
+    if (this.sessionLoaded()) {
+      return of(true);
+    }
+
+    // Otherwise, wait for sessionLoaded signal to become true
+    // Use a polling approach to wait for async restoration
+    return new Observable<boolean>((observer) => {
+      const checkInterval = setInterval(() => {
+        if (this.sessionLoaded()) {
+          clearInterval(checkInterval);
+          observer.next(true);
+          observer.complete();
+        }
+      }, 50); // Check every 50ms
+
+      // Timeout after 5 seconds to prevent infinite waiting
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        if (!this.sessionLoaded()) {
+          observer.next(false);
+          observer.complete();
+        }
+      }, 5000);
+    });
   }
 
   hasAuthority(authority: string): boolean {
@@ -194,6 +221,7 @@ export class AuthService {
       isAuthenticated: false,
       authorities: [],
     });
+    this.sessionLoaded.set(true);
   }
 
   private restoreSession(): void {
@@ -201,6 +229,7 @@ export class AuthService {
       .loadSession()
       .then((session) => {
         if (!session) {
+          this.sessionLoaded.set(true);
           return;
         }
 
@@ -210,7 +239,11 @@ export class AuthService {
           isAuthenticated: true,
           authorities: session.user.authorities || [],
         });
+        this.sessionLoaded.set(true);
       })
-      .catch(() => this.clearSession());
+      .catch(() => {
+        this.clearSession();
+        this.sessionLoaded.set(true);
+      });
   }
 }

@@ -19,15 +19,16 @@ import {
 } from '@shared/components';
 import { UserDisplayPipe } from '@shared/pipes/user-display.pipe';
 import { RoleDisplayPipe } from '@shared/pipes/role-display.pipe';
+import { RoleManagementModalComponent } from '@features/users/components/role-management-modal/role-management-modal.component';
 
 @Component({
   selector: 'app-user-detail',
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, RouterLink,
-    PageHeaderComponent, CardComponent, ButtonComponent, BadgeComponent,
+    CardComponent, ButtonComponent, BadgeComponent,
     FormFieldComponent, InputComponent, SkeletonComponent,
-    UserDisplayPipe, RoleDisplayPipe
+    UserDisplayPipe, RoleDisplayPipe, RoleManagementModalComponent
   ],
   template: `
     @if (loading()) {
@@ -141,20 +142,53 @@ import { RoleDisplayPipe } from '@shared/pipes/role-display.pipe';
             <app-card>
               <h2 class="text-lg font-bold text-slate-900">Role và truy cập</h2>
               <div class="mt-5 space-y-4">
-                <div class="block">
-                  <span class="mb-2 block text-sm font-medium text-slate-700">Chỉ định Roles</span>
-                  <div class="space-y-3 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-                    @for (role of roleOptions(); track role.id) {
-                      <label class="flex items-center gap-3 cursor-pointer">
-                        <input type="checkbox"
-                               [checked]="user()!.roles.includes(role.code)"
-                               (change)="toggleUserRole(role.code, $any($event.target).checked)"
-                               [disabled]="processing() || (user()!.roles.length <= 1 && user()!.roles.includes(role.code))"
-                               class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50" />
-                        <span class="text-sm font-medium text-slate-800" [class.opacity-50]="processing()">{{ role.name }}</span>
-                      </label>
+                <!-- Current Roles -->
+                <div>
+                  <h3 class="mb-3 text-sm font-medium text-slate-700">
+                    Các Role hiện tại
+                    @if ((user()!.roles.length || 0) === 0) {
+                      <span class="ml-1 text-slate-500">(Chưa có)</span>
                     }
-                  </div>
+                  </h3>
+                  @if ((user()!.roles.length || 0) > 0) {
+                    <div class="flex flex-wrap gap-3">
+                      @for (roleCode of user()!.roles; track roleCode) {
+                        <div class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2">
+                          <span class="text-sm font-medium text-slate-800">
+                            {{ roleCode | roleDisplay:roleOptions() }}
+                          </span>
+                          <button
+                            type="button"
+                            (click)="confirmRemoveRole(roleCode)"
+                            [disabled]="processing() || cannotRemoveRole()"
+                            class="ml-1 text-slate-500 transition hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Xóa role"
+                          >
+                            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+                            </svg>
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                      Người dùng chưa được gán role nào. Vui lòng thêm role bên dưới.
+                    </div>
+                  }
+                </div>
+
+                <!-- Add Role Button -->
+                <div class="pt-2">
+                  <app-button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    [disabled]="processing() || roleOptions().length === 0 || (user()!.roles.length || 0) >= roleOptions().length"
+                    (click)="openRoleModal()"
+                  >
+                    + Thêm Role
+                  </app-button>
                 </div>
               </div>
             </app-card>
@@ -180,6 +214,16 @@ import { RoleDisplayPipe } from '@shared/pipes/role-display.pipe';
         </div>
       </div>
     }
+
+    <!-- Role Management Modal -->
+    <app-role-management-modal
+      [open]="showRoleModal()"
+      [allRoles]="roleOptions()"
+      [currentRoleCodes]="user()?.roles || []"
+      [loading]="processing()"
+      (roleAdded)="addRole($event)"
+      (cancelled)="closeRoleModal()"
+    />
   `,
 })
 export class UserDetailComponent implements OnInit {
@@ -188,6 +232,7 @@ export class UserDetailComponent implements OnInit {
   loading = signal(true);
   processing = signal(false);
   profileSubmitting = signal(false);
+  showRoleModal = signal(false);
 
   private readonly formBuilder = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
@@ -307,6 +352,81 @@ export class UserDetailComponent implements OnInit {
         this.toastService.error(error.error?.message || 'Không thể cập nhật role người dùng.');
       },
     });
+  }
+
+  openRoleModal(): void {
+    this.showRoleModal.set(true);
+  }
+
+  closeRoleModal(): void {
+    this.showRoleModal.set(false);
+  }
+
+  addRole(roleCode: string): void {
+    const currentUser = this.user();
+    if (!currentUser || !roleCode) return;
+
+    const newRoles = [...(currentUser.roles || []), roleCode];
+    this.processing.set(true);
+    this.showRoleModal.set(false);
+
+    this.userService.assignRoles(currentUser.id, newRoles).subscribe({
+      next: (response) => {
+        const assignedRoles = response?.assignedRoles || newRoles || [];
+        this.user.set({ ...currentUser, roles: assignedRoles });
+        this.processing.set(false);
+        this.toastService.success(`Đã thêm role thành công.`);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.processing.set(false);
+        this.showRoleModal.set(false);
+        this.toastService.error(error.error?.message || 'Không thể thêm role.');
+      },
+    });
+  }
+
+  confirmRemoveRole(roleCode: string): void {
+    const currentUser = this.user();
+    if (!currentUser || currentUser.roles.length <= 1) return;
+
+    const roleName = this.roleOptions().find(r => r.code === roleCode)?.name || roleCode;
+    const confirmed = confirm(`Xác nhận xóa role "${roleName}"?`);
+
+    if (confirmed) {
+      this.removeRole(roleCode);
+    }
+  }
+
+  removeRole(roleCode: string): void {
+    const currentUser = this.user();
+    if (!currentUser) return;
+
+    const newRoles = (currentUser.roles || []).filter(r => r !== roleCode);
+
+    if (newRoles.length === 0) {
+      this.toastService.error('Người dùng phải có ít nhất 1 role.');
+      this.processing.set(false);
+      return;
+    }
+
+    this.processing.set(true);
+
+    this.userService.assignRoles(currentUser.id, newRoles).subscribe({
+      next: (response) => {
+        const assignedRoles = response?.assignedRoles || newRoles || [];
+        this.user.set({ ...currentUser, roles: assignedRoles });
+        this.processing.set(false);
+        this.toastService.success('Đã xóa role thành công.');
+      },
+      error: (error: HttpErrorResponse) => {
+        this.processing.set(false);
+        this.toastService.error(error.error?.message || 'Không thể xóa role.');
+      },
+    });
+  }
+
+  cannotRemoveRole(): boolean {
+    return (this.user()?.roles?.length || 0) <= 1;
   }
 
   toggleActive(): void {

@@ -51,23 +51,41 @@ public class AssignUserRolesUseCaseImpl implements AssignUserRolesUseCase {
             .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
 
         Set<Role> requestedRoles = resolveRoles(request);
-        Set<Role> mergedRoles = new LinkedHashSet<>(user.getRoles());
+        Set<Role> currentRoles = new LinkedHashSet<>(user.getRoles());
+
+        // Calculate newly assigned roles (in requested but not in current)
         Set<Role> newlyAssignedRoles = requestedRoles.stream()
-            .filter(role -> mergedRoles.stream().noneMatch(existing -> existing.getId().equals(role.getId())))
+            .filter(role -> currentRoles.stream().noneMatch(existing -> existing.getId().equals(role.getId())))
             .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        mergedRoles.addAll(requestedRoles);
-        user.assignRoles(mergedRoles);
+        // Calculate removed roles (in current but not in requested)
+        Set<Role> removedRoles = currentRoles.stream()
+            .filter(role -> requestedRoles.stream().noneMatch(existing -> existing.getId().equals(role.getId())))
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        // Replace roles (not merge) - set user roles to exactly what was requested
+        user.assignRoles(requestedRoles);
         User savedUser = userRepository.save(user);
 
         String actor = runtimePermissionService.getCurrentUsername();
-        Instant assignedAt = Instant.now();
+        Instant changedAt = Instant.now();
+
+        // Audit newly assigned roles
         newlyAssignedRoles.forEach(role -> auditService.record(
             actor,
             "USER_ROLE_ASSIGNED",
             "USER",
             savedUser.getId().toString(),
-            "role=" + role.getCode() + ", assigned_by=" + actor + ", assigned_at=" + assignedAt
+            "role=" + role.getCode() + ", assigned_by=" + actor + ", assigned_at=" + changedAt
+        ));
+
+        // Audit removed roles
+        removedRoles.forEach(role -> auditService.record(
+            actor,
+            "USER_ROLE_REMOVED",
+            "USER",
+            savedUser.getId().toString(),
+            "role=" + role.getCode() + ", removed_by=" + actor + ", removed_at=" + changedAt
         ));
 
         return new UserRoleAssignmentResponse(
@@ -78,7 +96,7 @@ public class AssignUserRolesUseCaseImpl implements AssignUserRolesUseCase {
                 .sorted(Comparator.naturalOrder())
                 .collect(Collectors.toCollection(LinkedHashSet::new)),
             actor,
-            assignedAt
+            changedAt
         );
     }
 
