@@ -41,14 +41,32 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BaseBusinessException.class)
     public ResponseEntity<Map<String, Object>> handleBusinessException(BaseBusinessException ex) {
         HttpStatus status = resolveStatus(ex);
+        String message = ex.getMessage();
+        
+        if ("USER_INACTIVE".equals(ex.getCode())) {
+            message = "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.";
+        } else if ("CANNOT_TOGGLE_ADMIN_ROLE".equals(ex.getCode())) {
+            message = "Không thể vô hiệu hóa vai trò Quản trị viên hệ thống.";
+        } else if ("CANNOT_REMOVE_ADMIN_ROLE_FROM_SELF".equals(ex.getCode())) {
+            message = "Bạn không thể tự gỡ bỏ vai trò Quản trị viên của chính mình.";
+        }
+        
         log.warn("[Business] {}: {}", ex.getCode(), ex.getMessage());
-        return buildResponse(status, ex.getMessage(), ex.getCode());
+        return buildResponse(status, message, ex.getCode());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleBadRequest(IllegalArgumentException ex) {
         log.warn("[Validation] Bad request: {}", ex.getMessage());
-        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), "BAD_REQUEST");
+        String message = ex.getMessage();
+        String code = "BAD_REQUEST";
+
+        if ("Invalid credentials".equalsIgnoreCase(message)) {
+            message = "Sai tên đăng nhập hoặc mật khẩu.";
+            code = "INVALID_CREDENTIALS";
+        }
+
+        return buildResponse(HttpStatus.BAD_REQUEST, message, code);
     }
 
     @ExceptionHandler(InvalidEncryptedPayloadException.class)

@@ -125,7 +125,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             authoritiesSet = runtimePermissionService.getAllAuthorities(principal.username());
         } catch (org.springframework.security.access.AccessDeniedException ex) {
             log.warn("Access denied for user {}: {}", principal.username(), ex.getMessage());
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Account is locked");
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Tài khoản đã bị khóa.");
             return;
         }
         List<SimpleGrantedAuthority> authorities = authoritiesSet.stream()
