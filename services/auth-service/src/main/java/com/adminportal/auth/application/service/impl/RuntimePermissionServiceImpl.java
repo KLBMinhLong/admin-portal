@@ -5,6 +5,8 @@ import com.adminportal.auth.application.service.RuntimePermissionService;
 import com.adminportal.auth.domain.entity.User;
 import com.adminportal.auth.domain.exception.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,6 +19,8 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class RuntimePermissionServiceImpl implements RuntimePermissionService {
+
+    private static final Logger log = LoggerFactory.getLogger(RuntimePermissionServiceImpl.class);
 
     private final UserRepositoryPort userRepository;
 

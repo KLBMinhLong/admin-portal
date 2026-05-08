@@ -5,11 +5,15 @@ import com.adminportal.auth.application.port.out.RbacAuditLogRepositoryPort;
 import com.adminportal.auth.application.service.RbacAuditService;
 import com.adminportal.auth.domain.entity.RbacAuditLog;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 public class RbacAuditServiceImpl implements RbacAuditService {
+
+    private static final Logger log = LoggerFactory.getLogger(RbacAuditServiceImpl.class);
 
     private final RbacAuditLogRepositoryPort auditLogRepository;
     private final AuditLoggerPort auditLogger;

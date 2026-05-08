@@ -5,6 +5,8 @@ import com.adminportal.auth.application.port.out.TokenRepositoryPort;
 import com.adminportal.auth.application.service.UserSessionRevocationService;
 import com.adminportal.auth.domain.entity.Token;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,6 +15,8 @@ import java.util.UUID;
 @Service
 @Slf4j
 public class UserSessionRevocationServiceImpl implements UserSessionRevocationService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserSessionRevocationServiceImpl.class);
 
     private final TokenRepositoryPort tokenRepository;
     private final TokenCachePort tokenCache;

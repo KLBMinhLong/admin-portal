@@ -17,6 +17,8 @@ import com.adminportal.auth.domain.exception.BusinessStateException;
 import com.adminportal.auth.domain.exception.ResourceConflictException;
 import com.adminportal.auth.domain.exception.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,8 @@ import java.util.UUID;
 @Transactional
 @Slf4j
 public class AdminUserManagementServiceImpl implements AdminUserManagementService {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminUserManagementServiceImpl.class);
 
     private final UserRepositoryPort userRepository;
     private final RoleRepositoryPort roleRepository;

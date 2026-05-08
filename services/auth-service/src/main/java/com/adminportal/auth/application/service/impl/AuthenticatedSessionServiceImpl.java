@@ -9,6 +9,8 @@ import com.adminportal.auth.application.service.UserSessionRevocationService;
 import com.adminportal.auth.domain.entity.Token;
 import com.adminportal.auth.domain.entity.User;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -22,6 +24,8 @@ import java.util.Set;
 @Service
 @Slf4j
 public class AuthenticatedSessionServiceImpl implements AuthenticatedSessionService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthenticatedSessionServiceImpl.class);
 
     private final UserSessionRevocationService userSessionRevocationService;
     private final TokenGeneratorPort tokenGenerator;

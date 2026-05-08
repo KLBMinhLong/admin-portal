@@ -9,6 +9,8 @@ import com.adminportal.auth.application.port.in.RoleManagementUseCase;
 import com.adminportal.auth.infrastructure.security.Encrypted;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,6 +35,8 @@ import java.util.UUID;
 @RequestMapping("/api/v1/admin")
 @Slf4j
 public class AdminRolePermissionController {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminRolePermissionController.class);
 
     private final RoleManagementUseCase roleManagementUseCase;
 
