@@ -1,107 +1,81 @@
 # Mô Tả Chi Tiết Luồng Đăng Nhập (Login Flow)
 
-Tài liệu này mô tả đúng theo code hiện tại của Admin Portal: từ lúc frontend gửi yêu cầu đăng nhập, qua bước xác thực ở Keycloak, cho đến lúc Auth Service tạo session và trả JWT riêng của hệ thống.
-
-## 1. Tổng Quan Kiến Trúc
-
-Luồng đăng nhập đi qua các thành phần chính sau:
-1. **Frontend (Angular)**: Gửi `username` và `password`. Mô hình request có trường `deviceInfo`, nhưng hiện tại frontend chưa gán giá trị thật cho trường này.
-2. **API Gateway**: Nhận request đầu tiên và route đến `auth-service`.
-3. **Auth Service**: Xử lý nghiệp vụ đăng nhập, kiểm tra 2FA, cấp JWT riêng, và quản lý session.
-4. **Keycloak**: Chỉ dùng để xác thực mật khẩu theo chuẩn OIDC Direct Grant (`grant_type=password`).
-5. **DatabaseUserStorageProvider**: Custom SPI trong Keycloak, dùng để Keycloak tra cứu user trực tiếp từ database của hệ thống.
-6. **Redis**: Lưu tạm `challenge` cho phiên 2FA dở dang.
-7. **PostgreSQL**: Lưu user, role, permission, và session/token metadata.
+Tài liệu này mô tả chi tiết quy trình xử lý đăng nhập của hệ thống Admin Portal, bám sát từng file code và phương thức thực tế.
 
 ---
 
-## 2. Luồng Thực Tế
-
-### Bước 1: Frontend gửi yêu cầu đăng nhập
-- Frontend gọi `POST /auth/login`.
-- Payload hiện tại chủ yếu là `username` và `password`.
-- Field `deviceInfo` có trong contract backend, nhưng code frontend hiện tại chưa tự lấy thông tin thiết bị và chưa gán giá trị này khi gọi login.
-
-### Bước 2: Request đi vào Auth Service
-- Request đi qua API Gateway và vào `AuthController`.
-- Controller gọi `loginUseCase.execute(request)`.
-
-### Bước 3: Chuẩn hóa username
-- Trong `LoginUseCaseImpl`, username được xử lý bằng `trim()` và `toLowerCase()` để tránh khác biệt do khoảng trắng hoặc chữ hoa/thường.
-
-### Bước 4: Auth Service gọi Keycloak để xác thực
-- `LoginUseCaseImpl` gọi `keycloakPort.authenticate(normalizedUsername, request.password())`.
-- `keycloakPort` là interface port ở layer application.
-- Implement thật nằm ở `KeycloakPasswordGrantAuthenticator`, dùng `RestClient` để gọi HTTP sang Keycloak.
-
-### Bước 5: Keycloak nhận request và xác thực user
-- Auth Service gửi request đến endpoint token của Keycloak theo `Resource Owner Password Credentials Grant`.
-- Request form-urlencoded gồm:
-  - `grant_type=password`
-  - `client_id`
-  - `client_secret` nếu có
-  - `username`
-  - `password`
-  - `scope=openid`
-- Khi Keycloak nhận request, nó uỷ quyền việc tra cứu user cho `DatabaseUserStorageProvider`.
-- Custom SPI này đọc user từ database của hệ thống và kiểm tra password theo logic của plugin.
-- Nếu sai credentials, Keycloak trả về lỗi 400/401 và Auth Service map thành `Invalid credentials`.
-- Nếu có lỗi mạng hoặc Keycloak không phản hồi đúng, Auth Service map thành `Authentication provider unavailable`.
-- Auth Service không dùng access token do Keycloak trả về; nó chỉ dùng kết quả xác thực thành công/thất bại.
-
-### Bước 6: Auth Service kiểm tra user nội bộ
-- Sau khi Keycloak xác thực thành công, Auth Service gọi `userRepository.findByUsernameForUpdate(normalizedUsername)`.
-- Query này dùng lock mức database để tránh race condition khi cùng một user đăng nhập đồng thời.
-- Nếu user không tồn tại hoặc không active, request bị từ chối.
-
-### Bước 7: Xử lý 2FA nếu user bật xác thực hai lớp
-- Nếu `user.isTwoFactorEnabled()` là `true`:
-  - Auth Service tạo `challenge` bằng `challengeStore.create(user.getId(), request.deviceInfo())`.
-  - `challenge` cùng `userId` và `deviceInfo` được lưu vào Redis với TTL ngắn.
-  - Response trả về cho frontend là `requiresTwoFactor = true` và `challenge`.
-- Nếu user không bật 2FA, Auth Service đi thẳng sang bước tạo session.
-
-### Bước 8: Xác minh 2FA khi người dùng nhập OTP
-- Khi frontend gọi verify 2FA, Auth Service đọc `challenge` từ Redis.
-- Nếu challenge còn hợp lệ, Auth Service lấy lại `userId` và `deviceInfo` đã lưu trước đó.
-- OTP được kiểm tra bằng `TwoFactorVerifierPort`.
-- Nếu OTP hợp lệ, challenge bị xoá và Auth Service tiếp tục tạo session như đăng nhập bình thường.
-
-### Bước 9: Cấp JWT và session của hệ thống
-- `AuthenticatedSessionService.create(user, deviceInfo)` thực hiện:
-  - Thu hồi toàn bộ session/token cũ của user để đảm bảo cơ chế single session.
-  - Gọi `tokenGenerator.generate(user)` để sinh JWT mới.
-  - JWT do `JwtProvider` tạo ra có các claim:
-    - `sub` / subject = username
-    - `username`
-    - `role`
-    - `userId`
-    - `jti`
-  - JWT này **không chứa danh sách authorities**.
-  - Token được băm SHA-256 và lưu metadata session/token vào DB.
-  - `deviceInfo` được lưu kèm session để phục vụ theo dõi thiết bị hoặc audit nếu cần.
-
-### Bước 10: Trả response về frontend
-- `AuthenticatedSessionService` gọi `RuntimePermissionService.getAllAuthorities(username)` để lấy toàn bộ quyền hiện tại của user.
-- Danh sách này được nhét vào `LoginResponse.user.authorities`.
-- Frontend nhận response và:
-  - lưu JWT vào `auth_token_enc`
-  - lưu object user, gồm `role` và `authorities`, vào `auth_user_enc`
-  - nạp `authorities` vào state để dùng cho guard/menu ẩn hiện
-- JWT và user object đều được mã hóa AES-GCM trước khi lưu vào localStorage theo implementation hiện tại.
+## 1. Thành Phần Tham Gia
+1.  **Frontend (Angular):** Thực hiện thu thập thông tin và hiển thị thông báo.
+2.  **API Gateway:** Điều phối request.
+3.  **Auth Service:** Trái tim xử lý logic nghiệp vụ bảo mật.
+4.  **Keycloak:** Thành phần xác thực (Password check) thông qua chuẩn OIDC.
+5.  **PostgreSQL & Redis:** Lưu trữ dữ liệu người dùng và metadata của phiên đăng nhập (Session).
 
 ---
 
-## 3. Tóm Tắt Cơ Chế Keycloak
+## 2. Chi Tiết Luồng Xử Lý (Step-by-Step)
 
-Luồng `keycloakPort.authenticate(username, password)` không phải là một lời gọi nội bộ tới SPI, mà là một HTTP call từ Auth Service sang Keycloak token endpoint.
+### Bước 1: Frontend thu thập thông tin
+- **File:** `frontend/src/app/features/auth/login/login.component.ts`
+- **Hành động:** Người dùng nhập `username` và `password`. Component gọi method `authService.login(request)`.
+- **Dữ liệu gửi đi:** Một JSON object gồm `username`, `password`, và `deviceInfo`.
 
-Keycloak sau đó tự xử lý phần xác thực và uỷ quyền tra cứu user cho `DatabaseUserStorageProvider`. Đây là lý do Auth Service chỉ cần biết kết quả thành công/thất bại, còn logic đọc user từ DB nằm bên trong Keycloak plugin.
+### Bước 2: Gateway điều phối
+- **File:** `gateway-service/.../RouteConfig.java` (hoặc cấu hình YML)
+- **Hành động:** Gateway nhận request tại `/api/v1/auth/login` và chuyển tiếp đến `auth-service` thông qua Load Balancer.
+
+### Bước 3: Auth Controller tiếp nhận
+- **File:** `com.adminportal.auth.infrastructure.web.controller.AuthController`
+- **Method:** `login(@Valid @RequestBody LoginRequest req)`
+- **Hành động:** 
+    - Giải mã request (nếu có sử dụng `@Encrypted`).
+    - Chuyển tiếp yêu cầu xuống lớp nghiệp vụ thông qua `loginUseCase.execute(req)`.
+
+### Bước 4: Xử lý nghiệp vụ tại LoginUseCase
+- **File:** `com.adminportal.auth.application.usecase.LoginUseCaseImpl`
+- **Method:** `execute(LoginRequest request)`
+- **Quy trình chi tiết:**
+    1.  **Chuẩn hóa:** `username` được đưa về chữ thường và xóa khoảng trắng thừa.
+    2.  **Xác thực mật khẩu (Keycloak):** Gọi `keycloakPort.authenticate(username, password)`. 
+        - Lớp này (`KeycloakPasswordGrantAuthenticator`) gửi request `grant_type=password` sang Keycloak.
+        - **Lưu ý:** Keycloak sử dụng `DatabaseUserStorageProvider` để truy vấn ngược lại database hệ thống nhằm kiểm tra mật khẩu.
+    3.  **Kiểm tra trạng thái tài khoản:** Sau khi Keycloak xác nhận mật khẩu đúng, hệ thống tra cứu User trong DB.
+        - Nếu `user.isActive() == false`: Ném lỗi `BusinessStateException("USER_INACTIVE")`.
+    4.  **Kiểm tra 2FA:** Nếu user đã bật 2FA, hệ thống trả về mã `challenge` và yêu cầu người dùng nhập mã OTP thay vì cấp Token ngay.
+    5.  **Cấp Token:** Nếu mọi thứ hợp lệ, gọi `authenticatedSessionService.create(user, deviceInfo)`.
+
+### Bước 5: Khởi tạo Phiên làm việc (Session Creation)
+- **File:** `com.adminportal.auth.application.service.impl.AuthenticatedSessionServiceImpl`
+- **Hành động:**
+    1.  **Single Session:** Thu hồi (Revoke) tất cả các Token cũ của user này trong database bằng cách set `active = false`.
+    2.  **Mint JWT:** Sử dụng `JwtProvider` để tạo một chuỗi JWT mới chứa `username` và `role`.
+    3.  **Lưu trữ Metadata:** Lưu thông tin Token (JTI, thời gian hết hạn) vào bảng `auth.tokens` trong PostgreSQL và đồng bộ vào Redis Cache để Gateway kiểm tra nhanh.
+
+### Bước 6: Phản hồi lỗi (Error Handling)
+- **File:** `com.adminportal.auth.infrastructure.web.GlobalExceptionHandler`
+- **Hành động:** Nếu bất kỳ bước nào ở trên thất bại:
+    - Lỗi sai mật khẩu -> Trả về: `"Sai tên đăng nhập hoặc mật khẩu."`
+    - Lỗi tài khoản khóa -> Trả về: `"Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên."`
+    - Các lỗi khác được đóng gói theo định dạng `ApiResponse` chuẩn.
 
 ---
 
-## 4. Điểm Cần Lưu Ý
+## 3. Tổng Kết Luồng Dữ Liệu
+```mermaid
+sequenceDiagram
+    participant FE as Frontend (Angular)
+    participant GW as Gateway
+    participant AS as Auth Service
+    participant KC as Keycloak
+    participant DB as Database (Postgres)
 
-- `deviceInfo` đã có ở backend contract nhưng frontend hiện chưa populate thật.
-- JWT hiện tại chỉ dùng để xác thực request và quản lý session, không chứa authorities.
-- Quyền hiển thị trên frontend đến từ `LoginResponse.user.authorities`, không phải từ token.
+    FE->>GW: POST /api/v1/auth/login
+    GW->>AS: Forward to Auth Service
+    AS->>KC: OIDC Direct Grant (Password Check)
+    KC->>DB: Query User (Custom SPI)
+    DB-->>KC: User Credentials
+    KC-->>AS: Auth OK
+    AS->>DB: Check is_active & 2FA
+    DB-->>AS: Active=True, 2FA=Off
+    AS->>DB: Revoke old tokens & Save new token
+    AS-->>FE: Return JWT + User Info
