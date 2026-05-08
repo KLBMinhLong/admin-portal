@@ -64,7 +64,7 @@ public class PurchasingRequestController {
      * Lấy danh sách requests (có filter).
      */
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAuthority('request.view')")
     public ResponseEntity<ApiResponse<java.util.List<PurchasingRequestDto>>> getAll(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String search) {
@@ -76,7 +76,7 @@ public class PurchasingRequestController {
      * Lấy thông tin chi tiết request.
      */
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAuthority('request.view')")
     public ResponseEntity<ApiResponse<PurchasingRequestDto>> getById(@PathVariable Long id) {
         PurchasingRequestDto dto = getRequestUseCase.execute(id);
         return ResponseEntity.ok(ApiResponse.success(dto));

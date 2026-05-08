@@ -66,7 +66,7 @@ public class AdminRolePermissionController {
     }
 
     @GetMapping("/roles")
-    @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
+    @PreAuthorize("hasAuthority('role.view')")
     public ResponseEntity<ApiResponse<List<AdminRoleDto>>> listRoles() {
         List<AdminRoleDto> roles = roleManagementUseCase.listRoles();
         log.info("[ADMIN] Listed {} roles", roles.size());
@@ -74,13 +74,13 @@ public class AdminRolePermissionController {
     }
 
     @GetMapping("/permissions")
-    @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
+    @PreAuthorize("hasAuthority('permission.view')")
     public ResponseEntity<ApiResponse<List<AdminPermissionDto>>> listPermissions() {
         return ResponseEntity.ok(ApiResponse.ok(roleManagementUseCase.listPermissions()));
     }
 
     @GetMapping("/audit-logs")
-    @PreAuthorize("hasAuthority('system.config') and hasAuthority('role.manage')")
+    @PreAuthorize("hasAuthority('audit.view')")
     public ResponseEntity<ApiResponse<List<AdminAuditLogDto>>> listAuditLogs() {
         return ResponseEntity.ok(ApiResponse.ok(roleManagementUseCase.listAuditLogs()));
     }

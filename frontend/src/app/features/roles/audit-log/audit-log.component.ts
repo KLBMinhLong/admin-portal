@@ -66,6 +66,7 @@ import { AuditDetailModalComponent } from './audit-detail-modal.component';
               <option value="ROLE_UPDATED">Cập nhật Role</option>
               <option value="ROLE_ACTIVATED">Kích hoạt Role</option>
               <option value="ROLE_DEACTIVATED">Vô hiệu hóa Role</option>
+              <option value="ROLE_PERMISSIONS_UPDATED">Cập nhật Quyền</option>
             </select>
           </div>
 
@@ -285,6 +286,7 @@ export class AuditLogComponent implements OnInit {
       'ROLE_UPDATED': 'Cập nhật Role',
       'ROLE_ACTIVATED': 'Kích hoạt Role',
       'ROLE_DEACTIVATED': 'Vô hiệu hóa Role',
+      'ROLE_PERMISSIONS_UPDATED': 'Cập nhật Quyền',
     };
     return actions[action] || action;
   }

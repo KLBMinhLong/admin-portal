@@ -36,7 +36,7 @@ public class AdminUserController {
     }
 
     @GetMapping("/users")
-    @PreAuthorize("hasAuthority('system.config') and hasAuthority('user.manage')")
+    @PreAuthorize("hasAuthority('user.view')")
     public ResponseEntity<ApiResponse<List<AdminUserDto>>> listUsers() {
         return ResponseEntity.ok(ApiResponse.ok(service.listUsers()));
     }
@@ -48,7 +48,7 @@ public class AdminUserController {
     }
 
     @GetMapping("/users/{id}")
-    @PreAuthorize("hasAuthority('system.config') and hasAuthority('user.manage')")
+    @PreAuthorize("hasAuthority('user.view')")
     public ResponseEntity<ApiResponse<AdminUserDto>> getUser(@PathVariable("id") UUID userId) {
         return ResponseEntity.ok(ApiResponse.ok(service.getUser(userId)));
     }
@@ -77,7 +77,7 @@ public class AdminUserController {
     }
 
     @PatchMapping("/users/{id}/toggle-active")
-    @PreAuthorize("hasAuthority('system.config') and hasAuthority('user.manage')")
+    @PreAuthorize("hasAuthority('user.status')")
     public ResponseEntity<ApiResponse<AdminUserDto>> toggleActive(@PathVariable("id") UUID userId) {
         return ResponseEntity.ok(ApiResponse.ok(service.toggleActive(userId)));
     }

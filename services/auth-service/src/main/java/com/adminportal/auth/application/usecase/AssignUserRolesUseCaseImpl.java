@@ -9,6 +9,7 @@ import com.adminportal.auth.application.service.RbacAuditService;
 import com.adminportal.auth.application.service.RuntimePermissionService;
 import com.adminportal.auth.domain.entity.Role;
 import com.adminportal.auth.domain.entity.User;
+import com.adminportal.auth.domain.exception.BusinessStateException;
 import com.adminportal.auth.domain.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,6 +53,16 @@ public class AssignUserRolesUseCaseImpl implements AssignUserRolesUseCase {
 
         Set<Role> requestedRoles = resolveRoles(request);
         Set<Role> currentRoles = new LinkedHashSet<>(user.getRoles());
+
+        // Logic: Cannot remove ADMIN role from self
+        String currentActor = runtimePermissionService.getCurrentUsername();
+        if (user.getUsername().equalsIgnoreCase(currentActor)) {
+            boolean isCurrentlyAdmin = currentRoles.stream().anyMatch(r -> "ADMIN".equalsIgnoreCase(r.getCode()));
+            boolean isRequestedAdmin = requestedRoles.stream().anyMatch(r -> "ADMIN".equalsIgnoreCase(r.getCode()));
+            if (isCurrentlyAdmin && !isRequestedAdmin) {
+                throw new BusinessStateException("CANNOT_REMOVE_ADMIN_ROLE_FROM_SELF");
+            }
+        }
 
         // Calculate newly assigned roles (in requested but not in current)
         Set<Role> newlyAssignedRoles = requestedRoles.stream()

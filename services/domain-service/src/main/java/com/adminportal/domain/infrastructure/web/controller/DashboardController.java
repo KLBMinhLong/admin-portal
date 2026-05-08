@@ -22,6 +22,7 @@ public class DashboardController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('dashboard.view')")
     public ResponseEntity<ApiResponse<DashboardDataDto>> getDashboard(Authentication authentication) {
         String username = authentication.getName();
         boolean isAdmin = authentication.getAuthorities().stream()

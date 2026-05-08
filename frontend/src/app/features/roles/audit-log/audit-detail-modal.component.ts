@@ -17,7 +17,7 @@ import { ModalComponent, BadgeComponent, ButtonComponent, BadgeVariant } from '@
       (closed)="onClose()"
     >
       <ng-container *ngIf="log">
-        <ng-container modalBody>
+        <div modalBody>
           <div class="space-y-6">
             <!-- Thông tin cơ bản -->
             <div class="grid grid-cols-2 gap-4">
@@ -57,7 +57,7 @@ import { ModalComponent, BadgeComponent, ButtonComponent, BadgeVariant } from '@
               </div>
             </div>
           </div>
-        </ng-container>
+        </div>
 
         <ng-container modalFooter>
           <div class="flex justify-end gap-3">
@@ -93,6 +93,7 @@ export class AuditDetailModalComponent {
       'ROLE_UPDATED': 'Cập nhật Role',
       'ROLE_ACTIVATED': 'Kích hoạt Role',
       'ROLE_DEACTIVATED': 'Vô hiệu hóa Role',
+      'ROLE_PERMISSIONS_UPDATED': 'Cập nhật Quyền',
     };
     return actions[action] || action;
   }
