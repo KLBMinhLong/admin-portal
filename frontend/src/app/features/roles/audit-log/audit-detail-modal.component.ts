@@ -108,14 +108,31 @@ export class AuditDetailModalComponent {
     return 'info';
   }
 
-  formatDetails(details: string): string {
-    // Try to format as JSON if it looks like key-value pairs
-    if (details.includes('=') && !details.includes('{')) {
-      return details
+  formatDetails(details: any): string {
+    if (details === null || details === undefined) {
+      return '';
+    }
+
+    // If it's an object/array, pretty-print JSON
+    if (typeof details === 'object') {
+      try {
+        return JSON.stringify(details, null, 2);
+      } catch {
+        return String(details);
+      }
+    }
+
+    // Ensure it's a string from here
+    const txt = String(details);
+
+    // Try to format as key=value pairs separated by commas
+    if (txt.includes('=') && !txt.includes('{')) {
+      return txt
         .split(',')
         .map(pair => pair.trim())
         .join('\n');
     }
-    return details;
+
+    return txt;
   }
 }
