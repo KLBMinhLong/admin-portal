@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { ApiResponse } from '@core/models/auth.models';
 
 export interface ProfileDto {
   username: string;
@@ -32,7 +34,9 @@ export class ProfileService {
   constructor(private http: HttpClient) {}
 
   getProfile(): Observable<ProfileDto> {
-    return this.http.get<ProfileDto>(this.apiUrl);
+    return this.http.get<ApiResponse<ProfileDto>>(this.apiUrl).pipe(
+      map(res => res.data)
+    );
   }
 
   changePassword(data: any): Observable<void> {
