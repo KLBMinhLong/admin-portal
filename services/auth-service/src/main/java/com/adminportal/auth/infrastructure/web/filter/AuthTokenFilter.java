@@ -120,7 +120,14 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         }
 
         // 5. Set Spring Security context (RBAC - permission load tu DB o layer service)
-        Set<String> authoritiesSet = runtimePermissionService.getAllAuthorities(principal.username());
+        Set<String> authoritiesSet;
+        try {
+            authoritiesSet = runtimePermissionService.getAllAuthorities(principal.username());
+        } catch (org.springframework.security.access.AccessDeniedException ex) {
+            log.warn("Access denied for user {}: {}", principal.username(), ex.getMessage());
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Account is locked");
+            return;
+        }
         List<SimpleGrantedAuthority> authorities = authoritiesSet.stream()
             .map(SimpleGrantedAuthority::new)
             .collect(Collectors.toList());

@@ -55,6 +55,11 @@ public class RuntimePermissionServiceImpl implements RuntimePermissionService {
         User user = userRepository.findByUsernameWithRolesAndPermissions(username)
             .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
 
+        if (!user.isActive()) {
+            log.warn("Attempt to load authorities for inactive user: {}", username);
+            throw new AccessDeniedException("User account is inactive");
+        }
+
         Set<String> authorities = user.getRoles().stream()
             .filter(com.adminportal.auth.domain.entity.Role::isActive)
             .map(r -> "ROLE_" + r.getCode().toUpperCase())

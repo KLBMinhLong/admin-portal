@@ -5,6 +5,7 @@ import com.adminportal.domain.application.services.DashboardService;
 import com.adminportal.domain.infrastructure.security.Encrypted;
 import com.adminportal.domain.infrastructure.web.ApiResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
