@@ -5,6 +5,8 @@ import com.adminportal.domain.application.dto.PurchasingRequestDto;
 import com.adminportal.domain.application.services.CurrentUserService;
 import com.adminportal.domain.application.usecase.CreateRequestUseCase;
 import com.adminportal.domain.application.usecase.SubmitRequestUseCase;
+import com.adminportal.domain.application.usecase.GetRequestUseCase;
+import com.adminportal.domain.application.usecase.ListRequestsUseCase;
 import com.adminportal.domain.domain.entity.IdempotencyRecord;
 import com.adminportal.domain.infrastructure.cache.IdempotencyService;
 import com.adminportal.domain.infrastructure.security.Encrypted;
@@ -36,23 +38,38 @@ public class PurchasingRequestController {
 
     private final CreateRequestUseCase createRequestUseCase;
     private final SubmitRequestUseCase submitRequestUseCase;
-    private final com.adminportal.domain.application.usecase.GetRequestUseCase getRequestUseCase;
+    private final GetRequestUseCase getRequestUseCase;
+    private final ListRequestsUseCase listRequestsUseCase;
     private final IdempotencyService idempotencyService;
     private final ObjectMapper objectMapper;
     private final CurrentUserService currentUserService;
 
     public PurchasingRequestController(CreateRequestUseCase createRequestUseCase,
                                        SubmitRequestUseCase submitRequestUseCase,
-                                       com.adminportal.domain.application.usecase.GetRequestUseCase getRequestUseCase,
+                                       GetRequestUseCase getRequestUseCase,
+                                       ListRequestsUseCase listRequestsUseCase,
                                        IdempotencyService idempotencyService,
                                        ObjectMapper objectMapper,
                                        CurrentUserService currentUserService) {
         this.createRequestUseCase = createRequestUseCase;
         this.submitRequestUseCase = submitRequestUseCase;
         this.getRequestUseCase = getRequestUseCase;
+        this.listRequestsUseCase = listRequestsUseCase;
         this.idempotencyService = idempotencyService;
         this.objectMapper = objectMapper;
         this.currentUserService = currentUserService;
+    }
+
+    /**
+     * Lấy danh sách requests (có filter).
+     */
+    @GetMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<java.util.List<PurchasingRequestDto>>> getAll(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String search) {
+        java.util.List<PurchasingRequestDto> list = listRequestsUseCase.execute(status, search);
+        return ResponseEntity.ok(ApiResponse.success(list));
     }
 
     /**

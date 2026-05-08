@@ -34,7 +34,7 @@ export class EncryptionInterceptor implements HttpInterceptor {
     '/engine-rest/',
   ];
 
-  constructor(private encryptionService: AesGcmEncryptionService) {}
+  constructor(private encryptionService: AesGcmEncryptionService) { }
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     // Nếu encryption tắt hoặc URL không cần mã hóa → gửi thẳng

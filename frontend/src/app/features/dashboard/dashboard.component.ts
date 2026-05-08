@@ -2,7 +2,7 @@ import { Component, OnInit, signal, computed, TemplateRef, ViewChild } from '@an
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
-import { DashboardService, DashboardData } from './dashboard.service';
+import { DashboardService, DashboardData } from '../../core/services/dashboard.service';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { StatCardComponent } from '@shared/components/stat-card/stat-card.component';
 import { CardComponent } from '@shared/components/card/card.component';
@@ -143,8 +143,8 @@ export class DashboardComponent implements OnInit {
   rejectedRequests = computed(() => this.data()?.requestsByStatus['REJECTED'] || 0);
   totalRequests = computed(() => {
     const stats = this.data()?.requestsByStatus;
-    if (!stats) return 0;
-    return Object.values(stats).reduce((a, b) => a + b, 0);
+    if (!stats || typeof stats !== 'object') return 0;
+    return Object.values(stats).reduce((a, b) => (Number(a) || 0) + (Number(b) || 0), 0);
   });
   topRequests = computed(() => this.data()?.topPendingRequests || []);
 
@@ -185,12 +185,20 @@ export class DashboardComponent implements OnInit {
     ]
   });
 
-  constructor(private dashboardService: DashboardService) {}
+  constructor(private dashboardService: DashboardService) { }
 
   ngOnInit(): void {
-    this.dashboardService.getDashboardData().subscribe(res => {
-      this.data.set(res);
-      this.updateCharts(res);
+    this.dashboardService.getDashboardData().subscribe({
+      next: (res) => {
+        console.log('[Dashboard] Data received:', res);
+        if (res) {
+          this.data.set(res);
+          this.updateCharts(res);
+        }
+      },
+      error: (err) => {
+        console.error('[Dashboard] Failed to load data:', err);
+      }
     });
   }
 
@@ -208,10 +216,11 @@ export class DashboardComponent implements OnInit {
     if (!res) return;
 
     // Cập nhật Pie Chart
-    const pending = res.requestsByStatus['PENDING_APPROVAL'] || 0;
-    const approved = res.requestsByStatus['APPROVED'] || 0;
-    const rejected = res.requestsByStatus['REJECTED'] || 0;
-    const total = Object.values(res.requestsByStatus).reduce((a, b) => a + b, 0);
+    const stats = res.requestsByStatus || {};
+    const pending = stats['PENDING_APPROVAL'] || 0;
+    const approved = stats['APPROVED'] || 0;
+    const rejected = stats['REJECTED'] || 0;
+    const total = Object.values(stats).reduce((a, b) => (Number(a) || 0) + (Number(b) || 0), 0);
     const other = total - pending - approved - rejected;
 
     this.pieChartData.set({
