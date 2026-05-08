@@ -110,8 +110,12 @@ export class ProfileComponent implements OnInit {
   }
 
   loadProfile() {
-    this.profileService.getProfile().subscribe(data => {
-      this.profile.set(data);
+    this.profileService.getProfile().subscribe({
+      next: data => this.profile.set(data),
+      error: err => {
+        this.toastService.error('Không thể tải hồ sơ người dùng.');
+        console.error('Profile load failed', err);
+      }
     });
   }
 
