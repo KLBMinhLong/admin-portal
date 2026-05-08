@@ -1,6 +1,7 @@
 package com.adminportal.domain.domain.entity;
 
 import jakarta.persistence.*;
+import com.adminportal.domain.domain.exception.BusinessStateException;
 import com.adminportal.domain.domain.exception.DomainConflictException;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -117,10 +118,10 @@ public class PurchasingRequest {
      */
     public void submit() {
         if (this.status != RequestStatus.DRAFT) {
-            throw new DomainConflictException("INVALID_STATUS_TRANSITION");
+            throw new BusinessStateException("INVALID_STATUS_TRANSITION");
         }
         if (this.items.isEmpty()) {
-            throw new IllegalStateException("Cannot submit request without any items");
+            throw new BusinessStateException("REQUEST_ITEMS_REQUIRED");
         }
         
         // Step 1 luôn là Department Lead
@@ -148,7 +149,7 @@ public class PurchasingRequest {
 
     public void processApproval(String username, String comment, boolean isApproved) {
         if (this.status != RequestStatus.PENDING_APPROVAL) {
-            throw new DomainConflictException("INVALID_STATUS");
+            throw new BusinessStateException("INVALID_REQUEST_STATE");
         }
 
         ApprovalStep currentStep = getCurrentPendingStep();

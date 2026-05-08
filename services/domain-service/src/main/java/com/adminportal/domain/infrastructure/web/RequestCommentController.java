@@ -3,6 +3,7 @@ package com.adminportal.domain.infrastructure.web;
 import com.adminportal.domain.application.dto.CreateCommentDto;
 import com.adminportal.domain.application.dto.RequestCommentDto;
 import com.adminportal.domain.application.services.RequestCommentService;
+import com.adminportal.domain.infrastructure.web.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,12 +24,13 @@ public class RequestCommentController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RequestCommentDto>> getComments(@PathVariable Long requestId) {
-        return ResponseEntity.ok(commentService.getCommentsForRequest(requestId));
+    public ResponseEntity<ApiResponse<java.util.List<RequestCommentDto>>> getComments(@PathVariable Long requestId) {
+        java.util.List<RequestCommentDto> list = commentService.getCommentsForRequest(requestId);
+        return ResponseEntity.ok(ApiResponse.success(list));
     }
 
     @PostMapping
-    public ResponseEntity<RequestCommentDto> addComment(
+    public ResponseEntity<ApiResponse<RequestCommentDto>> addComment(
             @PathVariable Long requestId,
             @Valid @RequestBody CreateCommentDto dto,
             Authentication authentication) {
@@ -44,6 +46,6 @@ public class RequestCommentController {
         }
 
         RequestCommentDto response = commentService.addComment(requestId, dto, username, role);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response, HttpStatus.CREATED.value()));
     }
 }

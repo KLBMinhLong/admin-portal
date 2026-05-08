@@ -9,7 +9,9 @@ import com.adminportal.domain.domain.entity.IdempotencyRecord;
 import com.adminportal.domain.infrastructure.cache.IdempotencyService;
 import com.adminportal.domain.infrastructure.security.Encrypted;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.adminportal.domain.infrastructure.web.ApiResponse;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,8 +60,9 @@ public class PurchasingRequestController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<PurchasingRequestDto> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(getRequestUseCase.execute(id));
+    public ResponseEntity<ApiResponse<PurchasingRequestDto>> getById(@PathVariable Long id) {
+        PurchasingRequestDto dto = getRequestUseCase.execute(id);
+        return ResponseEntity.ok(ApiResponse.success(dto));
     }
 
     /**
@@ -71,7 +74,7 @@ public class PurchasingRequestController {
      */
     @PostMapping
     @PreAuthorize("hasAuthority('request.create')")
-    public ResponseEntity<String> create(
+    public ResponseEntity<ApiResponse<PurchasingRequestDto>> create(
             @RequestHeader("Idempotency-Key") String idempotencyKey,
             @Valid @RequestBody CreateRequestDto dto) {
 
@@ -80,24 +83,33 @@ public class PurchasingRequestController {
         if (existing.isPresent()) {
             IdempotencyRecord record = existing.get();
             log.info("Idempotent replay for create key={}", idempotencyKey);
-            return ResponseEntity.status(record.getHttpStatus())
-                .header("Content-Type", "application/json")
-                .body(record.getResponseBody());
+            try {
+                ApiResponse<PurchasingRequestDto> previous = objectMapper.readValue(
+                    record.getResponseBody(), new TypeReference<ApiResponse<PurchasingRequestDto>>(){});
+                return ResponseEntity.status(record.getHttpStatus())
+                    .header("Content-Type", "application/json")
+                    .body(previous);
+            } catch (JsonProcessingException e) {
+                log.warn("Failed to parse saved idempotent response", e);
+                return ResponseEntity.status(record.getHttpStatus()).build();
+            }
         }
 
         String username = currentUserService.requireUsername();
 
         PurchasingRequestDto result = createRequestUseCase.execute(dto, username);
 
+        ApiResponse<PurchasingRequestDto> api = ApiResponse.success(result, HttpStatus.CREATED.value());
+
         try {
-            String responseJson = objectMapper.writeValueAsString(result);
+            String responseJson = objectMapper.writeValueAsString(api);
             idempotencyService.save(idempotencyKey, responseJson, HttpStatus.CREATED.value());
             return ResponseEntity.status(HttpStatus.CREATED)
                 .header("Content-Type", "application/json")
-                .body(responseJson);
+                .body(api);
         } catch (JsonProcessingException ex) {
             log.error("Failed to serialize response", ex);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(500, "Serialization error"));
         }
     }
 
@@ -106,7 +118,7 @@ public class PurchasingRequestController {
      */
     @PostMapping("/{id}/submit")
     @PreAuthorize("hasAuthority('request.submit')")
-    public ResponseEntity<String> submit(
+    public ResponseEntity<ApiResponse<PurchasingRequestDto>> submit(
             @PathVariable Long id,
             @RequestHeader("Idempotency-Key") String idempotencyKey) {
 
@@ -115,24 +127,33 @@ public class PurchasingRequestController {
         if (existing.isPresent()) {
             IdempotencyRecord record = existing.get();
             log.info("Idempotent replay for submit key={}", idempotencyKey);
-            return ResponseEntity.status(record.getHttpStatus())
-                .header("Content-Type", "application/json")
-                .body(record.getResponseBody());
+            try {
+                ApiResponse<PurchasingRequestDto> previous = objectMapper.readValue(
+                    record.getResponseBody(), new TypeReference<ApiResponse<PurchasingRequestDto>>(){});
+                return ResponseEntity.status(record.getHttpStatus())
+                    .header("Content-Type", "application/json")
+                    .body(previous);
+            } catch (JsonProcessingException e) {
+                log.warn("Failed to parse saved idempotent response", e);
+                return ResponseEntity.status(record.getHttpStatus()).build();
+            }
         }
 
         String username = currentUserService.requireUsername();
 
         PurchasingRequestDto result = submitRequestUseCase.execute(id, username);
 
+        ApiResponse<PurchasingRequestDto> api = ApiResponse.success(result, HttpStatus.OK.value());
+
         try {
-            String responseJson = objectMapper.writeValueAsString(result);
+            String responseJson = objectMapper.writeValueAsString(api);
             idempotencyService.save(idempotencyKey, responseJson, HttpStatus.OK.value());
             return ResponseEntity.status(HttpStatus.OK)
                 .header("Content-Type", "application/json")
-                .body(responseJson);
+                .body(api);
         } catch (JsonProcessingException ex) {
             log.error("Failed to serialize response", ex);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(500, "Serialization error"));
         }
     }
 }

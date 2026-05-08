@@ -1,7 +1,6 @@
 package com.adminportal.domain.infrastructure.controller;
 
 import com.adminportal.domain.application.services.report.ReportService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -40,8 +39,11 @@ public class ReportController {
 
     private static final Logger log = LoggerFactory.getLogger(ReportController.class);
     
-    @Autowired
-    private ReportService reportService;
+    private final ReportService reportService;
+
+    public ReportController(ReportService reportService) {
+        this.reportService = reportService;
+    }
     
     /**
      * Endpoint 1: Export danh sách yêu cầu theo trạng thái

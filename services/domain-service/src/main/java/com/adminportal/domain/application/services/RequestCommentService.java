@@ -4,7 +4,7 @@ import com.adminportal.domain.application.dto.CreateCommentDto;
 import com.adminportal.domain.application.dto.RequestCommentDto;
 import com.adminportal.domain.domain.entity.PurchasingRequest;
 import com.adminportal.domain.domain.entity.RequestComment;
-import com.adminportal.domain.domain.repository.PurchasingRequestRepository;
+import com.adminportal.domain.application.port.out.PurchasingRequestPort;
 import com.adminportal.domain.infrastructure.persistence.RequestCommentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,12 +15,12 @@ import java.util.stream.Collectors;
 @Service
 public class RequestCommentService {
 
-    private final RequestCommentRepository commentRepository;
-    private final PurchasingRequestRepository requestRepository;
+    private final com.adminportal.domain.application.port.out.RequestCommentPort commentRepository;
+    private final PurchasingRequestPort requestRepository;
     private final WebSocketNotificationService webSocketNotificationService;
 
-    public RequestCommentService(RequestCommentRepository commentRepository, 
-                                 PurchasingRequestRepository requestRepository,
+    public RequestCommentService(com.adminportal.domain.application.port.out.RequestCommentPort commentRepository, 
+                                 PurchasingRequestPort requestRepository,
                                  WebSocketNotificationService webSocketNotificationService) {
         this.commentRepository = commentRepository;
         this.requestRepository = requestRepository;

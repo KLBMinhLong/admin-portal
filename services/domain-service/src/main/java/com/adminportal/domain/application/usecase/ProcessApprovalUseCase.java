@@ -7,7 +7,7 @@ import com.adminportal.domain.application.services.RuntimeAuthorizationService;
 import com.adminportal.domain.domain.entity.PurchasingRequest;
 import com.adminportal.domain.domain.exception.ResourceNotFoundException;
 import com.adminportal.domain.domain.event.RequestProcessedEvent;
-import com.adminportal.domain.domain.repository.PurchasingRequestRepository;
+import com.adminportal.domain.application.port.out.PurchasingRequestPort;
 import com.adminportal.domain.infrastructure.camunda.WorkflowService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +25,7 @@ public class ProcessApprovalUseCase {
     private static final Logger log = LoggerFactory.getLogger(ProcessApprovalUseCase.class);
     private static final String KAFKA_TOPIC = "domain.request-processed";
 
-    private final PurchasingRequestRepository requestRepository;
+    private final com.adminportal.domain.application.port.out.PurchasingRequestPort requestRepository;
     private final PurchasingRequestMapper mapper;
     private final WorkflowService workflowService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
@@ -33,7 +33,7 @@ public class ProcessApprovalUseCase {
     private final RequestCommentService commentService;
     private final WebSocketNotificationService wsService;
 
-    public ProcessApprovalUseCase(PurchasingRequestRepository requestRepository,
+    public ProcessApprovalUseCase(PurchasingRequestPort requestRepository,
                                   PurchasingRequestMapper mapper,
                                   WorkflowService workflowService,
                                   KafkaTemplate<String, Object> kafkaTemplate,

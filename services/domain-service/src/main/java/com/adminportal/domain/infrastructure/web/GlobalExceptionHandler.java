@@ -1,5 +1,6 @@
 package com.adminportal.domain.infrastructure.web;
 
+import com.adminportal.domain.domain.exception.BusinessStateException;
 import com.adminportal.domain.domain.exception.DomainConflictException;
 import com.adminportal.domain.domain.exception.ResourceNotFoundException;
 import com.adminportal.domain.infrastructure.encryption.DecryptionFailedException;
@@ -15,9 +16,6 @@ import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.Instant;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -29,7 +27,7 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiResponse<Object>> handleValidation(MethodArgumentNotValidException ex) {
         String errors = ex.getBindingResult().getFieldErrors().stream()
             .map(e -> e.getField() + ": " + e.getDefaultMessage())
             .collect(Collectors.joining("; "));
@@ -37,7 +35,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MissingRequestHeaderException.class)
-    public ResponseEntity<Map<String, Object>> handleMissingHeader(MissingRequestHeaderException ex) {
+    public ResponseEntity<ApiResponse<Object>> handleMissingHeader(MissingRequestHeaderException ex) {
         // UC-SEC-02 A1: Thiếu Idempotency-Key → error code rõ ràng
         if (ex.getHeaderName().equalsIgnoreCase("Idempotency-Key")) {
             return buildResponse(HttpStatus.BAD_REQUEST, "MISSING_IDEMPOTENCY_KEY");
@@ -46,64 +44,68 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(com.adminportal.domain.domain.exception.IdempotencyInProgressException.class)
-    public ResponseEntity<Map<String, Object>> handleIdempotencyInProgress(
+    public ResponseEntity<ApiResponse<Object>> handleIdempotencyInProgress(
             com.adminportal.domain.domain.exception.IdempotencyInProgressException ex) {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
     }
 
     @ExceptionHandler(com.adminportal.domain.domain.exception.IdempotencyPayloadMismatchException.class)
-    public ResponseEntity<Map<String, Object>> handleIdempotencyPayloadMismatch(
+    public ResponseEntity<ApiResponse<Object>> handleIdempotencyPayloadMismatch(
             com.adminportal.domain.domain.exception.IdempotencyPayloadMismatchException ex) {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArg(IllegalArgumentException ex) {
+    public ResponseEntity<ApiResponse<Object>> handleIllegalArg(IllegalArgumentException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(InvalidEncryptedPayloadException.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidEncryptedPayload(InvalidEncryptedPayloadException ex) {
+    public ResponseEntity<ApiResponse<Object>> handleInvalidEncryptedPayload(InvalidEncryptedPayloadException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(DecryptionFailedException.class)
-    public ResponseEntity<Map<String, Object>> handleDecryptionFailed(DecryptionFailedException ex) {
+    public ResponseEntity<ApiResponse<Object>> handleDecryptionFailed(DecryptionFailedException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(EncryptionConfigException.class)
-    public ResponseEntity<Map<String, Object>> handleEncryptionConfig(EncryptionConfigException ex) {
+    public ResponseEntity<ApiResponse<Object>> handleEncryptionConfig(EncryptionConfigException ex) {
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleNotFound(ResourceNotFoundException ex) {
+    public ResponseEntity<ApiResponse<Object>> handleNotFound(ResourceNotFoundException ex) {
+        log.warn("Business not found: {}", ex.getMessage());
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
+    @ExceptionHandler(BusinessStateException.class)
+    public ResponseEntity<ApiResponse<Object>> handleBusinessState(BusinessStateException ex) {
+        log.warn("Business state violation: {}", ex.getMessage());
+        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+    }
+
     @ExceptionHandler(DomainConflictException.class)
-    public ResponseEntity<Map<String, Object>> handleConflict(DomainConflictException ex) {
+    public ResponseEntity<ApiResponse<Object>> handleConflict(DomainConflictException ex) {
+        log.warn("Business conflict: {}", ex.getMessage());
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
+    public ResponseEntity<ApiResponse<Object>> handleAccessDenied(AccessDeniedException ex) {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
+    public ResponseEntity<ApiResponse<Object>> handleGeneral(Exception ex) {
         log.error("Unhandled exception", ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
     }
 
-    private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", Instant.now());
-        body.put("status", status.value());
-        body.put("error", status.getReasonPhrase());
-        body.put("message", message);
+    private ResponseEntity<ApiResponse<Object>> buildResponse(HttpStatus status, String message) {
+        ApiResponse<Object> body = ApiResponse.error(status.value(), message);
         return ResponseEntity.status(status).body(body);
     }
 }

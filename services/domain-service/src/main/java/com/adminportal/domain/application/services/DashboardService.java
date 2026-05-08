@@ -4,7 +4,7 @@ import com.adminportal.domain.application.dto.dashboard.DashboardDataDto;
 import com.adminportal.domain.application.dto.dashboard.MonthlyCostDto;
 import com.adminportal.domain.application.dto.dashboard.TopRequestDto;
 import com.adminportal.domain.domain.entity.PurchasingRequest;
-import com.adminportal.domain.domain.repository.PurchasingRequestRepository;
+import com.adminportal.domain.application.port.out.PurchasingRequestPort;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -19,9 +19,9 @@ import java.util.stream.Collectors;
 @Service
 public class DashboardService {
 
-    private final PurchasingRequestRepository requestRepository;
+    private final PurchasingRequestPort requestRepository;
 
-    public DashboardService(PurchasingRequestRepository requestRepository) {
+    public DashboardService(PurchasingRequestPort requestRepository) {
         this.requestRepository = requestRepository;
     }
 

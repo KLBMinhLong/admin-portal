@@ -5,7 +5,7 @@ import com.adminportal.domain.application.mapper.PurchasingRequestMapper;
 import com.adminportal.domain.domain.entity.PurchasingRequest;
 import com.adminportal.domain.domain.exception.ResourceNotFoundException;
 import com.adminportal.domain.domain.event.RequestSubmittedEvent;
-import com.adminportal.domain.domain.repository.PurchasingRequestRepository;
+import com.adminportal.domain.application.port.out.PurchasingRequestPort;
 import com.adminportal.domain.infrastructure.camunda.WorkflowService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,14 +23,14 @@ public class SubmitRequestUseCase {
     private static final Logger log = LoggerFactory.getLogger(SubmitRequestUseCase.class);
     private static final String KAFKA_TOPIC = "domain.request-submitted";
 
-    private final PurchasingRequestRepository requestRepository;
+    private final PurchasingRequestPort requestRepository;
     private final PurchasingRequestMapper mapper;
     private final WorkflowService workflowService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final RequestCommentService commentService;
     private final WebSocketNotificationService wsService;
 
-    public SubmitRequestUseCase(PurchasingRequestRepository requestRepository,
+    public SubmitRequestUseCase(PurchasingRequestPort requestRepository,
                                 PurchasingRequestMapper mapper,
                                 WorkflowService workflowService,
                                 KafkaTemplate<String, Object> kafkaTemplate,

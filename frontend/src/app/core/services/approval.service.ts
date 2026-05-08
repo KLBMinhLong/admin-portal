@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { inject } from '@angular/core';
 import { API_URL } from '../tokens/config.token';
 import { PurchasingRequest } from '../models/request.models';
+import { ApiResponse } from '../models/auth.models';
 
 export interface ApprovalActionDto {
   comment?: string;
@@ -22,20 +23,26 @@ export class ApprovalService {
 
   /** Lấy danh sách requests chờ duyệt */
   getPendingApprovals(): Observable<PurchasingRequest[]> {
-    return this.http.get<PurchasingRequest[]>(this.requestUrl, {
-      params: new HttpParams().set('status', 'PENDING_APPROVAL'),
-    });
+    return this.http
+      .get<ApiResponse<PurchasingRequest[]> | PurchasingRequest[]>(this.requestUrl, {
+        params: new HttpParams().set('status', 'PENDING_APPROVAL'),
+      })
+      .pipe(map((res) => ('data' in (res as any) ? (res as ApiResponse<PurchasingRequest[]>).data : (res as PurchasingRequest[]))));
   }
 
   /** Approve một request */
   approve(requestId: number, comment?: string): Observable<PurchasingRequest> {
     const dto: ApprovalActionDto = { comment };
-    return this.http.post<PurchasingRequest>(`${this.apiUrl}/${requestId}/approve`, dto);
+    return this.http
+      .post<ApiResponse<PurchasingRequest> | PurchasingRequest>(`${this.apiUrl}/${requestId}/approve`, dto)
+      .pipe(map((res) => ('data' in (res as any) ? (res as ApiResponse<PurchasingRequest>).data : (res as PurchasingRequest))));
   }
 
   /** Reject một request */
   reject(requestId: number, comment: string): Observable<PurchasingRequest> {
     const dto: ApprovalActionDto = { comment };
-    return this.http.post<PurchasingRequest>(`${this.apiUrl}/${requestId}/reject`, dto);
+    return this.http
+      .post<ApiResponse<PurchasingRequest> | PurchasingRequest>(`${this.apiUrl}/${requestId}/reject`, dto)
+      .pipe(map((res) => ('data' in (res as any) ? (res as ApiResponse<PurchasingRequest>).data : (res as PurchasingRequest))));
   }
 }

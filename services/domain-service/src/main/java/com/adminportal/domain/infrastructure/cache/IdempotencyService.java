@@ -3,7 +3,7 @@ package com.adminportal.domain.infrastructure.cache;
 import com.adminportal.domain.domain.entity.IdempotencyRecord;
 import com.adminportal.domain.domain.exception.IdempotencyInProgressException;
 import com.adminportal.domain.domain.exception.IdempotencyPayloadMismatchException;
-import com.adminportal.domain.domain.repository.IdempotencyRepository;
+import com.adminportal.domain.application.port.out.IdempotencyPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -45,9 +45,9 @@ public class IdempotencyService {
     private static final Logger log = LoggerFactory.getLogger(IdempotencyService.class);
     private static final long TTL_HOURS = 24;
 
-    private final IdempotencyRepository idempotencyRepository;
+    private final IdempotencyPort idempotencyRepository;
 
-    public IdempotencyService(IdempotencyRepository idempotencyRepository) {
+    public IdempotencyService(IdempotencyPort idempotencyRepository) {
         this.idempotencyRepository = idempotencyRepository;
     }
 

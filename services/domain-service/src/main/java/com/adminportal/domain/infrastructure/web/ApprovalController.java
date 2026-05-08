@@ -8,6 +8,7 @@ import com.adminportal.domain.domain.entity.IdempotencyRecord;
 import com.adminportal.domain.infrastructure.cache.IdempotencyService;
 import com.adminportal.domain.infrastructure.security.Encrypted;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -43,7 +44,7 @@ public class ApprovalController {
 
     @PostMapping("/{requestId}/approve")
     @PreAuthorize("hasAuthority('request.approve')")
-    public ResponseEntity<String> approve(
+    public ResponseEntity<ApiResponse<PurchasingRequestDto>> approve(
             @PathVariable Long requestId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
             @Valid @RequestBody(required = false) ApprovalActionDto dto) {
@@ -53,7 +54,7 @@ public class ApprovalController {
 
     @PostMapping("/{requestId}/reject")
     @PreAuthorize("hasAuthority('request.reject')")
-    public ResponseEntity<String> reject(
+    public ResponseEntity<ApiResponse<PurchasingRequestDto>> reject(
             @PathVariable Long requestId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
             @Valid @RequestBody ApprovalActionDto dto) {
@@ -61,30 +62,40 @@ public class ApprovalController {
         return processAction(requestId, idempotencyKey, false, dto);
     }
 
-    private ResponseEntity<String> processAction(Long requestId, String idempotencyKey, boolean isApproved, ApprovalActionDto dto) {
+    private ResponseEntity<ApiResponse<PurchasingRequestDto>> processAction(Long requestId, String idempotencyKey, boolean isApproved, ApprovalActionDto dto) {
         // Idempotency check
         Optional<IdempotencyRecord> existing = idempotencyService.findExisting(idempotencyKey);
         if (existing.isPresent()) {
             IdempotencyRecord record = existing.get();
             log.info("Idempotent replay for approval key={}", idempotencyKey);
-            return ResponseEntity.status(record.getHttpStatus())
-                .header("Content-Type", "application/json")
-                .body(record.getResponseBody());
+            try {
+                ApiResponse<PurchasingRequestDto> previous = objectMapper.readValue(
+                    record.getResponseBody(), new TypeReference<ApiResponse<PurchasingRequestDto>>() {}
+                );
+                return ResponseEntity.status(record.getHttpStatus())
+                    .header("Content-Type", "application/json")
+                    .body(previous);
+            } catch (JsonProcessingException ex) {
+                log.warn("Failed to parse saved idempotent approval response", ex);
+                return ResponseEntity.status(record.getHttpStatus()).build();
+            }
         }
 
         String username = currentUserService.requireUsername();
 
         PurchasingRequestDto result = processApprovalUseCase.execute(requestId, username, isApproved, dto);
+        ApiResponse<PurchasingRequestDto> api = ApiResponse.success(result, HttpStatus.OK.value());
 
         try {
-            String responseJson = objectMapper.writeValueAsString(result);
+            String responseJson = objectMapper.writeValueAsString(api);
             idempotencyService.save(idempotencyKey, responseJson, HttpStatus.OK.value());
             return ResponseEntity.status(HttpStatus.OK)
                 .header("Content-Type", "application/json")
-                .body(responseJson);
+                .body(api);
         } catch (JsonProcessingException ex) {
             log.error("Failed to serialize response", ex);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Serialization error"));
         }
     }
 }

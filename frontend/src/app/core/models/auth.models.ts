@@ -4,6 +4,9 @@ export interface ApiResponse<T> {
   status: number;
   data: T;
   message: string;
+  error?: string;
+  code?: string;
+  traceId?: string;
 }
 
 /* ─── Auth Interfaces matching backend DTOs ─── */

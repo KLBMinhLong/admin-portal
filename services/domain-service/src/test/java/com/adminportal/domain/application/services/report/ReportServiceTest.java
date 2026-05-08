@@ -2,13 +2,11 @@ package com.adminportal.domain.application.services.report;
 
 import com.adminportal.domain.domain.entity.PurchaseItem;
 import com.adminportal.domain.domain.entity.PurchasingRequest;
-import com.adminportal.domain.domain.repository.PurchasingRequestRepository;
 import com.adminportal.domain.infrastructure.jasper.JasperReportCompiler;
 import com.adminportal.domain.infrastructure.jasper.JasperReportException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -28,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @DisplayName("ReportService Tests")
 class ReportServiceTest {
 
-    private PurchasingRequestRepository requestRepository;
+    private com.adminportal.domain.application.port.out.PurchasingRequestPort requestRepository;
     private JasperReportCompiler jasperReportCompiler;
     private ReportService reportService;
 
@@ -40,7 +38,6 @@ class ReportServiceTest {
     @BeforeEach
     void setUp() {
         jasperReportCompiler = new JasperReportCompiler();
-        reportService = new ReportService();
 
         requestOne = PurchasingRequest.create(
             "YC-2026-001",
@@ -72,8 +69,7 @@ class ReportServiceTest {
         allRequests = List.of(requestOne, requestTwo);
 
         requestRepository = createRepositoryStub();
-        ReflectionTestUtils.setField(reportService, "requestRepository", requestRepository);
-        ReflectionTestUtils.setField(reportService, "jasperReportCompiler", jasperReportCompiler);
+        reportService = new ReportService(requestRepository, jasperReportCompiler);
     }
 
     @Test
@@ -119,7 +115,7 @@ class ReportServiceTest {
         assertThrows(RuntimeException.class, () -> reportService.exportRequestsByStatus("INVALID", "report.user"));
     }
 
-    private PurchasingRequestRepository createRepositoryStub() {
+    private com.adminportal.domain.application.port.out.PurchasingRequestPort createRepositoryStub() {
         InvocationHandler handler = new InvocationHandler() {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) {
@@ -131,9 +127,9 @@ class ReportServiceTest {
             }
         };
 
-        return (PurchasingRequestRepository) Proxy.newProxyInstance(
-            PurchasingRequestRepository.class.getClassLoader(),
-            new Class<?>[] { PurchasingRequestRepository.class },
+        return (com.adminportal.domain.application.port.out.PurchasingRequestPort) Proxy.newProxyInstance(
+            com.adminportal.domain.application.port.out.PurchasingRequestPort.class.getClassLoader(),
+            new Class<?>[] { com.adminportal.domain.application.port.out.PurchasingRequestPort.class },
             handler
         );
     }

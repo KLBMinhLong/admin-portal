@@ -6,7 +6,7 @@ import com.adminportal.domain.application.mapper.PurchasingRequestMapper;
 import com.adminportal.domain.domain.entity.PurchaseItem;
 import com.adminportal.domain.domain.entity.PurchasingRequest;
 import com.adminportal.domain.domain.event.RequestCreatedEvent;
-import com.adminportal.domain.domain.repository.PurchasingRequestRepository;
+import com.adminportal.domain.application.port.out.PurchasingRequestPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -31,11 +31,11 @@ public class CreateRequestUseCase {
     private static final Logger log = LoggerFactory.getLogger(CreateRequestUseCase.class);
     private static final String KAFKA_TOPIC = "domain.request-created";
 
-    private final PurchasingRequestRepository requestRepository;
+    private final PurchasingRequestPort requestRepository;
     private final PurchasingRequestMapper mapper;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public CreateRequestUseCase(PurchasingRequestRepository requestRepository,
+    public CreateRequestUseCase(PurchasingRequestPort requestRepository,
                                 PurchasingRequestMapper mapper,
                                 KafkaTemplate<String, Object> kafkaTemplate) {
         this.requestRepository = requestRepository;

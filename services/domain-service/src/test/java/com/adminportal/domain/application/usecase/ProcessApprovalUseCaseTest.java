@@ -32,7 +32,7 @@ import static org.mockito.Mockito.when;
 class ProcessApprovalUseCaseTest {
 
     @Mock
-    private PurchasingRequestRepository requestRepository;
+    private com.adminportal.domain.application.port.out.PurchasingRequestPort requestRepository;
 
     @Mock
     private PurchasingRequestMapper mapper;

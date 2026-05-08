@@ -3,10 +3,10 @@ package com.adminportal.domain.application.services.report;
 import com.adminportal.domain.application.dtos.report.FinancialSummaryReportDto;
 import com.adminportal.domain.application.dtos.report.RequestByStatusReportDto;
 import com.adminportal.domain.application.dtos.report.RequestDetailReportDto;
+import com.adminportal.domain.application.port.out.PurchasingRequestPort;
 import com.adminportal.domain.domain.entity.ApprovalStep;
 import com.adminportal.domain.domain.entity.PurchasingRequest;
 import com.adminportal.domain.domain.entity.RequestStatus;
-import com.adminportal.domain.domain.repository.PurchasingRequestRepository;
 import com.adminportal.domain.infrastructure.jasper.JasperReportCompiler;
 import com.adminportal.domain.infrastructure.jasper.JasperReportException;
 import net.sf.jasperreports.engine.JasperExportManager;
@@ -14,7 +14,6 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -45,11 +44,14 @@ public class ReportService {
 
     private static final Logger log = LoggerFactory.getLogger(ReportService.class);
 
-    @Autowired
-    private PurchasingRequestRepository requestRepository;
+    private final PurchasingRequestPort requestRepository;
 
-    @Autowired
-    private JasperReportCompiler jasperReportCompiler;
+    private final JasperReportCompiler jasperReportCompiler;
+
+    public ReportService(PurchasingRequestPort requestRepository, JasperReportCompiler jasperReportCompiler) {
+        this.requestRepository = requestRepository;
+        this.jasperReportCompiler = jasperReportCompiler;
+    }
 
     public byte[] exportRequestsByStatus(String status, String username) {
         try {
