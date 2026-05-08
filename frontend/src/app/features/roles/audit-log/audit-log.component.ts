@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { RoleManagementService } from '@core/services/role-management.service';
 import { AdminAuditLog } from '@core/models/role.models';
 import { ToastService } from '@shared/components/toast/toast.service';
-import { 
-  PageHeaderComponent, CardComponent, SkeletonComponent, 
+import {
+  PageHeaderComponent, CardComponent, SkeletonComponent,
   EmptyStateComponent, BadgeComponent, ButtonComponent, PaginationComponent,
   BadgeVariant
 } from '@shared/components';
@@ -31,7 +31,7 @@ import { AuditDetailModalComponent } from './audit-detail-modal.component';
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    PageHeaderComponent, CardComponent, SkeletonComponent, 
+    PageHeaderComponent, CardComponent, SkeletonComponent,
     EmptyStateComponent, BadgeComponent, ButtonComponent, PaginationComponent,
     DatetimePickerComponent, AuditDetailModalComponent
   ],
@@ -171,7 +171,6 @@ import { AuditDetailModalComponent } from './audit-detail-modal.component';
 
     <!-- Detail Modal -->
     <app-audit-detail-modal
-      modalBody
       [open]="showDetailModal()"
       [log]="selectedLog()"
       (closed)="showDetailModal.set(false)"
@@ -182,7 +181,7 @@ export class AuditLogComponent implements OnInit {
   // ========== STATE ==========
   allLogs = signal<AdminAuditLog[]>([]);
   loading = signal(true);
-  
+
   // ========== FILTERS ==========
   selectedAction = signal('');
   fromDate = signal<Date | null>(null);
@@ -218,7 +217,7 @@ export class AuditLogComponent implements OnInit {
       });
     }
 
-    return logs.sort((a, b) => 
+    return logs.sort((a, b) =>
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
   });
