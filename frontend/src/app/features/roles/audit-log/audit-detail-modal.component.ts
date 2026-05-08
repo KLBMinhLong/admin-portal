@@ -8,71 +8,70 @@ import { ModalComponent, BadgeComponent, ButtonComponent, BadgeVariant } from '@
   standalone: true,
   imports: [CommonModule, ModalComponent, ButtonComponent, BadgeComponent],
   template: `
-    <app-modal
-      [open]="open"
-      title="Chi tiết Nhật ký Phân quyền"
-      subtitle="Audit Log Detail"
-      description="Xem thông tin chi tiết về hành động được thực hiện"
-      size="lg"
-      (closed)="onClose()"
-    >
+  <app-modal
+    [open]="open"
+    title="Chi tiết Nhật ký Phân quyền"
+    subtitle="Audit Log Detail"
+    description="Xem thông tin chi tiết về hành động được thực hiện"
+    size="lg"
+    (closed)="onClose()"
+  >
+    <div modalBody>
       <ng-container *ngIf="log">
-        <div modalBody>
-          <div class="space-y-6">
-            <!-- Thông tin cơ bản -->
-            <div class="grid grid-cols-2 gap-4">
-              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Thời gian</p>
-                <p class="mt-2 text-sm font-medium text-slate-900">
-                  {{ log.timestamp | date:'dd/MM/yyyy HH:mm:ss' }}
-                </p>
-              </div>
-              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Người thực hiện</p>
-                <p class="mt-2 text-sm font-medium text-slate-900">{{ log.actor }}</p>
-              </div>
-            </div>
-
-            <!-- Hành động -->
+        <div class="space-y-6">
+          <!-- Thời gian & Người thực hiện -->
+          <div class="grid grid-cols-2 gap-4">
             <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Hành động</p>
-              <div class="mt-2 flex items-center gap-2">
-                <app-badge [variant]="getActionBadgeVariant(log.action)">
-                  {{ formatAction(log.action) }}
-                </app-badge>
-              </div>
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Thời gian</p>
+              <p class="mt-2 text-sm font-medium text-slate-900">
+                {{ log.timestamp | date:'dd/MM/yyyy HH:mm:ss' }}
+              </p>
             </div>
-
-            <!-- Đối tượng -->
             <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Đối tượng tác động (Resource)</p>
-              <p class="mt-2 text-sm font-medium text-slate-900">{{ log.resource }}</p>
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Người thực hiện</p>
+              <p class="mt-2 text-sm font-medium text-slate-900">{{ log.actor }}</p>
             </div>
+          </div>
 
-            <!-- Chi tiết -->
-            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">Chi tiết hành động</p>
-              <div class="bg-white rounded-lg border border-slate-200 p-4 font-mono text-xs text-slate-600 whitespace-pre-wrap overflow-auto max-h-[300px] leading-relaxed">
-                {{ formatDetails(log.details) }}
-              </div>
+          <!-- Hành động -->
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Hành động</p>
+            <div class="mt-2 flex items-center gap-2">
+              <app-badge [variant]="getActionBadgeVariant(log.action)">
+                {{ formatAction(log.action) }}
+              </app-badge>
+            </div>
+          </div>
+
+          <!-- Đối tượng -->
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Đối tượng tác động (Resource)</p>
+            <p class="mt-2 text-sm font-medium text-slate-900">{{ log.resource }}</p>
+          </div>
+
+          <!-- Chi tiết -->
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">Chi tiết hành động</p>
+            <div class="bg-white rounded-lg border border-slate-200 p-4 font-mono text-xs text-slate-600 whitespace-pre-wrap overflow-auto max-h-[300px] leading-relaxed">
+              {{ formatDetails(log.details) }}
             </div>
           </div>
         </div>
-
-        <ng-container modalFooter>
-          <div class="flex justify-end gap-3">
-            <app-button
-              type="button"
-              variant="secondary"
-              (click)="onClose()"
-            >
-              Đóng
-            </app-button>
-          </div>
-        </ng-container>
       </ng-container>
-    </app-modal>
-  `,
+    </div>
+    <ng-container modalFooter>
+      <div class="flex justify-end gap-3">
+        <app-button
+          type="button"
+          variant="secondary"
+          (click)="onClose()"
+        >
+          Đóng
+        </app-button>
+      </div>
+    </ng-container>
+  </app-modal>
+`,
 })
 export class AuditDetailModalComponent {
   @Input() open = false;
