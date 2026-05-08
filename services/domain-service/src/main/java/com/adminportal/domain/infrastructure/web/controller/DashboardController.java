@@ -2,6 +2,7 @@ package com.adminportal.domain.infrastructure.web.controller;
 
 import com.adminportal.domain.application.dto.dashboard.DashboardDataDto;
 import com.adminportal.domain.application.services.DashboardService;
+import com.adminportal.domain.infrastructure.security.Encrypted;
 import com.adminportal.domain.infrastructure.web.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Encrypted
 @RequestMapping("/api/v1/dashboard")
 public class DashboardController {
 

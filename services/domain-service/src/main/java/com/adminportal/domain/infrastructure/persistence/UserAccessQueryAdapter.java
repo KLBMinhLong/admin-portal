@@ -23,7 +23,7 @@ public class UserAccessQueryAdapter implements UserAccessQueryPort {
     public Optional<UserAccessView> findActiveUserAccess(String username) {
         List<Object[]> users = entityManager.createNativeQuery("""
                 SELECT CAST(u.id AS TEXT), u.username
-                FROM users u
+                FROM auth.users u
                 WHERE u.username = :username
                   AND u.is_active = TRUE
                 """)
@@ -40,9 +40,9 @@ public class UserAccessQueryAdapter implements UserAccessQueryPort {
 
         Set<String> roleCodes = new LinkedHashSet<>(entityManager.createNativeQuery("""
                 SELECT DISTINCT r.code
-                FROM roles r
-                JOIN user_roles ur ON ur.role_id = r.id
-                JOIN users u ON u.id = ur.user_id
+                FROM auth.roles r
+                JOIN auth.user_roles ur ON ur.role_id = r.id
+                JOIN auth.users u ON u.id = ur.user_id
                 WHERE u.username = :username
                   AND u.is_active = TRUE
                   AND r.is_active = TRUE
@@ -53,11 +53,11 @@ public class UserAccessQueryAdapter implements UserAccessQueryPort {
 
         Set<String> permissionCodes = new LinkedHashSet<>(entityManager.createNativeQuery("""
                 SELECT DISTINCT p.code
-                FROM permissions p
-                JOIN role_permissions rp ON rp.permission_id = p.id
-                JOIN user_roles ur ON ur.role_id = rp.role_id
-                JOIN users u ON u.id = ur.user_id
-                JOIN roles r ON r.id = ur.role_id
+                FROM auth.permissions p
+                JOIN auth.role_permissions rp ON rp.permission_id = p.id
+                JOIN auth.user_roles ur ON ur.role_id = rp.role_id
+                JOIN auth.users u ON u.id = ur.user_id
+                JOIN auth.roles r ON r.id = ur.role_id
                 WHERE u.username = :username
                   AND u.is_active = TRUE
                   AND r.is_active = TRUE

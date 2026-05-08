@@ -13,14 +13,15 @@ export const authGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (authService.isAuthenticated()) {
-    return authService.ensureSessionLoaded().pipe(
-      map((loaded) => loaded ? true : router.createUrlTree(['/auth/login'])),
-    );
-  }
-
-  // Redirect to login nếu chưa đăng nhập
-  return router.createUrlTree(['/auth/login']);
+  return authService.ensureSessionLoaded().pipe(
+    map((loaded) => {
+      if (loaded && authService.isAuthenticated()) {
+        return true;
+      }
+      // Redirect to login nếu chưa đăng nhập hoặc load thất bại
+      return router.createUrlTree(['/auth/login']);
+    }),
+  );
 };
 
 /**
@@ -31,11 +32,14 @@ export const guestGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (!authService.isAuthenticated()) {
-    return true;
-  }
-
-  return router.createUrlTree(['/dashboard']);
+  return authService.ensureSessionLoaded().pipe(
+    map((loaded) => {
+      if (loaded && authService.isAuthenticated()) {
+        return router.createUrlTree(['/dashboard']);
+      }
+      return true;
+    }),
+  );
 };
 
 function permissionGuard(requiredAuthorities: string[]): CanActivateFn {
@@ -43,19 +47,14 @@ function permissionGuard(requiredAuthorities: string[]): CanActivateFn {
     const authService = inject(AuthService);
     const router = inject(Router);
 
-    if (!authService.isAuthenticated()) {
-      return router.createUrlTree(['/auth/login']);
-    }
-
     return authService.ensureSessionLoaded().pipe(
       map((loaded) => {
-        if (!loaded) {
-          return router.createUrlTree(['/auth/login']);
+        if (loaded && authService.isAuthenticated()) {
+          return authService.hasAllAuthorities(requiredAuthorities)
+            ? true
+            : router.createUrlTree(['/forbidden']);
         }
-
-        return authService.hasAllAuthorities(requiredAuthorities)
-          ? true
-          : router.createUrlTree(['/forbidden']);
+        return router.createUrlTree(['/auth/login']);
       }),
     );
   };

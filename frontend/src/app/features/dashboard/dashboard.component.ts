@@ -62,7 +62,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
         <h2 class="text-base font-semibold text-slate-900 mb-4">Trạng thái yêu cầu</h2>
         <div class="aspect-square flex items-center justify-center">
           <canvas baseChart
-                  [data]="pieChartData"
+                  [data]="pieChartData()"
                   [type]="pieChartType"
                   [options]="pieChartOptions">
           </canvas>
@@ -75,7 +75,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
           <h2 class="text-base font-semibold text-slate-900 mb-4">Tổng chi phí mua sắm theo tháng (VND)</h2>
           <div class="w-full h-72">
             <canvas baseChart
-                    [data]="barChartData"
+                    [data]="barChartData()"
                     [type]="barChartType"
                     [options]="barChartOptions">
             </canvas>
@@ -148,24 +148,25 @@ export class DashboardComponent implements OnInit {
   });
   topRequests = computed(() => this.data()?.topPendingRequests || []);
 
-  // Pie Chart config
+  // Pie Chart config (Signal)
   pieChartType: ChartType = 'pie';
   pieChartOptions: ChartConfiguration['options'] = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: { position: 'bottom' }
     }
   };
-  pieChartData: ChartData<'pie', number[], string | string[]> = {
+  pieChartData = signal<ChartData<'pie'>>({
     labels: ['Chờ duyệt', 'Đã duyệt', 'Từ chối', 'Khác'],
     datasets: [{
       data: [0, 0, 0, 0],
       backgroundColor: ['#f59e0b', '#22c55e', '#ef4444', '#94a3b8'],
       borderWidth: 0
     }]
-  };
+  });
 
-  // Bar Chart config
+  // Bar Chart config (Signal)
   barChartType: ChartType = 'bar';
   barChartOptions: ChartConfiguration['options'] = {
     responsive: true,
@@ -177,12 +178,12 @@ export class DashboardComponent implements OnInit {
       y: { beginAtZero: true }
     }
   };
-  barChartData: ChartData<'bar'> = {
+  barChartData = signal<ChartData<'bar'>>({
     labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
     datasets: [
-      { data: [], label: 'Tổng chi phí', backgroundColor: '#3b82f6', borderRadius: 4, hoverBackgroundColor: '#2563eb' }
+      { data: Array(12).fill(0), label: 'Tổng chi phí', backgroundColor: '#3b82f6', borderRadius: 4, hoverBackgroundColor: '#2563eb' }
     ]
-  };
+  });
 
   constructor(private dashboardService: DashboardService) {}
 
@@ -204,29 +205,31 @@ export class DashboardComponent implements OnInit {
   }
 
   updateCharts(res: DashboardData) {
+    if (!res) return;
+
     // Cập nhật Pie Chart
     const pending = res.requestsByStatus['PENDING_APPROVAL'] || 0;
     const approved = res.requestsByStatus['APPROVED'] || 0;
     const rejected = res.requestsByStatus['REJECTED'] || 0;
-    let total = Object.values(res.requestsByStatus).reduce((a, b) => a + b, 0);
+    const total = Object.values(res.requestsByStatus).reduce((a, b) => a + b, 0);
     const other = total - pending - approved - rejected;
 
-    this.pieChartData = {
+    this.pieChartData.set({
       labels: ['Chờ duyệt', 'Đã duyệt', 'Từ chối', 'Khác'],
       datasets: [{
         data: [pending, approved, rejected, other],
         backgroundColor: ['#f59e0b', '#22c55e', '#ef4444', '#94a3b8'],
         borderWidth: 0
       }]
-    };
+    });
 
     // Cập nhật Bar Chart
     const monthlyData = res.monthlyCosts.map(m => m.totalCost);
-    this.barChartData = {
+    this.barChartData.set({
       labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
       datasets: [
         { data: monthlyData, label: 'Tổng chi phí', backgroundColor: '#3b82f6', borderRadius: 4, hoverBackgroundColor: '#2563eb' }
       ]
-    };
+    });
   }
 }

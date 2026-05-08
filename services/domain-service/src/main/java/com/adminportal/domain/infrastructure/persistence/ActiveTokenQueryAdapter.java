@@ -31,7 +31,7 @@ public class ActiveTokenQueryAdapter implements ActiveTokenQueryPort {
 
         Number count = (Number) entityManager.createNativeQuery("""
                 SELECT COUNT(*)
-                FROM auth_tokens
+                FROM auth.auth_tokens
                 WHERE token_jti = :tokenJti
                   AND is_active = TRUE
                 """)
