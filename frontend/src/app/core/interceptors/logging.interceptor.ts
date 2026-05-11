@@ -11,15 +11,7 @@ import { Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { LoggingService } from '../services/logging.service';
 
-/** Utility function to generate simple UUID for tracing */
-function generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-}
-
-@Injectable()
+@Injectable() 
 export class LoggingInterceptor implements HttpInterceptor {
   constructor(private loggingService: LoggingService) {}
 
@@ -32,7 +24,7 @@ export class LoggingInterceptor implements HttpInterceptor {
     // Gắn traceId vào header
     let traceId = request.headers.get('X-Trace-Id') || request.headers.get('traceparent');
     if (!traceId) {
-      traceId = generateUUID();
+      traceId = crypto.randomUUID();
       request = request.clone({
         setHeaders: { 'X-Trace-Id': traceId }
       });

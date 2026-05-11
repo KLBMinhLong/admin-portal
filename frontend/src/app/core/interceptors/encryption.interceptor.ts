@@ -7,7 +7,7 @@ import {
   HttpResponse,
 } from '@angular/common/http';
 import { Observable, from, switchMap, map } from 'rxjs';
-import { AesGcmEncryptionService } from '../security/aes-gcm-encryption.service';
+import { AesGcmEncryptionService } from '../security/services/aes-gcm-encryption.service';
 import { EncryptedPayload } from '../security/encrypted-payload.model';
 
 /**

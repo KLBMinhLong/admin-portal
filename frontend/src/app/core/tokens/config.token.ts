@@ -1,12 +1,13 @@
 import { InjectionToken } from '@angular/core';
 import { environment } from '@env/environment';
+import { EncryptionConfig } from '../security/models/encryption-config.model';
 
 export const API_URL = new InjectionToken<string>('API_URL', {
   providedIn: 'root',
   factory: () => environment.apiBaseUrl
 });
 
-export const ENCRYPTION_CONFIG = new InjectionToken<{enabled: boolean, secretKey: string}>('ENCRYPTION_CONFIG', {
+export const ENCRYPTION_CONFIG = new InjectionToken<EncryptionConfig>('ENCRYPTION_CONFIG', {
   providedIn: 'root',
   factory: () => ({
     enabled: environment.encryption?.enabled ?? false,
