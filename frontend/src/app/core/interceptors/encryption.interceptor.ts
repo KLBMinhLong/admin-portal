@@ -8,7 +8,7 @@ import {
 } from '@angular/common/http';
 import { Observable, from, switchMap, map } from 'rxjs';
 import { AesGcmEncryptionService } from '../security/services/aes-gcm-encryption.service';
-import { EncryptedPayload } from '../security/encrypted-payload.model';
+import { EncryptedPayload } from '../security/models/encrypted-payload.model';
 
 /**
  * HTTP Interceptor tự động:
